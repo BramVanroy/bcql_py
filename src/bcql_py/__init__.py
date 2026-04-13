@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from bcql-py!")
+from ._version import version
