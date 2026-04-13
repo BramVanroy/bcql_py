@@ -59,17 +59,18 @@ class BCQLLexer:
                 self.pos += 1
         raise self._raise_error(f"Unterminated string (expected closing {initial_quote_char!r})")
 
-    def _is_relation_arrow(self, offset: int = 0) -> bool:
-        """Check if from current pos + offset we have ``-type->`` pattern."""
+    def _is_relation_arrow(self, offset: int = 0, is_parallel_relation: bool = False) -> bool:
+        """Check if from current pos + offset we have ``-type->`` or ``=type=>`` pattern."""
+        line_char = "=" if is_parallel_relation else "-"
         start_char_idx = self.pos + offset
-        if start_char_idx >= len(self.source) or self.source[start_char_idx] != "-":
+        if start_char_idx >= len(self.source) or self.source[start_char_idx] != line_char:
             return False
         start_char_idx += 1  # skip initial '-'
 
         while start_char_idx < len(self.source):
             ch = self.source[start_char_idx]
             # Found '->' pattern, so this is a relation arrow
-            if ch == "-" and start_char_idx + 1 < len(self.source) and self.source[start_char_idx + 1] == ">":
+            if ch == line_char and start_char_idx + 1 < len(self.source) and self.source[start_char_idx + 1] == ">":
                 return True
             # If we encounter whitespace or a closing bracket before finding '->', this cannot be a relation arrow
             if ch in " \t\n\r)]}":
@@ -77,29 +78,59 @@ class BCQLLexer:
             start_char_idx += 1
         return False
 
-    def _read_relation_arrow(self, start: int, is_root: bool = False) -> None:
-        """Read ``-type->`` after the leading ``-`` has been identified."""
+    def _read_relation_arrow(self, start: int, is_root: bool = False, is_parallel_relation: bool = False) -> None:
+        """Read ``-type->`` or ``=type=>`` after the leading ``-`` or ``=`` (=True) has been identified."""
         if is_root:
             self.pos += 1  # skip the leading '^'
 
-        self.pos += 1  # skip the leading '-'
+        if is_root and is_parallel_relation:
+            raise self._raise_error("Root relations cannot be parallel (i.e. start with '^')")
+
+        line_char = "=" if is_parallel_relation else "-"
+        self.pos += 1  # skip the leading '-' or '='
         # Read the relation type (everything up to '->') which may be empty
         rtype_chars: list[str] = []
         while self.pos < len(self.source):
-            if self._current_char == "-" and self._peek_ahead_char() == ">":
+            if self._current_char == line_char and self._peek_ahead_char() == ">":
                 break
             rtype_chars.append(self._current_char)
             self.pos += 1
         else:
-            raise self._error("Expected '->' to close relation arrow")
+            raise self._error("Expected '->' or '=>' to close relation arrow")
 
-        self.pos += 2  # skip '->'
+        self.pos += 2  # skip '->' or '=>'
 
         rtype = "".join(rtype_chars)
-        if is_root:
-            self._set_found_token(TokenType.ROOT_ARROW, rtype, start)
+
+        # Check for target field suffix in parallel relations, we can have `=type=>field`
+        # See https://github.com/instituutnederlandsetaal/BlackLab/blob/dev/site/docs/guide/040_query-language/030_parallel.md
+        # TODO: check if this exclusive to parallel relations
+        field = ""
+        if self.pos < len(self.source) and self._current_char.isalpha():
+            field_start = self.pos
+            while self.pos < len(self.source) and (
+                self._current_char.isalnum() or self._current_char == "_" or self._current_char == "?"
+            ):
+                self.pos += 1
+            field = self.source[field_start : self.pos]
+
+        value = f"{line_char}{rtype}{line_char}>{field}"
+
+        if is_parallel_relation:
+            self._set_found_token(TokenType.ALIGNMENT, value, start)
+        elif is_root:
+            value = f"^{value}"
+            self._set_found_token(TokenType.ROOT_ARROW, value, start)
         else:
-            self._set_found_token(TokenType.ARROW, rtype, start)
+            self._set_found_token(TokenType.ARROW, value, start)
+
+    def _is_alignment_arrow(self, offset: int = 0) -> bool:
+        """Check if from current pos + offset we have ``=type=>field[?]`` pattern."""
+        return self._is_relation_arrow(offset=offset, is_parallel_relation=True)
+
+    def _read_alignment_arrow(self, start: int) -> None:
+        """Read ``=type=>field[?]`` starting from the first ``=``."""
+        self._read_relation_arrow(start, is_root=False, is_parallel_relation=True)
 
     def tokenize(self) -> list[Token]:
         """
@@ -228,6 +259,16 @@ class BCQLLexer:
             # 3.2. Root relation arrow, e.g. `^-obj->` or `^-->` (if no relation type specified)
             if curr_char == "^" and self._is_relation_arrow(offset=1):
                 self._read_relation_arrow(starting_pos, is_root=True)
+                continue
+
+            # 3.3 Equals sign `=`: could be alignment arrow or just an equals sign for assigfment
+            if curr_char == "=":
+                if self._is_alignment_arrow():
+                    self._read_alignment_arrow(starting_pos)
+                    continue
+                # Otherwise treat as standalone equals sign (e.g. for assignment)
+                self._set_found_token(TokenType.EQ, "=", starting_pos)
+                self.pos += 1
                 continue
 
         return self.tokens

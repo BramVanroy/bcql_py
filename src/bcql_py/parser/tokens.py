@@ -31,8 +31,20 @@ class TokenType(StrEnum):
     SLASH = auto()  # /     (standalone, if needed)
 
     # Operators: relation / alignment arrows
-    ARROW = auto()  # -type-> (value holds the relation type between the dashes)
-    ROOT_ARROW = auto()  # ^-type-> (root relation; value holds the relation type)
+    # Rather than storing the relation type in the Token.value,
+    # the full string is stored, e.g. "-rel->" or "=word=>nl", and the TokenType indicates the kind of arrow.
+    # The actual decoding of relation type, target field etc. is deferred to the parser
+    ARROW = auto()
+    ROOT_ARROW = auto()
+    ALIGNMENT = auto()
+
+    # Operators: comparison
+    EQ = auto()  # =
+    NEQ = auto()  # !=
+    LT_CMP = auto()  # < (comparison, inside constraints)
+    LE = auto()  # <=
+    GT_CMP = auto()  # > (comparison, inside constraints)
+    GE = auto()  # >=
 
 
 @dataclass(frozen=True, slots=True)
