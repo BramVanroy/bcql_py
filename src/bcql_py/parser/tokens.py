@@ -30,6 +30,10 @@ class TokenType(StrEnum):
     SLASH_GT = auto()  # />    (self-closing)
     SLASH = auto()  # /     (standalone, if needed)
 
+    # Operators: relation / alignment arrows
+    ARROW = auto()  # -type-> (value holds the relation type between the dashes)
+    ROOT_ARROW = auto()  # ^-type-> (root relation; value holds the relation type)
+
 
 @dataclass(frozen=True, slots=True)
 class Token:

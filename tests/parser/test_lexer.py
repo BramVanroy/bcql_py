@@ -85,3 +85,32 @@ class TestLexerXML:
     def test_slash_gt(self):
         tokens = lex("/>")
         assert tokens[0].type == TokenType.SLASH_GT
+
+
+class TestLexerArrows:
+    def test_relation_arrow(self):
+        tokens = lex("-obj->")
+        assert tokens[0].type == TokenType.ARROW
+        assert tokens[0].value == "obj"
+
+    def test_untyped_arrow(self):
+        tokens = lex("-->")
+        assert tokens[0].type == TokenType.ARROW
+        assert tokens[0].value == ""
+
+    def test_untyped_root_arrow(self):
+        tokens = lex("^-->")
+        assert tokens[0].type == TokenType.ROOT_ARROW
+        assert tokens[0].value == ""
+
+    def test_root_arrow(self):
+        tokens = lex("^-obj->")
+        assert tokens[0].type == TokenType.ROOT_ARROW
+        assert tokens[0].value == "obj"
+
+
+class TestLexerIntegers:
+    def test_negative(self):
+        tokens = lex("-5")
+        assert tokens[0].type == TokenType.INTEGER
+        assert tokens[0].value == "-5"
