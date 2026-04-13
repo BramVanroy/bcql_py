@@ -14,12 +14,12 @@ class BCQLLexer:
     def _current_char(self) -> str:
         return self.source[self.pos]
 
-    def _peak_ahead_char(self, offset: int = 1) -> str:
+    def _peek_ahead_char(self, offset: int = 1) -> str:
         if self.pos + offset < len(self.source):
             return self.source[self.pos + offset]
         return ""
 
-    def _peak_ahead_string(self, length: int) -> str:
+    def _peek_ahead_string(self, length: int) -> str:
         return self.source[self.pos : self.pos + length]
 
     def _advance(self, steps: int = 1) -> None:
@@ -28,8 +28,7 @@ class BCQLLexer:
         return result
 
     def _set_found_token(self, ttype: TokenType, value: str, position: int) -> None:
-        token = Token(type=ttype, value=value, position=position)
-        self.tokens.append(token)
+        self.tokens.append(Token(type=ttype, value=value, position=position))
 
     def _throw_error(self, msg: str) -> BCQLSyntaxError:
         return BCQLSyntaxError(msg, query=self.source, position=self.pos)
@@ -72,18 +71,73 @@ class BCQLLexer:
 
             starting_pos = self.pos
             curr_char = self._current_char
-            # Quoted strings (both single and double)
+            # 1. Simple strings
+            # 1.a. Quoted strings (both single and double)
             if curr_char in ('"', "'"):
                 # Read string
                 self._read_string(curr_char, starting_pos, is_literal=False)
                 continue
 
-            # "literal" tokens, e.g. `l"e.g."`
+            # 1.b. "literal" tokens, e.g. `l"e.g."`
             # Note that in alternative notation, one can escape the period with a backslash without the need of a literal `l` flag, e.g. `"e\.g\."`
-            elif curr_char == "l" and self._peak_ahead_char() in ('"', "'"):
+            if curr_char == "l" and self._peek_ahead_char() in ('"', "'"):
                 self.pos += 1  # skip 'l'
                 # Read internal string; re-call self._current_char after pos updated
                 self._read_string(self._current_char, starting_pos, is_literal=True)
+                continue
+
+            # 2. Brackets
+            # 2.a. Square brackets
+            if curr_char == "[":
+                self._set_found_token(TokenType.LBRACKET, curr_char, starting_pos)
+                self.pos += 1
+                continue
+            if curr_char == "]":
+                self._set_found_token(TokenType.RBRACKET, curr_char, starting_pos)
+                self.pos += 1
+                continue
+            # 2.b. Curly Brackets (e.g. for grouping in regexes), example: `{2,3}`
+            if curr_char == "{":
+                self._set_found_token(TokenType.LCURLY, curr_char, starting_pos)
+                self.pos += 1
+                continue
+            if curr_char == "}":
+                self._set_found_token(TokenType.RCURLY, curr_char, starting_pos)
+                self.pos += 1
+                continue
+
+            # 2.c. Parentheses
+            # Check first if it is part of a regex lookaround construct, e.g. `(?=...)`, `(?!...)`, `(?<=...)`, `(?<!...)`.
+            # If not, treat as normal parentheses.
+            if curr_char == "(":
+                # Check for regex lookaround openers
+                rest4 = self._peek_ahead_string(4)
+                if rest4 == "(?<=":
+                    self._set_found_token(TokenType.LOOKBEHIND_POS, rest4, starting_pos)
+                    self.pos += 4
+                    continue
+                if rest4 == "(?<!":
+                    self._set_found_token(TokenType.LOOKBEHIND_NEG, rest4, starting_pos)
+                    self.pos += 4
+                    continue
+
+                rest3 = self._peek_ahead_string(3)
+                if rest3 == "(?=":
+                    self._set_found_token(TokenType.LOOKAHEAD_POS, rest3, starting_pos)
+                    self.pos += 3
+                    continue
+                if rest3 == "(?!":
+                    self._set_found_token(TokenType.LOOKAHEAD_NEG, rest3, starting_pos)
+                    self.pos += 3
+                    continue
+                # If not a lookaround, treat as normal parenthesis
+                self._set_found_token(TokenType.LPAREN, "(", starting_pos)
+                self.pos += 1
+                continue
+
+            if curr_char == ")":
+                self._set_found_token(TokenType.RPAREN, ")", starting_pos)
+                self.pos += 1
                 continue
 
         return self.tokens

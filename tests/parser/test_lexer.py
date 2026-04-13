@@ -37,3 +37,33 @@ class TestLexerStrings:
     def test_sensitivity_flags(self):
         tokens = lex('"(?-i)Panama"')
         assert tokens[0].value == "(?-i)Panama"
+
+
+class TestLexerBrackets:
+    def test_square_brackets(self):
+        tokens = lex("[]")
+        assert tokens[0].type == TokenType.LBRACKET
+        assert tokens[1].type == TokenType.RBRACKET
+
+    def test_parens(self):
+        tokens = lex("()")
+        assert tokens[0].type == TokenType.LPAREN
+        assert tokens[1].type == TokenType.RPAREN
+
+
+class TestLexerLookaround:
+    def test_positive_lookahead(self):
+        tokens = lex("(?=")
+        assert tokens[0].type == TokenType.LOOKAHEAD_POS
+
+    def test_negative_lookahead(self):
+        tokens = lex("(?!")
+        assert tokens[0].type == TokenType.LOOKAHEAD_NEG
+
+    def test_positive_lookbehind(self):
+        tokens = lex("(?<=")
+        assert tokens[0].type == TokenType.LOOKBEHIND_POS
+
+    def test_negative_lookbehind(self):
+        tokens = lex("(?<!")
+        assert tokens[0].type == TokenType.LOOKBEHIND_NEG

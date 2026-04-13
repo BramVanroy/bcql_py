@@ -3,8 +3,25 @@ from enum import StrEnum, auto
 
 
 class TokenType(StrEnum):
-    STRING = auto()
-    LITERAL_STRING = auto()
+    # Literals
+    STRING = auto()  # "hello", 'world'
+    LITERAL_STRING = auto()  # l"e.g.", l'fo.o'
+    INTEGER = auto()  # 123, -5
+    IDENTIFIER = auto()  # word, lemma, pos, meet, union, ...
+
+    # Brackets
+    LBRACKET = auto()  # [
+    RBRACKET = auto()  # ]
+    LCURLY = auto()  # {
+    RCURLY = auto()  # }
+    LPAREN = auto()  # (
+    RPAREN = auto()  # )
+
+    # Lookaround openers (single tokens for multiple characters, for easier parsing)
+    LOOKAHEAD_POS = auto()  # (?=
+    LOOKAHEAD_NEG = auto()  # (?!
+    LOOKBEHIND_POS = auto()  # (?<=
+    LOOKBEHIND_NEG = auto()  # (?<!
 
 
 @dataclass(frozen=True, slots=True)
