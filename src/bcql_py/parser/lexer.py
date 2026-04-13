@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.parser.tokens import Token, TokenType
 
 
@@ -30,8 +31,8 @@ class BCQLLexer:
         token = Token(type=ttype, value=value, position=position)
         self.tokens.append(token)
 
-    def _throw_error(self, message: str) -> None:
-        raise SyntaxError(f"Lexer error at position {self.pos}: {message}")
+    def _throw_error(self, msg: str) -> BCQLSyntaxError:
+        return BCQLSyntaxError(msg, query=self.source, position=self.pos)
 
     def _skip_whitespace(self) -> None:
         while self._current_char.isspace():
