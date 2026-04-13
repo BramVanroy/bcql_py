@@ -1,0 +1,84 @@
+[project]
+name = "bcql-py"
+dynamic = ["version"]
+description = "A Python parser for Blacklab Corpus Query Language"
+readme = "README.md"
+authors = [
+    { name = "Bram Vanroy", email = "2779410+BramVanroy@users.noreply.github.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.13.0,<3",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.20.1,<2",
+    "pytest>=9.0.3,<10",
+    "ruff>=0.15.10,<1",
+]
+
+[project.urls]
+homepage = "https://github.com/BramVanroy/bcql_py"
+documentation = "https://bramvanroy.github.io/bcql-py/"
+issues = "https://github.com/BramVanroy/bcql_py/issues"
+repository = "https://github.com/BramVanroy/bcql_py.git"
+
+[build-system]
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[tool.hatch.build.hooks.version]
+path = "src/bcql_py/_version.py"
+template = '''
+version = "{version}"
+'''
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src", "tests"]
+pretty = true
+show_error_codes = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+no_implicit_optional = true
+check_untyped_defs = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+# Ruff style
+[tool.ruff]
+line-length = 119
+
+[tool.ruff.lint]
+ignore = ["C901", "E501", "E741", "F402", "F823", "E402"]
+select = ["C", "E", "F", "W", "I"]
+
+# Ignore import violations in all `__init__.py` files.
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "F401", "F403", "F811"]
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+known-first-party = ["bcql_py"]
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
