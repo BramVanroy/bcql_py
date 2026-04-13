@@ -23,6 +23,13 @@ class TokenType(StrEnum):
     LOOKBEHIND_POS = auto()  # (?<=
     LOOKBEHIND_NEG = auto()  # (?<!
 
+    # XML-like angle brackets
+    LT = auto()  # <     (opening angle bracket, not followed by / )
+    GT = auto()  # >
+    LT_SLASH = auto()  # </    (opening of end-tag)
+    SLASH_GT = auto()  # />    (self-closing)
+    SLASH = auto()  # /     (standalone, if needed)
+
 
 @dataclass(frozen=True, slots=True)
 class Token:

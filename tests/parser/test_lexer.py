@@ -67,3 +67,21 @@ class TestLexerLookaround:
     def test_negative_lookbehind(self):
         tokens = lex("(?<!")
         assert tokens[0].type == TokenType.LOOKBEHIND_NEG
+
+
+class TestLexerXML:
+    def test_lt(self):
+        tokens = lex("<")
+        assert tokens[0].type == TokenType.LT
+
+    def test_lt_slash(self):
+        tokens = lex("</")
+        assert tokens[0].type == TokenType.LT_SLASH
+
+    def test_gt(self):
+        tokens = lex(">")
+        assert tokens[0].type == TokenType.GT
+
+    def test_slash_gt(self):
+        tokens = lex("/>")
+        assert tokens[0].type == TokenType.SLASH_GT

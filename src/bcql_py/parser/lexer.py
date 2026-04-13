@@ -96,6 +96,7 @@ class BCQLLexer:
                 self._set_found_token(TokenType.RBRACKET, curr_char, starting_pos)
                 self.pos += 1
                 continue
+
             # 2.b. Curly Brackets (e.g. for grouping in regexes), example: `{2,3}`
             if curr_char == "{":
                 self._set_found_token(TokenType.LCURLY, curr_char, starting_pos)
@@ -107,10 +108,9 @@ class BCQLLexer:
                 continue
 
             # 2.c. Parentheses
-            # Check first if it is part of a regex lookaround construct, e.g. `(?=...)`, `(?!...)`, `(?<=...)`, `(?<!...)`.
-            # If not, treat as normal parentheses.
             if curr_char == "(":
-                # Check for regex lookaround openers
+                # Check first if it is part of a regex look-around
+                # i.e. look-behind: `(?<=...)`, `(?<!...)`, look-ahead: `(?=...)`, `(?!...)`
                 rest4 = self._peek_ahead_string(4)
                 if rest4 == "(?<=":
                     self._set_found_token(TokenType.LOOKBEHIND_POS, rest4, starting_pos)
@@ -130,6 +130,7 @@ class BCQLLexer:
                     self._set_found_token(TokenType.LOOKAHEAD_NEG, rest3, starting_pos)
                     self.pos += 3
                     continue
+
                 # If not a lookaround, treat as normal parenthesis
                 self._set_found_token(TokenType.LPAREN, "(", starting_pos)
                 self.pos += 1
@@ -138,6 +139,25 @@ class BCQLLexer:
             if curr_char == ")":
                 self._set_found_token(TokenType.RPAREN, ")", starting_pos)
                 self.pos += 1
+                continue
+
+            # 2.d. Angled brackets, e.g. for XML
+            # TODO: are named groups in regexes also supported, e.g. `(?P<name>...)` in BlackLab?
+            if curr_char == "<":
+                if self._peek_ahead_char() == "/":
+                    self._set_found_token(TokenType.LT_SLASH, "</", starting_pos)
+                    self.pos += 2
+                    continue
+                self._set_found_token(TokenType.LT, "<", starting_pos)
+                self.pos += 1
+                continue
+            if curr_char == ">":
+                self._set_found_token(TokenType.GT, ">", starting_pos)
+                self.pos += 1
+                continue
+            if curr_char == "/" and self._peek_ahead_char() == ">":
+                self._set_found_token(TokenType.SLASH_GT, "/>", starting_pos)
+                self.pos += 2
                 continue
 
         return self.tokens
