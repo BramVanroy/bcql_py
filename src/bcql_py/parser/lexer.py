@@ -58,7 +58,7 @@ class BCQLLexer:
             else:
                 chars.append(char)
                 self.pos += 1
-        raise self._error(f"Unterminated string (expected closing {initial_quote_char!r})")
+        raise self._throw_error(f"Unterminated string (expected closing {initial_quote_char!r})")
 
     def tokenize(self) -> list[Token]:
         """

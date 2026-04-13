@@ -29,3 +29,11 @@ class TestLexerStrings:
     def test_escaped_quote(self):
         tokens = lex('"say \\"yes\\""')
         assert tokens[0].value == 'say \\"yes\\"'
+
+    def test_regex_in_string(self):
+        tokens = lex('"(wo)?man"')
+        assert tokens[0].value == "(wo)?man"
+
+    def test_sensitivity_flags(self):
+        tokens = lex('"(?-i)Panama"')
+        assert tokens[0].value == "(?-i)Panama"

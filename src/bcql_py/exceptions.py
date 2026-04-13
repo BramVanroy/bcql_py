@@ -1,7 +1,5 @@
 class BCQLSyntaxError(Exception):
-    def __init__(
-        self, error_message: str, *, bcql_query: str = "", error_position: int | None = None
-    ) -> None:
+    def __init__(self, error_message: str, *, bcql_query: str = "", error_position: int | None = None) -> None:
         self.query = bcql_query
         self.position = error_position
         self.message = error_message
