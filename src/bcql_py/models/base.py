@@ -8,6 +8,7 @@ is a frozen Pydantic v2 ``BaseModel`` (immutable after construction) with a
 from __future__ import annotations
 
 import abc
+from functools import cached_property
 
 from pydantic import BaseModel, ConfigDict
 
@@ -32,3 +33,8 @@ class BCQLNode(BaseModel, abc.ABC):
         The returned string is *functionally* equivalent to the original
         query but may differ in trivial whitespace and formatting.
         """
+
+    @cached_property
+    def bcql(self) -> str:
+        """Convenience property to get the BCQL string representation of this node."""
+        return self.to_bcql()
