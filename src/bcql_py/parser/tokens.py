@@ -12,12 +12,12 @@ class TokenType(StrEnum):
     # Brackets
     LBRACKET = auto()  # [
     RBRACKET = auto()  # ]
-    LCURLY = auto()  # {
-    RCURLY = auto()  # }
+    LBRACE = auto()  # {
+    RBRACE = auto()  # }
     LPAREN = auto()  # (
     RPAREN = auto()  # )
 
-    # Lookaround openers (single tokens for multiple characters, for easier parsing)
+    # Lookaround openers
     LOOKAHEAD_POS = auto()  # (?=
     LOOKAHEAD_NEG = auto()  # (?!
     LOOKBEHIND_POS = auto()  # (?<=
@@ -28,22 +28,22 @@ class TokenType(StrEnum):
     GT = auto()  # >
     LT_SLASH = auto()  # </    (opening of end-tag)
     SLASH_GT = auto()  # />    (self-closing)
-    SLASH = auto()  # /     (standalone, if needed)
+    FWD_SLASH = auto()  # /     (standalone, if needed)
 
     # Operators: relation / alignment arrows
-    # Rather than storing the relation type in the Token.value,
-    # the full string is stored, e.g. "-rel->" or "=word=>nl", and the TokenType indicates the kind of arrow.
-    # The actual decoding of relation type, target field etc. is deferred to the parser
-    ARROW = auto()
-    ROOT_ARROW = auto()
-    ALIGNMENT = auto()
+    REL_LINE = auto()  # -
+    REL_ARROW = auto() # ->
+    ROOT_REL_CARET = auto()
+    ALIGN_LINE = auto()  # =type= (alignment line, no field)
+    ALIGN_ARROW = auto()  # =>
+    QUESTION = auto()  # ? (eg optional alignment, after field, e.g. ==>nl?)
 
     # Operators: comparison
     EQ = auto()  # =
     NEQ = auto()  # !=
-    LT_CMP = auto()  # < (comparison, inside constraints)
+    LT_CMP = auto()  # <
     LE = auto()  # <=
-    GT_CMP = auto()  # > (comparison, inside constraints)
+    GT_CMP = auto()  # >
     GE = auto()  # >=
 
 

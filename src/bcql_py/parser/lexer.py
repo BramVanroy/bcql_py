@@ -59,7 +59,7 @@ class BCQLLexer:
                 self.pos += 1
         raise self._raise_error(f"Unterminated string (expected closing {initial_quote_char!r})")
 
-    def _is_relation_arrow(self, offset: int = 0, is_parallel_relation: bool = False) -> bool:
+    def _is_arrow(self, offset: int = 0, is_parallel_relation: bool = False) -> bool:
         """Check if from current pos + offset we have ``-type->`` or ``=type=>`` pattern."""
         line_char = "=" if is_parallel_relation else "-"
         start_char_idx = self.pos + offset
@@ -78,7 +78,7 @@ class BCQLLexer:
             start_char_idx += 1
         return False
 
-    def _read_relation_arrow(self, start: int, is_root: bool = False, is_parallel_relation: bool = False) -> None:
+    def _read_arrow(self, start: int, is_root: bool = False, is_parallel_relation: bool = False) -> None:
         """Read ``-type->`` or ``=type=>`` after the leading ``-`` or ``=`` (=True) has been identified."""
         if is_root:
             self.pos += 1  # skip the leading '^'
@@ -114,23 +114,41 @@ class BCQLLexer:
                 self.pos += 1
             field = self.source[field_start : self.pos]
 
-        value = f"{line_char}{rtype}{line_char}>{field}"
+        if is_root:            
+            self._set_found_token(TokenType.ROOT_REL_CARET, "^", start)
+            start += 1
 
         if is_parallel_relation:
-            self._set_found_token(TokenType.ALIGNMENT, value, start)
-        elif is_root:
-            value = f"^{value}"
-            self._set_found_token(TokenType.ROOT_ARROW, value, start)
+            self._set_found_token(TokenType.ALIGN_LINE, "=", start)
         else:
-            self._set_found_token(TokenType.ARROW, value, start)
+            self._set_found_token(TokenType.REL_LINE, "-", start)
+        start += 1
+
+        if rtype:
+            self._set_found_token(TokenType.IDENTIFIER, rtype, start)
+            start += len(rtype)
+        
+        if is_parallel_relation:
+            self._set_found_token(TokenType.ALIGN_ARROW, "=>", start)
+        else:
+            self._set_found_token(TokenType.REL_ARROW, "->", start)
+        start += 2
+
+        if field:
+            if (is_optional := field.endswith("?")):
+                field = field[:-1]                
+            self._set_found_token(TokenType.IDENTIFIER, field, start)
+            start += len(field)
+            if is_optional:
+                self._set_found_token(TokenType.QUESTION, "?", start)
 
     def _is_alignment_arrow(self, offset: int = 0) -> bool:
         """Check if from current pos + offset we have ``=type=>field[?]`` pattern."""
-        return self._is_relation_arrow(offset=offset, is_parallel_relation=True)
+        return self._is_arrow(offset=offset, is_parallel_relation=True)
 
     def _read_alignment_arrow(self, start: int) -> None:
         """Read ``=type=>field[?]`` starting from the first ``=``."""
-        self._read_relation_arrow(start, is_root=False, is_parallel_relation=True)
+        self._read_arrow(start, is_root=False, is_parallel_relation=True)
 
     def tokenize(self) -> list[Token]:
         """
@@ -172,11 +190,11 @@ class BCQLLexer:
 
             # 2.2. Curly Brackets (e.g. for grouping in regexes), example: `{2,3}`
             if curr_char == "{":
-                self._set_found_token(TokenType.LCURLY, curr_char, starting_pos)
+                self._set_found_token(TokenType.LBRACE, curr_char, starting_pos)
                 self.pos += 1
                 continue
             if curr_char == "}":
-                self._set_found_token(TokenType.RCURLY, curr_char, starting_pos)
+                self._set_found_token(TokenType.RBRACE, curr_char, starting_pos)
                 self.pos += 1
                 continue
 
@@ -238,8 +256,8 @@ class BCQLLexer:
             if curr_char == "-":
                 # 3.1.1. Check if this is a relation arrow: -type->
                 # A relation arrow starts with '-' and somewhere later has '->'
-                if self._is_relation_arrow():
-                    self._read_relation_arrow(starting_pos)
+                if self._is_arrow():
+                    self._read_arrow(starting_pos)
                     continue
 
                 # 3.1.2. Negative integer
@@ -257,8 +275,8 @@ class BCQLLexer:
                 raise self._raise_error("Unexpected character '-'")
 
             # 3.2. Root relation arrow, e.g. `^-obj->` or `^-->` (if no relation type specified)
-            if curr_char == "^" and self._is_relation_arrow(offset=1):
-                self._read_relation_arrow(starting_pos, is_root=True)
+            if curr_char == "^" and self._is_arrow(offset=1):
+                self._read_arrow(starting_pos, is_root=True)
                 continue
 
             # 3.3 Equals sign `=`: could be alignment arrow or just an equals sign for assigfment
