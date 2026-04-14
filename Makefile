@@ -5,7 +5,9 @@ quality:
 style:
 	uv run ruff check src/bcql_py tests/ scripts/ --fix
 	uv run ruff format src/bcql_py tests/ scripts/
+
 typecheck:
 	uv run mypy src/bcql_py tests/ scripts/
+	
 test:
 	uv run pytest

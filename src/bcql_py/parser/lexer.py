@@ -49,7 +49,7 @@ class BCQLLexer:
         return BCQLSyntaxError(error_message=msg, bcql_query=self._source, error_position=self._pos)
 
     def _skip_whitespace(self) -> None:
-        while self._current_char.isspace():
+        while self._pos < len(self._source) and self._current_char.isspace():
             self._step()
 
     def _read_string(self, initial_quote_char: str, starting_pos: int, is_literal: bool) -> None:
@@ -111,7 +111,8 @@ class BCQLLexer:
             rtype_chars.append(self._current_char)
             self._pos += 1
         else:
-            raise self._raise_error("Expected '->' or '=>' to close relation arrow")
+            expected_arrow = "=>" if is_parallel_relation else "->"
+            raise self._raise_error(f"Expected '{expected_arrow}' to close relation arrow")
 
         self._pos += 2  # skip '->' or '=>'
 
@@ -121,7 +122,7 @@ class BCQLLexer:
         # See https://github.com/instituutnederlandsetaal/BlackLab/blob/dev/site/docs/guide/040_query-language/030_parallel.md
         # TODO: check if this exclusive to parallel relations
         field = ""
-        if self._pos < len(self._source) and self._current_char.isalpha():
+        if self._pos < len(self._source) and (self._current_char.isalpha() or self._current_char == "_"):
             field_start = self._pos
             while self._pos < len(self._source) and (
                 self._current_char.isalnum() or self._current_char == "_" or self._current_char == "?"
@@ -297,9 +298,23 @@ class BCQLLexer:
                 self._emit(TokenType.GT, ">", starting_pos)
                 self._pos += 1
                 continue
-            if curr_char == "/" and self._peek_char() == ">":
-                self._emit(TokenType.SLASH_GT, "/>", starting_pos)
-                self._pos += 2
+            if curr_char == "/":
+                if self._peek_char() == ">":
+                    self._emit(TokenType.SLASH_GT, "/>", starting_pos)
+                    self._pos += 2
+                    continue
+                if self._peek_char() == "*":
+                    # Multiline comment
+                    self._pos += 2  # Skip "/*"
+                    while self._pos < len(self._source) and not (
+                        self._current_char == "*" and self._peek_char() == "/"
+                    ):
+                        self._pos += 1
+                    if self._pos < len(self._source):
+                        self._pos += 2  # Skip "*/"
+                    continue
+                self._emit(TokenType.FWD_SLASH, "/", starting_pos)
+                self._pos += 1
                 continue
 
             # Minus sign or dash `-`:  could be relation arrow or negative int -
@@ -389,6 +404,17 @@ class BCQLLexer:
                 self._pos += 1
                 continue
 
+            # Quantifiers
+            if curr_char == "*":
+                self._emit(TokenType.STAR, "*", starting_pos)
+                self._pos += 1
+                continue
+
+            if curr_char == "+":
+                self._emit(TokenType.PLUS, "+", starting_pos)
+                self._pos += 1
+                continue
+
             if curr_char.isdigit():
                 self._read_integer(starting_pos)
                 continue
@@ -402,15 +428,6 @@ class BCQLLexer:
             if curr_char == "#":
                 while self._pos < len(self._source) and self._source[self._pos] != "\n":
                     self._pos += 1
-                continue
-
-            # Multiline comments
-            if curr_char == "/" and self._peek_char() == "*":
-                self._pos += 2  # Skip "/*"
-                while self._pos < len(self._source) and not (self._current_char == "*" and self._peek_char() == "/"):
-                    self._pos += 1
-                if self._pos < len(self._source):
-                    self._pos += 2  # Skip "*/"
                 continue
 
             raise self._raise_error(f"Unexpected character {curr_char!r}")

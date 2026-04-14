@@ -1,6 +1,6 @@
 import pytest
 
-from bcql_py.parser.lexer import BCQLLexer, BCQLSyntaxError
+from bcql_py.parser.lexer import BCQLLexer, BCQLSyntaxError, tokenize
 from bcql_py.parser.tokens import Token, TokenType
 
 
@@ -366,3 +366,168 @@ class TestLexerErrors:
     def test_unclosed_string(self):
         with pytest.raises(BCQLSyntaxError):
             BCQLLexer('"unclosed').tokenize()
+
+    def test_unexpected_dash(self):
+        with pytest.raises(BCQLSyntaxError, match="Unexpected character '-'"):
+            BCQLLexer("-").tokenize()
+
+    def test_unexpected_caret_alone(self):
+        with pytest.raises(BCQLSyntaxError, match="Unexpected character '\\^'"):
+            BCQLLexer("^").tokenize()
+
+    def test_unexpected_character(self):
+        with pytest.raises(BCQLSyntaxError, match="Unexpected character"):
+            BCQLLexer("@").tokenize()
+
+    def test_root_parallel_relation_error(self):
+        """'^' only starts '-' arrows, not '=' arrows, so '^==>' is an unexpected '^'."""
+        with pytest.raises(BCQLSyntaxError, match="Unexpected character '\\^'"):
+            BCQLLexer("^==>").tokenize()
+
+    def test_unterminated_arrow(self):
+        """'-foo' is not recognized as an arrow (no '->'), so '-' is unexpected."""
+        with pytest.raises(BCQLSyntaxError, match="Unexpected character '-'"):
+            BCQLLexer("-foo").tokenize()
+
+    def test_unclosed_single_quote_string(self):
+        with pytest.raises(BCQLSyntaxError):
+            BCQLLexer("'unclosed").tokenize()
+
+    def test_unclosed_literal_string(self):
+        with pytest.raises(BCQLSyntaxError):
+            BCQLLexer('l"unclosed').tokenize()
+
+
+class TestLexerQuantifiers:
+    def test_star(self):
+        tokens = lex("*")
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.STAR
+        assert tokens[0].value == "*"
+
+    def test_plus(self):
+        tokens = lex("+")
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.PLUS
+        assert tokens[0].value == "+"
+
+    def test_question(self):
+        tokens = lex("==>nl?")
+        # The ? is emitted as part of alignment arrow handling
+        assert tokens[-1].type == TokenType.QUESTION
+
+    def test_repetition_braces(self):
+        tokens = lex("{2,3}")
+        assert tokens[0].type == TokenType.LBRACE
+        assert tokens[1].type == TokenType.INTEGER
+        assert tokens[1].value == "2"
+        assert tokens[2].type == TokenType.COMMA
+        assert tokens[3].type == TokenType.INTEGER
+        assert tokens[3].value == "3"
+        assert tokens[4].type == TokenType.RBRACE
+
+
+class TestLexerSlash:
+    def test_standalone_fwd_slash(self):
+        tokens = lex("/")
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.FWD_SLASH
+        assert tokens[0].value == "/"
+
+    def test_slash_gt_still_works(self):
+        tokens = lex("/>")
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.SLASH_GT
+
+    def test_multiline_comment_still_works(self):
+        tokens = lex('"a" /* comment */ "b"')
+        assert len(tokens) == 2
+        assert tokens[0].value == "a"
+        assert tokens[1].value == "b"
+
+
+class TestLexerArrowEdgeCases:
+    def test_arrow_field_underscore(self):
+        """Arrow with underscore field: -obj->_"""
+        tokens = lex("-obj->_")
+        assert tokens[0].type == TokenType.REL_LINE
+        assert tokens[1].type == TokenType.IDENTIFIER
+        assert tokens[1].value == "obj"
+        assert tokens[2].type == TokenType.REL_ARROW
+        assert tokens[3].type == TokenType.UNDERSCORE
+        assert tokens[3].value == "_"
+
+    def test_alignment_arrow_field_underscore(self):
+        """Alignment arrow with underscore field: =word=>_"""
+        tokens = lex("=word=>_")
+        assert tokens[0].type == TokenType.ALIGN_LINE
+        assert tokens[1].type == TokenType.IDENTIFIER
+        assert tokens[1].value == "word"
+        assert tokens[2].type == TokenType.ALIGN_ARROW
+        assert tokens[3].type == TokenType.UNDERSCORE
+
+    def test_rel_arrow_with_field(self):
+        """Relation arrow with target field: -dep->word"""
+        tokens = lex("-dep->word")
+        assert tokens[0].type == TokenType.REL_LINE
+        assert tokens[1].type == TokenType.IDENTIFIER
+        assert tokens[1].value == "dep"
+        assert tokens[2].type == TokenType.REL_ARROW
+        assert tokens[3].type == TokenType.IDENTIFIER
+        assert tokens[3].value == "word"
+
+    def test_optional_alignment_field_underscore(self):
+        """Alignment with optional underscore: ==>_?"""
+        tokens = lex("==>_?")
+        assert tokens[0].type == TokenType.ALIGN_LINE
+        assert tokens[1].type == TokenType.ALIGN_ARROW
+        assert tokens[2].type == TokenType.UNDERSCORE
+        assert tokens[3].type == TokenType.QUESTION
+
+
+class TestLexerWhitespace:
+    def test_trailing_whitespace(self):
+        tokens = lex('"a"  ')
+        assert len(tokens) == 1
+        assert tokens[0].value == "a"
+
+    def test_only_whitespace(self):
+        lexer = BCQLLexer("   ")
+        result = lexer.tokenize()
+        # Only whitespace produces no tokens (not even EOF from the else branch)
+        # The while loop ends because _skip_whitespace moves _pos past len
+        assert len(result) == 0
+
+    def test_empty_source(self):
+        lexer = BCQLLexer("")
+        result = lexer.tokenize()
+        # Empty string still produces an EOF token
+        assert len(result) == 1
+        assert result[0].type == TokenType.EOF
+
+
+class TestLexerPropertiesAccess:
+    def test_source_property(self):
+        lexer = BCQLLexer("hello")
+        assert lexer.source == "hello"
+
+    def test_pos_property(self):
+        lexer = BCQLLexer("hello")
+        assert lexer.pos == 0
+
+
+class TestLexerLiteralStringSingleQuote:
+    def test_literal_single_quoted(self):
+        tokens = lex("l'e.g.'")
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.LITERAL_STRING
+        assert tokens[0].value == "e.g."
+
+
+class TestLexerTokenizeFunction:
+    def test_tokenize_function(self):
+        """Test the standalone tokenize() function."""
+        result = tokenize('[word="man"]')
+        assert isinstance(result, tuple)
+        assert result[-1].type == TokenType.EOF
+        assert len(result) == 6  # [ word = "man" ] EOF
