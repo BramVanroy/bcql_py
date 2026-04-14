@@ -1,0 +1,155 @@
+"""AST nodes for sequence-level constructions.
+
+These models represent sequences of tokens, repetition quantifiers,
+parenthesized groups, logical union/intersection/negation at the
+sequence level, and the ``_`` underscore used in relation queries where applicable
+"""
+
+from __future__ import annotations
+
+from typing import Literal
+
+from pydantic import Field
+
+from bcql_py.models.base import BCQLNode
+
+
+class SequenceNode(BCQLNode):
+    """An ordered sequence of adjacent tokens / sub-queries.
+    A very high-level node type that can represent an entire query or a sub-sequence
+
+    Attributes:
+        children: The ordered list of child nodes in the sequence.
+    """
+
+    node_type: Literal["sequence"] = "sequence"
+    children: list[BCQLNode] = Field(min_length=2, description="Ordered child nodes.")
+
+    def to_bcql(self) -> str:
+        return " ".join(child.to_bcql() for child in self.children)
+
+
+class RepetitionNode(BCQLNode):
+    """A repetition quantifier applied to a sub-query.
+
+    Supports ``+`` (1+), ``*`` (0+), ``?`` (0 or 1), ``{n}``, ``{n,m}``,
+    ``{n,}``. Note that "up to" quantifiers like ``{0,m}`` are exported as
+    ``{,m}`` and may therefore be different in surface form from the original.
+
+    Attributes:
+        child: The sub-query being repeated.
+        min_count: Minimum number of repetitions (inclusive, min. 0).
+        max_count: Maximum number of repetitions (inclusive), or ``None``
+            for unlimited.
+    """
+
+    node_type: Literal["repetition"] = "repetition"
+    child: BCQLNode = Field(description="The sub-query to repeat")
+    min_count: int = Field(ge=0, description="Minimum repetitions (inclusive)")
+    max_count: int | None = Field(
+        default=None,
+        description="Maximum repetitions (inclusive), or None for unlimited.",
+    )
+
+    @property
+    def quantifier(self) -> str:
+        if self.min_count == 0 and self.max_count is None:
+            return "*"
+        if self.min_count == 1 and self.max_count is None:
+            return "+"
+        if self.min_count == 0 and self.max_count == 1:
+            return "?"
+        if self.max_count is None:
+            return f"{{{self.min_count},}}"
+        if self.min_count == self.max_count:
+            return f"{{{self.min_count}}}"
+        if not self.min_count:
+            return f"{{,{self.max_count}}}"
+        return f"{{{self.min_count},{self.max_count}}}"
+
+    def to_bcql(self) -> str:
+        return f"{self.child.to_bcql()}{self.quantifier}"
+
+
+class GroupNode(BCQLNode):
+    """A parenthesized group of sub-queries.
+
+    Groups allow applying repetition operators or capture constraints to
+    a complex sub-expression. We specify that there can only be one child node in a group,
+    which typically would be a SequenceNode if there are multiple adjacent tokens or
+    a token-level Node.
+
+    Attributes:
+        child: The inner sub-query.
+    """
+
+    node_type: Literal["group"] = "group"
+    child: BCQLNode = Field(description="The inner sub-query")
+
+    def to_bcql(self) -> str:
+        return f"({self.child.to_bcql()})"
+
+
+class UnionNode(BCQLNode):
+    """Sequence-level union (``|``): matches if *any* alternative matches.
+
+    E.g. ``"happy" "dog" | "sad" "cat"``
+    TODO: check what to do with more than two alternatives, or which precedence rules applies.
+
+    Attributes:
+        children: The alternative sub-queries.
+    """
+
+    node_type: Literal["union"] = "union"
+    children: list[BCQLNode] = Field(min_length=2, description="")
+
+    def to_bcql(self) -> str:
+        return " | ".join(child.to_bcql() for child in self.children)
+
+
+class IntersectionNode(BCQLNode):
+    """Sequence-level intersection (``&``): matches if *all* operands match.
+
+    E.g. ``"double" [] & [] "trouble`` which should match the "intersection" of
+    sequences matching ``"double" []`` and sequences matching ``[] "trouble"``.
+
+    Attributes:
+        children: The sub-queries that must all match.
+    """
+
+    node_type: Literal["intersection"] = "intersection"
+    children: list[BCQLNode] = Field(min_length=2, description="Sub-queries that must all match.")
+
+    def to_bcql(self) -> str:
+        return " & ".join(child.to_bcql() for child in self.children)
+
+
+class NegationNode(BCQLNode):
+    """Sequence-level negation (``!``).
+
+    Attributes:
+        child: The sub-query being negated.
+    """
+
+    node_type: Literal["negation"] = "negation"
+    child: BCQLNode = Field(description="The sub-query to negate.")
+
+    def to_bcql(self) -> str:
+        inner = self.child.to_bcql()
+        # If the child is a group ``GroupNode``, the parens are already there
+        if isinstance(self.child, GroupNode):
+            return f"!{inner}"
+        return f"!({inner})"
+
+
+class UnderscoreNode(BCQLNode):
+    """The ``_`` wildcard used in relation queries.
+
+    Distinct from ``[]`` (match-all token): ``_`` means "any source or
+    target" in a relation expression without constraining token count.
+    """
+
+    node_type: Literal["underscore"] = "underscore"
+
+    def to_bcql(self) -> str:
+        return "_"
