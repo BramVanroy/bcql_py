@@ -1,4 +1,6 @@
-"""Recursive descent parser for BCQL"""
+"""Recursive descent parser for BCQL, i.e. starting from the lowest precedence operators and working down to the highest precedence. The trick is that each level immediately delegates down to the tighter precedence level before it looks for its own operator. This way we can handle precedence without needing separate left and right recursion or operator precedence climbing.
+
+We start from largest possible expression (i.e. global constraint) and recursively parse smaller sub-expressions."""
 
 from __future__ import annotations
 
@@ -58,15 +60,10 @@ class BCQLParser:
 
     Args:
         tokens: Token list produced by [BCQLLexer][bcql_py.parser.lexer.BCQLLexer].
-        source: The original query string (for error messages).
-        schema: Optional corpus schema for annotation validation.
+        source: The original query string (for exact error messages).
     """
 
-    def __init__(
-        self,
-        tokens: list[Token],
-        source: str = "",
-    ) -> None:
+    def __init__(self, tokens: list[Token], source: str = "") -> None:
         self.tokens = tokens
         self.source = source
         self.pos = 0
@@ -102,3 +99,30 @@ class BCQLParser:
 
     def _raise_error(self, msg: str) -> BCQLSyntaxError:
         return BCQLSyntaxError(msg, query=self.source, position=self._current_token.position)
+
+    def parse(self) -> BCQLNode:
+        """Parse the token stream and return the root AST node.
+
+        Raises:
+            BCQLSyntaxError: On any syntax error.
+
+        Returns:
+            The root [BCQLNode][bcql_py.models.base.BCQLNode].
+        """
+        node = self._parse_global_constraint()
+        if not self._current_token_is_oneof(TokenType.EOF):
+            tok = self._current_token
+            raise self._raise_error(f"Unexpected token {tok.value!r} after end of query")
+        return node
+
+
+def parse_from_tokens(tokens: list[Token], source: str) -> BCQLNode:
+    """Parse a BCQL query string into an AST.
+
+    Args:
+        tokens: The list of tokens to parse.
+        source: The original source string.
+    
+    """
+    parser = BCQLParser(tokens, source=source)
+    return parser.parse()

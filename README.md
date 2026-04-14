@@ -28,6 +28,12 @@ cd parser/
 antlr4 -v 4.13.2 -Dlanguage=Python3 Bcql.g4
 ```
 
+### Design choices
+
+Building a lexer is somewhat care-free with the exception of deciding which boundaries to use. As an example, I chose to tokenize the regex positive lookbehind `(?<=` as a single Token but I could have chosen to go deeper and re-use regular parens `(`, followed by a question mark (also used as quantifier) `?`, followed by the single-token `<=`, also used as a mathematical operator. Such changes would make the "vocabulary" smaller but apart from that I did not see much benefit - though I am sure that there are more arguments to make both for and against a minimalist approach.
+
+The parser, however, is a different beast entirely. be separated so we can re-use it and re-use `<=` as a single entity operator), building a parser 
+
 ### Pydantic models
 
 #### Model rebuilding
