@@ -28,6 +28,14 @@ cd parser/
 antlr4 -v 4.13.2 -Dlanguage=Python3 Bcql.g4
 ```
 
+### Pydantic models
+
+#### Model rebuilding
+
+In many of the models in `models/*.py` you will see that that we have to call `model_rebuild` after having set the discirminatory `*ConstraintExpr` union. This union is needed for typing - some of the constraint nodes have operands that can be any constraint nodes (union). Pydantic needs to know about the union after all the individual classes have been defined, so we call `model_rebuild` on all of them at the end of the file.
+
+If we don't do this, we'll get a Pydantic error about the forward reference not being resolved when we try to create a NotConstraint or BoolConstraint
+
 ## Acknowledegments
 
 - [Blacklab](https://blacklab.ivdnt.org/)
