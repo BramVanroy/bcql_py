@@ -423,3 +423,6 @@ class BCQLLexer:
 def tokenize(source: str) -> tuple[Token]:
     lexer = BCQLLexer(source)
     return lexer.tokenize()
+
+
+__all__ = ["BCQLLexer", "tokenize", "BCQLSyntaxError"]

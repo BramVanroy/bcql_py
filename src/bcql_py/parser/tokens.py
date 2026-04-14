@@ -103,3 +103,6 @@ class Token:
 
     def __repr__(self) -> str:
         return f"Token({self.type.name}, {self.value!r}, pos={self.position})"
+
+
+__all__ = ["TokenType", "Token", "KEYWORDS"]
