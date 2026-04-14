@@ -39,12 +39,24 @@ class TokenType(StrEnum):
     QUESTION = auto()  # ? (eg optional alignment, after field, e.g. ==>nl?)
 
     # Operators: comparison
+    LTE = auto() # <=
+    GTE = auto() # >=
     EQ = auto()  # =
     NEQ = auto()  # !=
     LT_CMP = auto()  # <
-    LE = auto()  # <=
     GT_CMP = auto()  # >
-    GE = auto()  # >=
+
+    # Operators: logical / boolean
+    BANG = auto()  # !  (standalone negation)
+    AMP = auto()  # &
+    PIPE = auto()  # |
+
+    # Operators: misc
+    COLON = auto()  # :
+    DOUBLE_COLON = auto()  # :: (constraints)
+    SEMICOLON = auto()  # ;
+    DOT = auto()  # .
+    COMMA = auto()  # ,
 
 
 @dataclass(frozen=True, slots=True)

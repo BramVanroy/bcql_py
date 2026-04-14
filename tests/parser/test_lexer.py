@@ -24,6 +24,8 @@ class TestLexerStrings:
         tokens = lex('l"e.g."')
         assert len(tokens) == 1
         assert tokens[0].type == TokenType.LITERAL_STRING
+        # Note that the 'l' prefix is not included in the token value! It's just a marker for the lexer to treat the string as literal.
+        # The full string content, including any escaped characters, is stored in the token value.
         assert tokens[0].value == "e.g."
 
     def test_escaped_quote(self):
@@ -54,18 +56,22 @@ class TestLexerBrackets:
 class TestLexerLookaround:
     def test_positive_lookahead(self):
         tokens = lex("(?=")
+        assert len(tokens) == 1
         assert tokens[0].type == TokenType.LOOKAHEAD_POS
 
     def test_negative_lookahead(self):
         tokens = lex("(?!")
+        assert len(tokens) == 1
         assert tokens[0].type == TokenType.LOOKAHEAD_NEG
 
     def test_positive_lookbehind(self):
         tokens = lex("(?<=")
+        assert len(tokens) == 1
         assert tokens[0].type == TokenType.LOOKBEHIND_POS
 
     def test_negative_lookbehind(self):
         tokens = lex("(?<!")
+        assert len(tokens) == 1
         assert tokens[0].type == TokenType.LOOKBEHIND_NEG
 
 
@@ -76,6 +82,7 @@ class TestLexerXML:
 
     def test_lt_slash(self):
         tokens = lex("</")
+        assert len(tokens) == 1
         assert tokens[0].type == TokenType.LT_SLASH
 
     def test_gt(self):
@@ -84,6 +91,7 @@ class TestLexerXML:
 
     def test_slash_gt(self):
         tokens = lex("/>")
+        assert len(tokens) == 1
         assert tokens[0].type == TokenType.SLASH_GT
 
 
@@ -176,5 +184,55 @@ class TestLexerArrows:
 class TestLexerIntegers:
     def test_negative(self):
         tokens = lex("-5")
+        assert len(tokens) == 1
         assert tokens[0].type == TokenType.INTEGER
         assert tokens[0].value == "-5"
+
+
+class TestLexerOperators:
+    def test_equals(self):
+        tokens = lex("=")
+        assert tokens[0].type == TokenType.EQ
+        assert tokens[0].value == "="
+
+    def test_not_equals(self):
+        tokens = lex("!=")
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.NEQ
+        assert tokens[0].value == "!="
+
+    def test_less_than(self):
+        tokens = lex("<")
+        assert tokens[0].type == TokenType.LT
+        assert tokens[0].value == "<"
+
+    def test_less_equal(self):
+        tokens = lex("<=")
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.LTE
+        assert tokens[0].value == "<="
+
+    def test_greater_than(self):
+        tokens = lex(">")
+        assert tokens[0].type == TokenType.GT
+        assert tokens[0].value == ">"
+
+    def test_greater_equal(self):
+        # Lexer tokenizes >= as two separate tokens: GT + EQ
+        tokens = lex(">=")
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.GTE
+        assert tokens[0].value == ">="
+
+    def test_bang(self):
+        tokens = lex("!")
+        assert tokens[0].type == TokenType.BANG
+    
+    def test_ampersand(self):
+        tokens = lex("&")
+        assert tokens[0].type == TokenType.AMP
+
+    def test_pipe(self):
+        tokens = lex("|")
+        assert tokens[0].type == TokenType.PIPE
+

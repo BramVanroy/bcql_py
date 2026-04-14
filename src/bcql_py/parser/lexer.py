@@ -14,12 +14,12 @@ class BCQLLexer:
     def _current_char(self) -> str:
         return self.source[self.pos]
 
-    def _peek_ahead_char(self, offset: int = 1) -> str:
+    def _peek_char(self, offset: int = 1) -> str:
         if self.pos + offset < len(self.source):
             return self.source[self.pos + offset]
         return ""
 
-    def _peek_ahead_string(self, length: int) -> str:
+    def _peek_str(self, length: int) -> str:
         return self.source[self.pos : self.pos + length]
 
     def _step(self, steps: int = 1) -> str:
@@ -27,7 +27,7 @@ class BCQLLexer:
         self.pos += steps
         return result
 
-    def _set_found_token(self, ttype: TokenType, value: str, position: int) -> None:
+    def _emit(self, ttype: TokenType, value: str, position: int) -> None:
         self.tokens.append(Token(type=ttype, value=value, position=position))
 
     def _raise_error(self, msg: str) -> BCQLSyntaxError:
@@ -52,7 +52,7 @@ class BCQLLexer:
             elif char == initial_quote_char:
                 self.pos += 1  # skip closing quote
                 ttype = TokenType.LITERAL_STRING if is_literal else TokenType.STRING
-                self._set_found_token(ttype, "".join(chars), starting_pos)
+                self._emit(ttype, "".join(chars), starting_pos)
                 return
             else:
                 chars.append(char)
@@ -91,7 +91,7 @@ class BCQLLexer:
         # Read the relation type (everything up to '->') which may be empty
         rtype_chars: list[str] = []
         while self.pos < len(self.source):
-            if self._current_char == line_char and self._peek_ahead_char() == ">":
+            if self._current_char == line_char and self._peek_char() == ">":
                 break
             rtype_chars.append(self._current_char)
             self.pos += 1
@@ -115,32 +115,32 @@ class BCQLLexer:
             field = self.source[field_start : self.pos]
 
         if is_root:
-            self._set_found_token(TokenType.ROOT_REL_CARET, "^", start)
+            self._emit(TokenType.ROOT_REL_CARET, "^", start)
             start += 1
 
         if is_parallel_relation:
-            self._set_found_token(TokenType.ALIGN_LINE, "=", start)
+            self._emit(TokenType.ALIGN_LINE, "=", start)
         else:
-            self._set_found_token(TokenType.REL_LINE, "-", start)
+            self._emit(TokenType.REL_LINE, "-", start)
         start += 1
 
         if rtype:
-            self._set_found_token(TokenType.IDENTIFIER, rtype, start)
+            self._emit(TokenType.IDENTIFIER, rtype, start)
             start += len(rtype)
 
         if is_parallel_relation:
-            self._set_found_token(TokenType.ALIGN_ARROW, "=>", start)
+            self._emit(TokenType.ALIGN_ARROW, "=>", start)
         else:
-            self._set_found_token(TokenType.REL_ARROW, "->", start)
+            self._emit(TokenType.REL_ARROW, "->", start)
         start += 2
 
         if field:
             if is_optional := field.endswith("?"):
                 field = field[:-1]
-            self._set_found_token(TokenType.IDENTIFIER, field, start)
+            self._emit(TokenType.IDENTIFIER, field, start)
             start += len(field)
             if is_optional:
-                self._set_found_token(TokenType.QUESTION, "?", start)
+                self._emit(TokenType.QUESTION, "?", start)
 
     def _is_alignment_arrow(self, offset: int = 0) -> bool:
         """Check if from current pos + offset we have ``=type=>field[?]`` pattern."""
@@ -162,130 +162,191 @@ class BCQLLexer:
 
             starting_pos = self.pos
             curr_char = self._current_char
-            # 1. Simple strings
-            # 1.1. Quoted strings (both single and double)
+            
+            # Quoted strings (both single and double)
             if curr_char in ('"', "'"):
-                # Read string
                 self._read_string(curr_char, starting_pos, is_literal=False)
                 continue
 
-            # 1.2. "literal" tokens, e.g. `l"e.g."`
+            # "literal" tokens, e.g. `l"e.g."`
             # Note that in alternative notation, one can escape the period with a backslash without the need of a literal `l` flag, e.g. `"e\.g\."`
-            if curr_char == "l" and self._peek_ahead_char() in ('"', "'"):
+            if curr_char == "l" and self._peek_char() in ('"', "'"):
                 self.pos += 1  # skip 'l'
-                # Read internal string; re-call self._current_char after pos updated
+                # re-call self._current_char after pos updated
                 self._read_string(self._current_char, starting_pos, is_literal=True)
                 continue
 
-            # 2. Brackets
-            # 2.1. Square brackets
+            # Square brackets
             if curr_char == "[":
-                self._set_found_token(TokenType.LBRACKET, curr_char, starting_pos)
+                self._emit(TokenType.LBRACKET, curr_char, starting_pos)
                 self.pos += 1
                 continue
             if curr_char == "]":
-                self._set_found_token(TokenType.RBRACKET, curr_char, starting_pos)
+                self._emit(TokenType.RBRACKET, curr_char, starting_pos)
                 self.pos += 1
                 continue
 
-            # 2.2. Curly Brackets (e.g. for grouping in regexes), example: `{2,3}`
+            # Curly Brackets (e.g. for grouping in regexes), example: `{2,3}`
             if curr_char == "{":
-                self._set_found_token(TokenType.LBRACE, curr_char, starting_pos)
+                self._emit(TokenType.LBRACE, curr_char, starting_pos)
                 self.pos += 1
                 continue
             if curr_char == "}":
-                self._set_found_token(TokenType.RBRACE, curr_char, starting_pos)
+                self._emit(TokenType.RBRACE, curr_char, starting_pos)
                 self.pos += 1
                 continue
 
-            # 2.3. Parentheses
+            # Parentheses
             if curr_char == "(":
                 # Check first if it is part of a regex look-around
                 # i.e. look-behind: `(?<=...)`, `(?<!...)`, look-ahead: `(?=...)`, `(?!...)`
-                rest4 = self._peek_ahead_string(4)
+                rest4 = self._peek_str(4)
                 if rest4 == "(?<=":
-                    self._set_found_token(TokenType.LOOKBEHIND_POS, rest4, starting_pos)
+                    self._emit(TokenType.LOOKBEHIND_POS, rest4, starting_pos)
                     self.pos += 4
                     continue
                 if rest4 == "(?<!":
-                    self._set_found_token(TokenType.LOOKBEHIND_NEG, rest4, starting_pos)
+                    self._emit(TokenType.LOOKBEHIND_NEG, rest4, starting_pos)
                     self.pos += 4
                     continue
 
-                rest3 = self._peek_ahead_string(3)
+                rest3 = self._peek_str(3)
                 if rest3 == "(?=":
-                    self._set_found_token(TokenType.LOOKAHEAD_POS, rest3, starting_pos)
+                    self._emit(TokenType.LOOKAHEAD_POS, rest3, starting_pos)
                     self.pos += 3
                     continue
                 if rest3 == "(?!":
-                    self._set_found_token(TokenType.LOOKAHEAD_NEG, rest3, starting_pos)
+                    self._emit(TokenType.LOOKAHEAD_NEG, rest3, starting_pos)
                     self.pos += 3
                     continue
 
                 # If not a lookaround, treat as normal parenthesis
-                self._set_found_token(TokenType.LPAREN, "(", starting_pos)
+                self._emit(TokenType.LPAREN, "(", starting_pos)
                 self.pos += 1
                 continue
 
             if curr_char == ")":
-                self._set_found_token(TokenType.RPAREN, ")", starting_pos)
+                self._emit(TokenType.RPAREN, ")", starting_pos)
                 self.pos += 1
                 continue
 
-            # 2.4. Angled brackets, e.g. for XML
+            # Angled brackets, e.g. for XML
             # TODO: are named groups in regexes also supported, e.g. `(?P<name>...)` in BlackLab?
             if curr_char == "<":
-                if self._peek_ahead_char() == "/":
-                    self._set_found_token(TokenType.LT_SLASH, "</", starting_pos)
+                if self._peek_char() == "/":
+                    self._emit(TokenType.LT_SLASH, "</", starting_pos)
                     self.pos += 2
                     continue
-                self._set_found_token(TokenType.LT, "<", starting_pos)
+
+                if self._peek_char() == "=":
+                    self._emit(TokenType.LTE, "<=", starting_pos)
+                    self.pos += 2
+                    continue
+
+                self._emit(TokenType.LT, "<", starting_pos)
                 self.pos += 1
                 continue
+
             if curr_char == ">":
-                self._set_found_token(TokenType.GT, ">", starting_pos)
+                if self._peek_char() == "=":
+                    self._emit(TokenType.GTE, ">=", starting_pos)
+                    self.pos += 2
+                    continue
+
+                self._emit(TokenType.GT, ">", starting_pos)
                 self.pos += 1
                 continue
-            if curr_char == "/" and self._peek_ahead_char() == ">":
-                self._set_found_token(TokenType.SLASH_GT, "/>", starting_pos)
+            if curr_char == "/" and self._peek_char() == ">":
+                self._emit(TokenType.SLASH_GT, "/>", starting_pos)
                 self.pos += 2
                 continue
 
-            # 3. Relations
-            # 3.1. Minus sign or dash `-` :  could be relation arrow or negative int -
+            # Minus sign or dash `-`:  could be relation arrow or negative int -
             if curr_char == "-":
-                # 3.1.1. Check if this is a relation arrow: -type->
+                # Check if this is a relation arrow: -type->
                 # A relation arrow starts with '-' and somewhere later has '->'
                 if self._is_arrow():
                     self._read_arrow(starting_pos)
                     continue
 
-                # 3.1.2. Negative integer
-                if self._peek_ahead_char().isdigit():
+                # Negative integer
+                if self._peek_char().isdigit():
                     self.pos += 1
                     int_start = starting_pos
                     chars = ["-"]
                     while self.pos < len(self.source) and self._current_char.isdigit():
                         chars.append(self._current_char)
                         self.pos += 1
-                    self._set_found_token(TokenType.INTEGER, "".join(chars), int_start)
+                    self._emit(TokenType.INTEGER, "".join(chars), int_start)
                     continue
 
                 # If it's neither a relation arrow nor a negative integer, it's an unexpected character in this context
                 raise self._raise_error("Unexpected character '-'")
 
-            # 3.2. Root relation arrow, e.g. `^-obj->` or `^-->` (if no relation type specified)
-            if curr_char == "^" and self._is_arrow(offset=1):
-                self._read_arrow(starting_pos, is_root=True)
+            # Root relation arrow, e.g. `^-obj->` or `^-->` (if no relation type specified)
+            if curr_char == "^":
+                if self._is_arrow(offset=1):
+                    self._read_arrow(starting_pos, is_root=True)
+                else:
+                    raise self._raise_error("Unexpected character '^' (if you meant to start a root relation, it should be followed by a relation arrow like `^-type->` or `^->`)") 
                 continue
 
-            # 3.3 Equals sign `=`: could be alignment arrow or just an equals sign for assigfment
+            # Equals sign `=`: could be alignment arrow or just an equals sign for assigfment
             if curr_char == "=":
                 if self._is_alignment_arrow():
                     self._read_alignment_arrow(starting_pos)
                     continue
                 # Otherwise treat as standalone equals sign (e.g. for assignment)
-                self._set_found_token(TokenType.EQ, "=", starting_pos)
+                self._emit(TokenType.EQ, "=", starting_pos)
+                self.pos += 1
+                continue
+
+            if curr_char == "!":
+                # 3.4.1 Check if this is a not-equals operator `!=`
+                if self._peek_char() == "=":
+                    self._emit(TokenType.NEQ, "!=", starting_pos)
+                    self.pos += 2
+                    continue
+                
+                # Otherwise, treat as standalone '!' (e.g. for negation in regexes)
+                self._emit(TokenType.BANG, "!", starting_pos)
+                self.pos += 1
+                continue
+
+            if curr_char == "|":
+                self._emit(TokenType.PIPE, "|", starting_pos)
+                self.pos += 1
+                continue
+
+            if curr_char == "&":
+                self._emit(TokenType.AMP, "&", starting_pos)
+                self.pos += 1
+                continue
+
+            if curr_char == ":":
+                if self._peek() == ":":
+                    self._emit(TokenType.DOUBLE_COLON, "::", starting_pos)
+                    self.pos += 2
+                    continue
+                self._emit(TokenType.COLON, ":", starting_pos)
+                self.pos += 1
+                continue
+
+            # Semicolon
+            if curr_char == ";":
+                self._emit(TokenType.SEMICOLON, ";", starting_pos)
+                self.pos += 1
+                continue
+
+            # Dot
+            if curr_char == ".":
+                self._emit(TokenType.DOT, ".", starting_pos)
+                self.pos += 1
+                continue
+
+            # Comma
+            if curr_char == ",":
+                self._emit(TokenType.COMMA, ",", starting_pos)
                 self.pos += 1
                 continue
 
