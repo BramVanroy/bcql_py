@@ -14,9 +14,9 @@ uv sync
 
 ### ANTLR to generate the needed tools
 
-Blacklab uses ANTLR to generate the parser/lexer in Java based on a [g4 file](https://github.com/instituutnederlandsetaal/BlackLab/blob/e248fc2acf2b8cf44deb2564e8b24138b140d4ca/query-parser/src/main/antlr4/nl/inl/blacklab/queryParser/corpusql/Bcql.g4#L1-L97). We could similarly generate Python files. However, after trying it out, I find the files obfuscated and unclear and I'm not fond of requiring an extra external library. That is not a slight to ANTLR; I am simply not familiar with the tool - I am sure it is incredibly powerful and useful if you know how to use it. To keep a clearer view of this library I therefore strive to make a Python-native implementation that is true to spec. It's also just a fun project that I do not wish to "automate away" (though I might regret that later). At a later time (TODO) I might implement functionality to cross-validate our implementation with the generated ANTLR parser and lexer. For now I will be satisfied with high coverage testing.
+Blacklab uses ANTLR to generate the parser/lexer in Java based on a [g4 file](https://github.com/instituutnederlandsetaal/BlackLab/blob/e248fc2acf2b8cf44deb2564e8b24138b140d4ca/query-parser/src/main/antlr4/nl/inl/blacklab/queryParser/corpusql/Bcql.g4#L1-L97). We could similarly generate Python files. However, after trying it out, I find the files obfuscated and unclear and I'm not fond of requiring an extra external library. That is not a slight to ANTLR; I am simply not familiar with the tool - I am sure it is incredibly powerful and useful if you know how to use it. To keep a clearer view of this library I therefore strive to make a Python-native implementation that is true to spec. It's also just a fun project that I do not wish to "automate away" (though I might regret that later). At a later time (TODO) I might implement functionality to cross-validate our implementation with the generated ANTLR parser and lexer. For now I will be satisfied with high coverage testing. In case of doubt I have followed the Bcql.g4 file.
 
-If you'd like to try the Python route yourself, you can try it as follows:
+If you'd like to try the ANTLR route yourself, you can try it as follows:
 
 1. Install requirements (not included in our pyproject.toml file, you'll need to download these yourself!)
 
