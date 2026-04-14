@@ -92,10 +92,10 @@ class TestLexerArrows:
         tokens = lex("-obj->")
         assert tokens[0].type == TokenType.REL_LINE
         assert tokens[0].value == "-"
-        
+
         assert tokens[1].type == TokenType.IDENTIFIER
         assert tokens[1].value == "obj"
-        
+
         assert tokens[2].type == TokenType.REL_ARROW
         assert tokens[2].value == "->"
 
@@ -106,10 +106,10 @@ class TestLexerArrows:
 
         assert tokens[1].type == TokenType.REL_LINE
         assert tokens[1].value == "-"
-        
+
         assert tokens[2].type == TokenType.IDENTIFIER
         assert tokens[2].value == "obj"
-        
+
         assert tokens[3].type == TokenType.REL_ARROW
         assert tokens[3].value == "->"
 
@@ -117,7 +117,7 @@ class TestLexerArrows:
         tokens = lex("-->")
         assert tokens[0].type == TokenType.REL_LINE
         assert tokens[0].value == "-"
-        
+
         assert tokens[1].type == TokenType.REL_ARROW
         assert tokens[1].value == "->"
 
@@ -128,19 +128,18 @@ class TestLexerArrows:
 
         assert tokens[1].type == TokenType.REL_LINE
         assert tokens[1].value == "-"
-        
+
         assert tokens[2].type == TokenType.REL_ARROW
         assert tokens[2].value == "->"
-
 
     def test_untyped_align_arrow(self):
         tokens = lex("==>nl")
         assert tokens[0].type == TokenType.ALIGN_LINE
         assert tokens[0].value == "="
-        
+
         assert tokens[1].type == TokenType.ALIGN_ARROW
         assert tokens[1].value == "=>"
-        
+
         assert tokens[2].type == TokenType.IDENTIFIER
         assert tokens[2].value == "nl"
 
@@ -148,29 +147,28 @@ class TestLexerArrows:
         tokens = lex("==>nl?")
         assert tokens[0].type == TokenType.ALIGN_LINE
         assert tokens[0].value == "="
-        
+
         assert tokens[1].type == TokenType.ALIGN_ARROW
         assert tokens[1].value == "=>"
-        
+
         assert tokens[2].type == TokenType.IDENTIFIER
         assert tokens[2].value == "nl"
 
         assert tokens[3].type == TokenType.QUESTION
         assert tokens[3].value == "?"
 
-
     def test_align_arrow(self):
         tokens = lex("=word=>nl")
-        
+
         assert tokens[0].type == TokenType.ALIGN_LINE
         assert tokens[0].value == "="
-        
+
         assert tokens[1].type == TokenType.IDENTIFIER
         assert tokens[1].value == "word"
-        
+
         assert tokens[2].type == TokenType.ALIGN_ARROW
         assert tokens[2].value == "=>"
-        
+
         assert tokens[3].type == TokenType.IDENTIFIER
         assert tokens[3].value == "nl"
 

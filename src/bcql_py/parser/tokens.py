@@ -32,7 +32,7 @@ class TokenType(StrEnum):
 
     # Operators: relation / alignment arrows
     REL_LINE = auto()  # -
-    REL_ARROW = auto() # ->
+    REL_ARROW = auto()  # ->
     ROOT_REL_CARET = auto()
     ALIGN_LINE = auto()  # =type= (alignment line, no field)
     ALIGN_ARROW = auto()  # =>

@@ -114,7 +114,7 @@ class BCQLLexer:
                 self.pos += 1
             field = self.source[field_start : self.pos]
 
-        if is_root:            
+        if is_root:
             self._set_found_token(TokenType.ROOT_REL_CARET, "^", start)
             start += 1
 
@@ -127,7 +127,7 @@ class BCQLLexer:
         if rtype:
             self._set_found_token(TokenType.IDENTIFIER, rtype, start)
             start += len(rtype)
-        
+
         if is_parallel_relation:
             self._set_found_token(TokenType.ALIGN_ARROW, "=>", start)
         else:
@@ -135,8 +135,8 @@ class BCQLLexer:
         start += 2
 
         if field:
-            if (is_optional := field.endswith("?")):
-                field = field[:-1]                
+            if is_optional := field.endswith("?"):
+                field = field[:-1]
             self._set_found_token(TokenType.IDENTIFIER, field, start)
             start += len(field)
             if is_optional:

@@ -5,6 +5,7 @@ tmp
 log.out
 schema.json
 /guides
+/parser
 
 .ruff_cache
 .venv
