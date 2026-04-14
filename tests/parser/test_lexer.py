@@ -11,6 +11,28 @@ def lex(source: str) -> list[Token]:
     return tokens
 
 
+class TestLexerReadOnlyState:
+    def test_public_properties_are_read_only(self):
+        lexer = BCQLLexer("lemma")
+
+        with pytest.raises(AttributeError):
+            lexer.source = "word"
+
+        with pytest.raises(AttributeError):
+            lexer.pos = 10
+
+        with pytest.raises(AttributeError):
+            lexer.tokens = []
+
+    def test_tokens_property_is_immutable(self):
+        lexer = BCQLLexer("lemma")
+        _ = lexer.tokenize()  # Populate the tokens property
+
+        assert isinstance(lexer.tokens, tuple)
+        assert lexer.tokens[0].value == "lemma"
+        assert len(lexer.tokens) == 2  # includes EOF
+
+
 class TestLexerStrings:
     def test_double_quoted(self):
         tokens = lex('"hello"')
