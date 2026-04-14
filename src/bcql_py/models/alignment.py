@@ -1,7 +1,7 @@
 """Alignment queries use the ``==>`` operator to find cross-field alignments
 between versions of a parallel corpus (e.g. English -> Dutch).
 
-Similar to models/relation but with different operators and semantics. 
+Similar to models/relation but with different operators and semantics.
 """
 
 from __future__ import annotations
@@ -27,13 +27,9 @@ class AlignmentOperator(BCQLNode):
 
     node_type: Literal["alignment_operator"] = "alignment_operator"
     target_field: str = Field(description="Target field name.")
-    optional: bool = Field(
-        default=False, description="True for optional alignment (==>field?)."
-    )
+    optional: bool = Field(default=False, description="True for optional alignment (==>field?).")
     relation_type: str | None = Field(default=None, description="Relation type filter.")
-    capture_name: str | None = Field(
-        default=None, description="Override capture group name."
-    )
+    capture_name: str | None = Field(default=None, description="Override capture group name.")
 
     def to_bcql(self) -> str:
         rtype = self.relation_type or ""
