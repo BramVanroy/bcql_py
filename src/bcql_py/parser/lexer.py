@@ -421,6 +421,11 @@ class BCQLLexer:
                 self._pos += 1
                 continue
 
+            if curr_char == "?":
+                self._emit(TokenType.QUESTION, "?", starting_pos)
+                self._pos += 1
+                continue
+
             if curr_char.isdigit():
                 self._read_integer(starting_pos)
                 continue

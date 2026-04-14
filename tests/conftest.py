@@ -1,7 +1,5 @@
 """Shared test helpers for BCQL parser tests."""
 
-import pytest
-
 from bcql_py.parser.lexer import BCQLLexer
 from bcql_py.parser.parser import BCQLParser
 

@@ -6,21 +6,22 @@ tighter-binding level before it looks for its own operator. This way we handle
 precedence without needing separate left/right recursion or operator precedence
 climbing.
 
-Precedence chain (lowest → highest), mirroring the BNF in ``bnf.md``::
+Precedence chain (lowest -> highest), mirroring the BNF in ``bnf.md``::
 
-    global_cst  →  pos_filter  →  rel_align  →  union_intersect
-    →  sequence  →  capture  →  span  →  repetition  →  atom
+    global_cst -> pos_filter -> rel_align -> union_intersect
+    -> sequence -> capture -> span -> repetition -> atom
 
 Within ``[...]`` brackets a separate, self-contained token-constraint
 grammar applies (see ``_parse_token_expr`` and friends).
 """
 
 from __future__ import annotations
+
 from typing import Sequence
 
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.base import BCQLNode
-from bcql_py.models.sequence import UnderscoreNode
+from bcql_py.models.sequence import RepetitionNode, UnderscoreNode
 from bcql_py.models.token import (
     AnnotationConstraint,
     BoolConstraint,
@@ -38,7 +39,7 @@ class BCQLParser:
     """Parse a list of BCQL tokens into an AST.
 
     Args:
-        tokens: Token list produced by :class:`~bcql_py.parser.lexer.BCQLLexer`.
+        tokens: Token list produced by ``BCQLLexer``.
         source: The original query string (used in error messages).
     """
 
@@ -90,7 +91,7 @@ class BCQLParser:
         return self._advance()
 
     def _raise_error(self, msg: str) -> BCQLSyntaxError:
-        """Build a :class:`BCQLSyntaxError` pointing at the current token."""
+        """Build a ``BCQLSyntaxError`` pointing at the current token."""
         return BCQLSyntaxError(msg, bcql_query=self.source, error_position=self._current_token.position)
 
     def parse(self) -> BCQLNode:
@@ -100,7 +101,7 @@ class BCQLParser:
             BCQLSyntaxError: On any syntax error.
 
         Returns:
-            The root :class:`~bcql_py.models.base.BCQLNode`.
+            The root ``BCQLNode``.
         """
         node = self._parse_global_constraint()
         if not self._current_token_is_oneof(TokenType.EOF):
@@ -114,7 +115,7 @@ class BCQLParser:
         Lowest precedence level. Currently passes through; the ``::`` capture-constraint branch will be added in a later step.
 
         Returns:
-            A :class:`~bcql_py.models.base.BCQLNode`.
+            A ``BCQLNode``.
         """
         return self._parse_pos_filter()
 
@@ -125,7 +126,7 @@ class BCQLParser:
         Currently passes through; will be implemented in a later step.
 
         Returns:
-            A :class:`~bcql_py.models.base.BCQLNode`.
+            A ``BCQLNode``.
         """
         return self._parse_rel_align()
 
@@ -136,7 +137,7 @@ class BCQLParser:
         (``=type=>``).  Currently passes through.
 
         Returns:
-            A :class:`~bcql_py.models.base.BCQLNode`.
+            A ``BCQLNode``.
         """
         return self._parse_union_intersect()
 
@@ -147,7 +148,7 @@ class BCQLParser:
         Currently passes through; will be implemented in a later step.
 
         Returns:
-            A :class:`~bcql_py.models.base.BCQLNode`.
+            A ``BCQLNode``.
         """
         return self._parse_sequence()
 
@@ -158,7 +159,7 @@ class BCQLParser:
         Currently passes through; will be implemented in a later step.
 
         Returns:
-            A :class:`~bcql_py.models.base.BCQLNode`.
+            A ``BCQLNode``.
         """
         return self._parse_capture()
 
@@ -169,7 +170,7 @@ class BCQLParser:
         Currently passes through; will be implemented in a later step.
 
         Returns:
-            A :class:`~bcql_py.models.base.BCQLNode`.
+            A ``BCQLNode``.
         """
         return self._parse_span()
 
@@ -180,20 +181,88 @@ class BCQLParser:
         Currently passes through; will be implemented in a later step.
 
         Returns:
-            A :class:`~bcql_py.models.base.BCQLNode`.
+            A ``BCQLNode``.
         """
         return self._parse_repetition()
 
     def _parse_repetition(self) -> BCQLNode:
         """``repetition := atom | repetition quantifier``
 
-        Handles quantifiers ``+``, ``*``, ``?``, ``{n}``, ``{n,m}``, etc.
-        Currently passes through; will be implemented in a later step.
+        Parses the inner atom first, then greedily consumes any postfix
+        quantifiers (``+``, ``*``, ``?``, ``{n}``, ``{n,m}``, ``{n,}``,
+        ``{,m}``).  Multiple consecutive quantifiers each wrap the
+        previous result in a new ``RepetitionNode``.
+
+        The BNF rule is left-recursive (``repetition quantifier``), which
+        we implement here as an iterative while-loop.  See
+        ``010_token-based.md`` for repetition examples.
 
         Returns:
-            A :class:`~bcql_py.models.base.BCQLNode`.
+            The inner atom unchanged when no quantifier follows, or a
+            ``RepetitionNode`` wrapping the atom.
         """
-        return self._parse_atom()
+        node = self._parse_atom()
+
+        while self._current_token_is_oneof(TokenType.PLUS, TokenType.STAR, TokenType.QUESTION, TokenType.LBRACE):
+            tok = self._current_token
+
+            if tok.type == TokenType.PLUS:
+                self._advance()
+                node = RepetitionNode(child=node, min_count=1, max_count=None)
+
+            elif tok.type == TokenType.STAR:
+                self._advance()
+                node = RepetitionNode(child=node, min_count=0, max_count=None)
+
+            elif tok.type == TokenType.QUESTION:
+                self._advance()
+                node = RepetitionNode(child=node, min_count=0, max_count=1)
+
+            elif tok.type == TokenType.LBRACE:
+                node = self._parse_brace_quantifier(node)
+
+        return node
+
+    def _parse_brace_quantifier(self, child: BCQLNode) -> RepetitionNode:
+        """Parse a brace quantifier: ``{n}``, ``{n,m}``, ``{n,}``, or ``{,m}``.
+
+        Called after the child node has been parsed and we see ``{``.
+
+        Args:
+            child: The node to which the quantifier applies.
+
+        Returns:
+            A ``RepetitionNode`` with the appropriate min/max counts.
+        """
+        self._expect(TokenType.LBRACE, "at start of brace quantifier")
+
+        # {,m} - "up to m"
+        if self._current_token.type == TokenType.COMMA:
+            self._advance()
+            max_tok = self._expect(TokenType.INTEGER, "as upper bound in {,m} quantifier")
+            self._expect(TokenType.RBRACE, "at end of brace quantifier")
+            return RepetitionNode(child=child, min_count=0, max_count=int(max_tok.value))
+
+        min_tok = self._expect(TokenType.INTEGER, "as count in brace quantifier")
+        min_val = int(min_tok.value)
+
+        # {n} - exact count
+        if self._current_token.type == TokenType.RBRACE:
+            self._advance()
+            return RepetitionNode(child=child, min_count=min_val, max_count=min_val)
+
+        # {n, ...
+        self._expect(TokenType.COMMA, "in brace quantifier")
+
+        # {n,} - "n or more"
+        if self._current_token.type == TokenType.RBRACE:
+            self._advance()
+            return RepetitionNode(child=child, min_count=min_val, max_count=None)
+
+        # {n,m} - range
+        max_tok = self._expect(TokenType.INTEGER, "as upper bound in {n,m} quantifier")
+        self._expect(TokenType.RBRACE, "at end of brace quantifier")
+        return RepetitionNode(child=child, min_count=min_val, max_count=int(max_tok.value))
 
     def _parse_atom(self) -> BCQLNode:
         """``atom := '[' token_expr? ']' | STRING | '_' | ...``
@@ -206,9 +275,9 @@ class BCQLParser:
         relations, lookarounds, functions) will be added in later steps.
 
         Returns:
-            A :class:`~bcql_py.models.token.TokenQuery` for ``[...]``
+            A ``TokenQuery`` for ``[...]``
             and bare strings, or an
-            :class:`~bcql_py.models.sequence.UnderscoreNode` for ``_``.
+            ``UnderscoreNode`` for ``_``.
 
         Raises:
             BCQLSyntaxError: When the current token cannot start an atom.
@@ -219,7 +288,7 @@ class BCQLParser:
         if tok.type == TokenType.LBRACKET:
             return self._parse_token_query()
 
-        # --- Bare string shorthand: "man" → TokenQuery(shorthand=StringValue(...)) ---
+        # Bare string shorthand: "man" -> TokenQuery(shorthand=StringValue(...))
         if tok.type in (TokenType.STRING, TokenType.LITERAL_STRING):
             return self._parse_string_shorthand()
 
@@ -228,23 +297,21 @@ class BCQLParser:
             self._advance()
             return UnderscoreNode()
 
-        raise self._raise_error(
-            f"Expected a token query, string, or '_', got {tok.type.name} ({tok.value!r})"
-        )
+        raise self._raise_error(f"Expected a token query, string, or '_', got {tok.type.name} ({tok.value!r})")
 
     def _parse_token_query(self) -> TokenQuery:
         """Parse a bracketed token query: ``[`` *token_expr*? ``]``.
 
         Produces an empty match-all ``TokenQuery(constraint=None)`` for
-        ``[]``, or delegates to :meth:`_parse_token_expr` for the
+        ``[]``, or delegates to ``_parse_token_expr`` for the
         constraint inside brackets.
 
         Returns:
-            A :class:`~bcql_py.models.token.TokenQuery`.
+            A ``TokenQuery``.
         """
         self._expect(TokenType.LBRACKET, "at start of token query")
 
-        # Empty brackets → match-all
+        # Empty brackets -> match-all
         if self._current_token.type == TokenType.RBRACKET:
             self._advance()
             return TokenQuery()
@@ -264,8 +331,8 @@ class BCQLParser:
         convention.
 
         Returns:
-            A :class:`~bcql_py.models.token.TokenQuery` with ``shorthand``
-            set to a :class:`~bcql_py.models.token.StringValue`.
+            A ``TokenQuery`` with ``shorthand``
+            set to a ``StringValue``.
         """
         tok = self._advance()
         sv = StringValue(
@@ -280,7 +347,7 @@ class BCQLParser:
         Entry point for the token-constraint grammar used inside ``[...]``.
 
         Returns:
-            A :data:`~bcql_py.models.token.ConstraintExpr` node.
+            A ``ConstraintExpr`` node.
         """
         return self._parse_token_bool()
 
@@ -294,7 +361,7 @@ class BCQLParser:
         and the ``booleanOperator`` rule in ``Bcql.g4``.
 
         Returns:
-            A :class:`~bcql_py.models.token.BoolConstraint` when an
+            A ``BoolConstraint`` when an
             operator is present, otherwise the inner constraint unchanged.
         """
         left = self._parse_token_not()
@@ -314,7 +381,7 @@ class BCQLParser:
         chained negations like ``!!expr`` (though unusual in practice).
 
         Returns:
-            A :class:`~bcql_py.models.token.NotConstraint` when negated,
+            A ``NotConstraint`` when negated,
             otherwise the inner constraint unchanged.
         """
         if self._current_token.type == TokenType.BANG:
@@ -334,18 +401,18 @@ class BCQLParser:
         based on the tokens following the identifier:
 
         - **Annotation comparison** (``word="man"``, ``pos!="noun"``):
-          Produces an :class:`~bcql_py.models.token.AnnotationConstraint`.
+          Produces an ``AnnotationConstraint``.
         - **Integer range** (``pos_confidence=in[50,100]``):
-          Produces an :class:`~bcql_py.models.token.IntegerRangeConstraint`.
+          Produces an ``IntegerRangeConstraint``.
         - **Function/pseudo-annotation** (``word("man","woman")``):
-          Produces a :class:`~bcql_py.models.token.FunctionConstraint`.
+          Produces a ``FunctionConstraint``.
           See ``010_token-based.md`` for details on pseudo-annotation
           functions (e.g. ``punctAfter``).
         - **Parenthesized sub-expression** (``(word="a" | word="the")``):
-          Recurses into :meth:`_parse_token_bool`.
+          Recurses into ``_parse_token_bool``.
 
         Returns:
-            A :data:`~bcql_py.models.token.ConstraintExpr` node.
+            A ``ConstraintExpr`` node.
 
         Raises:
             BCQLSyntaxError: On unexpected tokens inside brackets.
@@ -362,8 +429,7 @@ class BCQLParser:
         # --- Identifier-led alternatives ---
         if tok.type != TokenType.IDENTIFIER:
             raise self._raise_error(
-                f"Expected annotation name or '(' inside token constraint, "
-                f"got {tok.type.name} ({tok.value!r})"
+                f"Expected annotation name or '(' inside token constraint, got {tok.type.name} ({tok.value!r})"
             )
 
         ident_tok = self._advance()
@@ -405,7 +471,7 @@ class BCQLParser:
             operator: ``"="`` or ``"!="``.
 
         Returns:
-            An :class:`~bcql_py.models.token.AnnotationConstraint`.
+            An ``AnnotationConstraint``.
 
         Raises:
             BCQLSyntaxError: When the value is not a string token.
@@ -413,8 +479,7 @@ class BCQLParser:
         tok = self._current_token
         if tok.type not in (TokenType.STRING, TokenType.LITERAL_STRING):
             raise self._raise_error(
-                f"Expected a string value after {annotation!r}{operator}, "
-                f"got {tok.type.name} ({tok.value!r})"
+                f"Expected a string value after {annotation!r}{operator}, got {tok.type.name} ({tok.value!r})"
             )
         self._advance()
         sv = StringValue(
@@ -432,7 +497,7 @@ class BCQLParser:
             annotation: The annotation name preceding ``=in[``.
 
         Returns:
-            An :class:`~bcql_py.models.token.IntegerRangeConstraint`.
+            An ``IntegerRangeConstraint``.
         """
         self._expect(TokenType.IN, "in integer range constraint")
         self._expect(TokenType.LBRACKET, "in integer range constraint")
@@ -458,7 +523,7 @@ class BCQLParser:
             name: The function name preceding ``(``.
 
         Returns:
-            A :class:`~bcql_py.models.token.FunctionConstraint`.
+            A ``FunctionConstraint``.
         """
         self._expect(TokenType.LPAREN, "in function constraint")
         args: list[StringValue] = []
@@ -473,13 +538,13 @@ class BCQLParser:
         return FunctionConstraint(name=name, args=args)
 
     def _parse_string_value(self, context: str = "") -> StringValue:
-        """Consume a STRING or LITERAL_STRING token and return a :class:`StringValue`.
+        """Consume a STRING or LITERAL_STRING token and return a ``StringValue``.
 
         Args:
             context: Human-readable context for the error message.
 
         Returns:
-            A :class:`~bcql_py.models.token.StringValue`.
+            A ``StringValue``.
 
         Raises:
             BCQLSyntaxError: When the current token is not a string.
@@ -499,11 +564,11 @@ def parse_from_tokens(tokens: list[Token], source: str) -> BCQLNode:
     """Parse a BCQL token list into an AST.
 
     Args:
-        tokens: The list of tokens to parse (from :func:`~bcql_py.parser.lexer.tokenize`).
+        tokens: The list of tokens to parse (from ``tokenize``).
         source: The original source string.
 
     Returns:
-        The root :class:`~bcql_py.models.base.BCQLNode`.
+        The root ``BCQLNode``.
     """
     parser = BCQLParser(tokens, source=source)
     return parser.parse()

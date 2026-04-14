@@ -416,6 +416,12 @@ class TestLexerQuantifiers:
         # The ? is emitted as part of alignment arrow handling
         assert tokens[-1].type == TokenType.QUESTION
 
+    def test_question_standalone(self):
+        tokens = lex('"word"?')
+        assert tokens[0].type == TokenType.STRING
+        assert tokens[1].type == TokenType.QUESTION
+        assert tokens[1].value == "?"
+
     def test_repetition_braces(self):
         tokens = lex("{2,3}")
         assert tokens[0].type == TokenType.LBRACE
