@@ -122,13 +122,11 @@ string_list    := ε
 ### 3. Capture-constraint grammar (after ::)
 
 ```
-cc_expr        := cc_or_impl
+cc_expr        := cc_bool
 
-cc_or_impl     := cc_and
-                | cc_or_impl ('|' | '->') cc_and       /* '->' is a single REL_ARROW token */
-
-cc_and         := cc_not
-                | cc_and '&' cc_not
+cc_bool        := cc_not
+                | cc_bool ('&' | '|' | '->') cc_not    /* all same precedence, left-to-right;
+                                                          '->' is a single REL_ARROW token */
 
 cc_not         := cc_cmp
                 | '!' cc_not
