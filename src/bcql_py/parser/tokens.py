@@ -39,8 +39,8 @@ class TokenType(StrEnum):
     QUESTION = auto()  # ? (eg optional alignment, after field, e.g. ==>nl?)
 
     # Operators: comparison
-    LTE = auto() # <=
-    GTE = auto() # >=
+    LTE = auto()  # <=
+    GTE = auto()  # >=
     EQ = auto()  # =
     NEQ = auto()  # !=
     LT_CMP = auto()  # <

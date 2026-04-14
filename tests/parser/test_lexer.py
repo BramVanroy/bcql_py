@@ -227,7 +227,7 @@ class TestLexerOperators:
     def test_bang(self):
         tokens = lex("!")
         assert tokens[0].type == TokenType.BANG
-    
+
     def test_ampersand(self):
         tokens = lex("&")
         assert tokens[0].type == TokenType.AMP
@@ -236,3 +236,28 @@ class TestLexerOperators:
         tokens = lex("|")
         assert tokens[0].type == TokenType.PIPE
 
+    def test_single_colon(self):
+        tokens = lex(":")
+        assert tokens[0].type == TokenType.COLON
+        assert tokens[0].value == ":"
+
+    def test_double_colon(self):
+        tokens = lex("::")
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.DOUBLE_COLON
+        assert tokens[0].value == "::"
+
+    def test_semicolon(self):
+        tokens = lex(";")
+        assert tokens[0].type == TokenType.SEMICOLON
+        assert tokens[0].value == ";"
+
+    def test_dot(self):
+        tokens = lex(".")
+        assert tokens[0].type == TokenType.DOT
+        assert tokens[0].value == "."
+
+    def test_comma(self):
+        tokens = lex(",")
+        assert tokens[0].type == TokenType.COMMA
+        assert tokens[0].value == ","

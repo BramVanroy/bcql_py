@@ -162,7 +162,7 @@ class BCQLLexer:
 
             starting_pos = self.pos
             curr_char = self._current_char
-            
+
             # Quoted strings (both single and double)
             if curr_char in ('"', "'"):
                 self._read_string(curr_char, starting_pos, is_literal=False)
@@ -288,7 +288,9 @@ class BCQLLexer:
                 if self._is_arrow(offset=1):
                     self._read_arrow(starting_pos, is_root=True)
                 else:
-                    raise self._raise_error("Unexpected character '^' (if you meant to start a root relation, it should be followed by a relation arrow like `^-type->` or `^->`)") 
+                    raise self._raise_error(
+                        "Unexpected character '^' (if you meant to start a root relation, it should be followed by a relation arrow like `^-type->` or `^->`)"
+                    )
                 continue
 
             # Equals sign `=`: could be alignment arrow or just an equals sign for assigfment
@@ -307,14 +309,9 @@ class BCQLLexer:
                     self._emit(TokenType.NEQ, "!=", starting_pos)
                     self.pos += 2
                     continue
-                
+
                 # Otherwise, treat as standalone '!' (e.g. for negation in regexes)
                 self._emit(TokenType.BANG, "!", starting_pos)
-                self.pos += 1
-                continue
-
-            if curr_char == "|":
-                self._emit(TokenType.PIPE, "|", starting_pos)
                 self.pos += 1
                 continue
 
@@ -323,8 +320,13 @@ class BCQLLexer:
                 self.pos += 1
                 continue
 
+            if curr_char == "|":
+                self._emit(TokenType.PIPE, "|", starting_pos)
+                self.pos += 1
+                continue
+
             if curr_char == ":":
-                if self._peek() == ":":
+                if self._peek_char() == ":":
                     self._emit(TokenType.DOUBLE_COLON, "::", starting_pos)
                     self.pos += 2
                     continue
