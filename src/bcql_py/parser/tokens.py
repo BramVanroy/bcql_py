@@ -86,6 +86,25 @@ KEYWORDS: dict[str, TokenType] = {
     "_": TokenType.UNDERSCORE,
 }
 
+# Maps boolean-operator token types to their string representation.
+# Matches the ``booleanOperator`` rule in ``Bcql.g4``: ``'&' | '|' | '->'``.
+BOOL_OPS: dict[TokenType, str] = {
+    TokenType.AMP: "&",
+    TokenType.PIPE: "|",
+    TokenType.REL_ARROW: "->",
+}
+
+# Maps comparison-operator token types to their string representation.
+# Matches the ``comparisonOperator`` rule in ``Bcql.g4``: ``'=' | '!=' | '>=' | '<=' | '>' | '<'``.
+CMP_OPS: dict[TokenType, str] = {
+    TokenType.EQ: "=",
+    TokenType.NEQ: "!=",
+    TokenType.LT: "<",
+    TokenType.LTE: "<=",
+    TokenType.GT: ">",
+    TokenType.GTE: ">=",
+}
+
 
 @dataclass(frozen=True, slots=True)
 class Token:

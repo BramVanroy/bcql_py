@@ -23,7 +23,7 @@ from bcql_py.models.token import (
     StringValue,
     TokenQuery,
 )
-from bcql_py.parser.tokens import Token, TokenType
+from bcql_py.parser.tokens import BOOL_OPS, CMP_OPS, Token, TokenType
 
 
 class BCQLParser:
@@ -249,6 +249,10 @@ class BCQLParser:
 
         Called after the child node has been parsed and we see ``{``.
 
+        Note: ``{,m}`` (no minimum) is a bcql_py extension not present in ``Bcql.g4``'s ``repetitionAmount`` rule,
+        which requires at least one INTEGER before the comma.  We accept it as a convenience since it is a common
+        regex convention meaning "up to m repetitions".
+
         Args:
             child: The node to which the quantifier applies.
 
@@ -365,20 +369,21 @@ class BCQLParser:
         return self._parse_token_bool()
 
     def _parse_token_bool(self) -> ConstraintExpr:
-        """``token_bool := token_not | token_bool ('|' | '&') token_not``
+        """``token_bool := token_not | token_bool ('|' | '&' | '->') token_not``
 
-        Left-associative boolean combination.  Both ``&`` and ``|`` share the **same** precedence at every grammar
-        level (token constraints, sequence-level, and capture constraints).  This is intentional in CQL and differs
-        from standard boolean conventions.  See ``bnf.md`` and the ``booleanOperator`` rule in ``Bcql.g4``.
+        Left-associative boolean combination.  ``&``, ``|``, and ``->`` all share the **same** precedence at every
+        grammar level (token constraints, sequence-level, and capture constraints).  This matches the
+        ``booleanOperator`` rule in ``Bcql.g4``.  The ``->`` operator is implication, primarily used in capture
+        constraints (e.g. ``A.word = "cat" -> B.word = "dog"``) but allowed at every level by the grammar.
 
         Returns:
             A ``BoolConstraint`` when an operator is present, otherwise the inner constraint unchanged.
         """
         left = self._parse_token_not()
 
-        while self._current_token_is_oneof(TokenType.AMP, TokenType.PIPE):
+        while self._current_token.type in BOOL_OPS:
             op_tok = self._advance()
-            operator: str = "&" if op_tok.type == TokenType.AMP else "|"
+            operator = BOOL_OPS[op_tok.type]
             right = self._parse_token_not()
             left = BoolConstraint(operator=operator, left=left, right=right)
 
@@ -401,14 +406,13 @@ class BCQLParser:
         return self._parse_token_cmp()
 
     def _parse_token_cmp(self) -> ConstraintExpr:
-        """``token_cmp := IDENT ('=' | '!=') STRING``
-        ``           | IDENT '=' 'in' '[' INT ',' INT ']'``
-        ``           | IDENT '(' string_list ')'``
-        ``           | '(' token_bool ')'``
+        """``token_cmp := IDENT CMP STRING | IDENT '=' 'in' '[' INT ',' INT ']' | IDENT '(' string_list ')' | '(' token_bool ')'``
 
         Highest-precedence level inside token constraints.  Dispatches based on the tokens following the identifier:
 
-        - **Annotation comparison** (``word="man"``, ``pos!="noun"``): Produces an ``AnnotationConstraint``.
+        - **Annotation comparison** (``word="man"``, ``pos!="noun"``, ``score>="5"``): Produces an
+          ``AnnotationConstraint``.  All six comparison operators from ``Bcql.g4``'s ``comparisonOperator`` rule are
+          supported: ``=``, ``!=``, ``<``, ``<=``, ``>``, ``>=``.
         - **Integer range** (``pos_confidence=in[50,100]``): Produces an ``IntegerRangeConstraint``.
         - **Function/pseudo-annotation** (``word("man","woman")``): Produces a ``FunctionConstraint``.
           See ``010_token-based.md`` for details on pseudo-annotation functions (e.g. ``punctAfter``).
@@ -442,35 +446,32 @@ class BCQLParser:
         if self._current_token.type == TokenType.LPAREN:
             return self._parse_function_constraint(annotation)
 
-        # Comparison: ident ('=' | '!=') ...
-        if self._current_token.type == TokenType.EQ:
+        # Comparison: ident CMP_OP ...
+        if self._current_token.type in CMP_OPS:
+            op_type = self._current_token.type
+            op_str = CMP_OPS[op_type]
             self._advance()
 
             # Integer range: ident '=' 'in' '[' INT ',' INT ']'
-            if self._current_token.type == TokenType.IN:
+            if op_type == TokenType.EQ and self._current_token.type == TokenType.IN:
                 return self._parse_integer_range_constraint(annotation)
 
-            # Normal annotation comparison: ident '=' STRING
-            return self._parse_annotation_value(annotation, "=")
-
-        if self._current_token.type == TokenType.NEQ:
-            self._advance()
-            return self._parse_annotation_value(annotation, "!=")
+            return self._parse_annotation_value(annotation, op_str)
 
         raise self._raise_error(
-            f"Expected '=', '!=', or '(' after annotation name {annotation!r}, "
+            f"Expected a comparison operator or '(' after annotation name {annotation!r}, "
             f"got {self._current_token.type.name} ({self._current_token.value!r})"
         )
 
     def _parse_annotation_value(self, annotation: str, operator: str) -> AnnotationConstraint:
-        """Parse the string value after ``annotation =`` or ``annotation !=``.
+        """Parse the string value after ``annotation <op>`` where op is any comparison operator.
 
         Handles both regular strings (``"man"``) and literal strings (``l"e.g."``).  See ``010_token-based.md``
         for discussion of literal strings and regex escaping.
 
         Args:
             annotation: The annotation name (e.g. ``"word"``).
-            operator: ``"="`` or ``"!="``.
+            operator: One of ``"="``, ``"!="``, ``"<"``, ``"<="``, ``">"``, ``">="``.
 
         Returns:
             An ``AnnotationConstraint``.

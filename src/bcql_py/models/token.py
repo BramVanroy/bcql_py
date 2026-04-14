@@ -63,7 +63,7 @@ class AnnotationConstraint(BCQLNode):
 
     node_type: Literal["annotation_constraint"] = "annotation_constraint"
     annotation: str = Field(description="Annotation name (e.g. 'word', 'lemma', 'pos').")
-    operator: Literal["=", "!="] = Field(description="Comparison operator: '=' or '!='.")
+    operator: Literal["=", "!=", "<", "<=", ">", ">="] = Field(description="Comparison operator.")
     value: StringValue = Field(description="The value being compared against.")
 
     def to_bcql(self) -> str:
@@ -134,20 +134,21 @@ class NotConstraint(BCQLNode):
 class BoolConstraint(BCQLNode):
     """Boolean combination of token-level constraints: ``left op right``.
 
-    The operator is ``&`` (AND) or ``|`` (OR).  Per the BCQL spec both
-    have **identical** precedence and are left-associative.
+    The operator is ``&`` (AND), ``|`` (OR), or ``->`` (implication).  Per the BCQL spec / ``Bcql.g4``,
+    all three share **identical** precedence and are left-associative. See the ``booleanOperator`` rule
+    in ``Bcql.g4``. Naming-wise calling it "boolean" might be somewhat confusing for the implication case though
 
     Not to be confused with sequence-level boolean operators (also ``&`` and ``|``) which
     combine whole sub-queries instead of token constraints. See sequence.UnionNode and sequence.IntersectionNode for those.
 
     Attributes:
-        operator: ``"&"`` or ``"|"``.
+        operator: ``"&"``, ``"|"``, or ``"->"``.
         left: Left operand.
         right: Right operand.
     """
 
     node_type: Literal["bool_constraint"] = "bool_constraint"
-    operator: Literal["&", "|"] = Field(description="Boolean operator: '&' or '|'.")
+    operator: Literal["&", "|", "->"] = Field(description="Boolean operator: '&', '|', or '->'.")
     left: ConstraintExpr = Field(description="Left operand.")
     right: ConstraintExpr = Field(description="Right operand.")
 

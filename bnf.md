@@ -57,7 +57,7 @@ aligns          := align_child
 align_child     := '=' IDENT? '=>' IDENT '?'? union_intersect
 
 union_intersect := sequence
-                 | union_intersect ('|' | '&') sequence
+                 | union_intersect ('|' | '&' | '->') sequence  /* booleanOperator in Bcql.g4 */
 
 sequence        := capture
                  | capture sequence
@@ -76,7 +76,7 @@ repetition      := atom
 quantifier      := '+' | '*' | '?'
                  | '{' INT '}'
                  | '{' INT ',' INT? '}'
-                 | '{' ',' INT '}'
+                 | '{' ',' INT '}'              /* bcql_py extension; not in Bcql.g4 */
 
 atom            := '[' token_expr? ']'
                  | STRING
@@ -105,12 +105,13 @@ attr            := IDENT '=' STRING
 token_expr     := token_bool
 
 token_bool     := token_not
-                | token_bool ('|' | '&') token_not
+                | token_bool ('|' | '&' | '->') token_not  /* all same precedence, left-to-right;
+                                                               matches booleanOperator in Bcql.g4 */
 
 token_not      := token_cmp
                 | '!' token_not
 
-token_cmp      := IDENT ('=' | '!=') STRING
+token_cmp      := IDENT CMP STRING
                 | IDENT '=' 'in' '[' INT ',' INT ']'
                 | IDENT '(' string_list ')'
                 | '(' token_bool ')'

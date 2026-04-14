@@ -126,6 +126,51 @@ class TestAnnotationConstraint:
         round_trip('[pos!="noun"]')
 
 
+class TestAnnotationComparisonOperators:
+    """Extended comparison operators: ``<``, ``<=``, ``>``, ``>=`` in addition to ``=`` and ``!=``."""
+
+    def test_less_than(self):
+        node = parse('[pos_confidence<"50"]')
+        assert isinstance(node, TokenQuery)
+        c = node.constraint
+        assert isinstance(c, AnnotationConstraint)
+        assert c.operator == "<"
+        assert c.value.value == "50"
+
+    def test_less_than_or_equal(self):
+        node = parse('[pos_confidence<="50"]')
+        assert isinstance(node, TokenQuery)
+        c = node.constraint
+        assert isinstance(c, AnnotationConstraint)
+        assert c.operator == "<="
+
+    def test_greater_than(self):
+        node = parse('[pos_confidence>"50"]')
+        assert isinstance(node, TokenQuery)
+        c = node.constraint
+        assert isinstance(c, AnnotationConstraint)
+        assert c.operator == ">"
+
+    def test_greater_than_or_equal(self):
+        node = parse('[pos_confidence>="50"]')
+        assert isinstance(node, TokenQuery)
+        c = node.constraint
+        assert isinstance(c, AnnotationConstraint)
+        assert c.operator == ">="
+
+    def test_round_trip_lt(self):
+        round_trip('[pos_confidence<"50"]')
+
+    def test_round_trip_lte(self):
+        round_trip('[pos_confidence<="50"]')
+
+    def test_round_trip_gt(self):
+        round_trip('[pos_confidence>"50"]')
+
+    def test_round_trip_gte(self):
+        round_trip('[pos_confidence>="50"]')
+
+
 class TestBoolConstraint:
     """``[a & b]``, ``[a | b]``, and chained combinations inside token brackets.
     Note that these are different from the boolean operators on the query level (AND, OR) but
@@ -178,6 +223,35 @@ class TestBoolConstraint:
 
     def test_round_trip_chained(self):
         round_trip('[word="a" & word="b" | word="c"]')
+
+    def test_implication(self):
+        """``[a -> b]``: implication operator has the same precedence as ``&`` and ``|``."""
+        node = parse('[word="a" -> word="b"]')
+        assert isinstance(node, TokenQuery)
+        c = node.constraint
+        assert isinstance(c, BoolConstraint)
+        assert c.operator == "->"
+        assert isinstance(c.left, AnnotationConstraint)
+        assert isinstance(c.right, AnnotationConstraint)
+        assert c.left.value.value == "a"
+        assert c.right.value.value == "b"
+
+    def test_implication_left_associativity(self):
+        """``a -> b & c`` should parse as ``(a -> b) & c``: same precedence, left-to-right."""
+        node = parse('[word="a" -> word="b" & word="c"]')
+        assert isinstance(node, TokenQuery)
+        c = node.constraint
+        assert isinstance(c, BoolConstraint)
+        assert c.operator == "&"
+        assert isinstance(c.left, BoolConstraint)
+        assert c.left.operator == "->"
+        assert isinstance(c.right, AnnotationConstraint)
+
+    def test_round_trip_implication(self):
+        round_trip('[word="a" -> word="b"]')
+
+    def test_round_trip_mixed_implication(self):
+        round_trip('[word="a" -> word="b" & word="c"]')
 
 
 class TestNotConstraint:
