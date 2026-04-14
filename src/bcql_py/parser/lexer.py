@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from bcql_py.exceptions import BCQLSyntaxError
-from bcql_py.parser.tokens import Token, TokenType
+from bcql_py.parser.tokens import KEYWORDS, Token, TokenType
 
 
 class BCQLLexer:
@@ -31,7 +31,7 @@ class BCQLLexer:
         self.tokens.append(Token(type=ttype, value=value, position=position))
 
     def _raise_error(self, msg: str) -> BCQLSyntaxError:
-        return BCQLSyntaxError(msg, query=self.source, position=self.pos)
+        return BCQLSyntaxError(error_message=msg, bcql_query=self.source, error_position=self.pos)
 
     def _skip_whitespace(self) -> None:
         while self._current_char.isspace():
@@ -137,7 +137,10 @@ class BCQLLexer:
         if field:
             if is_optional := field.endswith("?"):
                 field = field[:-1]
-            self._emit(TokenType.IDENTIFIER, field, start)
+            if field == "_":
+                self._emit(TokenType.UNDERSCORE, "_", start)
+            else:
+                self._emit(TokenType.IDENTIFIER, field, start)
             start += len(field)
             if is_optional:
                 self._emit(TokenType.QUESTION, "?", start)
@@ -149,6 +152,29 @@ class BCQLLexer:
     def _read_alignment_arrow(self, start: int) -> None:
         """Read ``=type=>field[?]`` starting from the first ``=``."""
         self._read_arrow(start, is_root=False, is_parallel_relation=True)
+
+    def _read_identifier(self, start: int) -> None:
+        """Read an identifier, incl. reserved keywords."""
+        chars: list[str] = []
+        while self.pos < len(self.source) and (self._current_char.isalnum() or self._current_char in "_-"):
+            chars.append(self._current_char)
+            self.pos += 1
+
+        word = "".join(chars)
+        # Try getting a reserved keyword match, otherwise default to IDENTIFIER
+        ttype = KEYWORDS.get(word, TokenType.IDENTIFIER)
+        self._emit(ttype, word, start)
+
+    def _read_integer(self, start: int) -> None:
+        """Read an integer (possibly negative, though sign is separate)."""
+        chars: list[str] = []
+        if self._current_char == "-":
+            chars.append("-")
+            self.pos += 1
+        while self.pos < len(self.source) and self._current_char.isdigit():
+            chars.append(self._current_char)
+            self.pos += 1
+        self._emit(TokenType.INTEGER, "".join(chars), start)
 
     def tokenize(self) -> list[Token]:
         """
@@ -271,13 +297,7 @@ class BCQLLexer:
 
                 # Negative integer
                 if self._peek_char().isdigit():
-                    self.pos += 1
-                    int_start = starting_pos
-                    chars = ["-"]
-                    while self.pos < len(self.source) and self._current_char.isdigit():
-                        chars.append(self._current_char)
-                        self.pos += 1
-                    self._emit(TokenType.INTEGER, "".join(chars), int_start)
+                    self._read_integer(starting_pos)
                     continue
 
                 # If it's neither a relation arrow nor a negative integer, it's an unexpected character in this context
@@ -315,6 +335,7 @@ class BCQLLexer:
                 self.pos += 1
                 continue
 
+            # Logical AND and OR operators
             if curr_char == "&":
                 self._emit(TokenType.AMP, "&", starting_pos)
                 self.pos += 1
@@ -325,6 +346,7 @@ class BCQLLexer:
                 self.pos += 1
                 continue
 
+            # Colon and double colon (e.g. for constraints)
             if curr_char == ":":
                 if self._peek_char() == ":":
                     self._emit(TokenType.DOUBLE_COLON, "::", starting_pos)
@@ -351,5 +373,33 @@ class BCQLLexer:
                 self._emit(TokenType.COMMA, ",", starting_pos)
                 self.pos += 1
                 continue
+
+            if curr_char.isdigit():
+                self._read_integer(starting_pos)
+                continue
+
+            # Identifiers and keywords
+            if curr_char.isalpha() or curr_char == "_":
+                self._read_identifier(starting_pos)
+                continue
+
+            # Comments starting with #, skip until end of line
+            if curr_char == "#":
+                while self.pos < len(self.source) and self.source[self.pos] != "\n":
+                    self.pos += 1
+                continue
+
+            # Multiline comments
+            if curr_char == "/" and self._peek_char() == "*":
+                self.pos += 2  # Skip "/*"
+                while self.pos < len(self.source) and not (self._current_char == "*" and self._peek_char() == "/"):
+                    self.pos += 1
+                if self.pos < len(self.source):
+                    self.pos += 2  # Skip "*/"
+                continue
+
+            raise self._error(f"Unexpected character {curr_char!r}")
+        else:
+            self._emit(TokenType.EOF, "", self.pos)
 
         return self.tokens

@@ -1,10 +1,13 @@
-from bcql_py.parser.lexer import BCQLLexer
+import pytest
+
+from bcql_py.parser.lexer import BCQLLexer, BCQLSyntaxError
 from bcql_py.parser.tokens import Token, TokenType
 
 
 def lex(source: str) -> list[Token]:
-    """Tokenize *source* and return tokens."""
+    """Tokenize *source* and return tokens (excl. EOF)."""
     tokens = BCQLLexer(source).tokenize()
+    tokens = [token for token in tokens if token.type != TokenType.EOF]
     return tokens
 
 
@@ -19,6 +22,7 @@ class TestLexerStrings:
         tokens = lex("'hello'")
         assert len(tokens) == 1
         assert tokens[0].type == TokenType.STRING
+        assert tokens[0].value == "hello"
 
     def test_literal_string(self):
         tokens = lex('l"e.g."')
@@ -41,6 +45,42 @@ class TestLexerStrings:
         assert tokens[0].value == "(?-i)Panama"
 
 
+class TestLexerIdentifiers:
+    def test_simple_identifier(self):
+        tokens = lex("lemma")
+        assert tokens[0].type == TokenType.IDENTIFIER
+        assert tokens[0].value == "lemma"
+
+    def test_keyword_within(self):
+        tokens = lex("within")
+        assert tokens[0].type == TokenType.WITHIN
+
+    def test_keyword_containing(self):
+        tokens = lex("containing")
+        assert tokens[0].type == TokenType.CONTAINING
+
+    def test_keyword_overlap(self):
+        tokens = lex("overlap")
+        assert tokens[0].type == TokenType.OVERLAP
+
+    def test_keyword_in(self):
+        tokens = lex("in")
+        assert tokens[0].type == TokenType.IN
+
+    def test_keyword_true(self):
+        tokens = lex("true")
+        assert tokens[0].type == TokenType.TRUE
+
+    def test_keyword_false(self):
+        tokens = lex("false")
+        assert tokens[0].type == TokenType.FALSE
+
+    def test_keyword_underscore(self):
+        tokens = lex("_")
+        assert tokens[0].type == TokenType.UNDERSCORE
+        assert tokens[0].value == "_"
+
+
 class TestLexerBrackets:
     def test_square_brackets(self):
         tokens = lex("[]")
@@ -51,6 +91,11 @@ class TestLexerBrackets:
         tokens = lex("()")
         assert tokens[0].type == TokenType.LPAREN
         assert tokens[1].type == TokenType.RPAREN
+
+    def test_curly_brackets(self):
+        tokens = lex("{}")
+        assert tokens[0].type == TokenType.LBRACE
+        assert tokens[1].type == TokenType.RBRACE
 
 
 class TestLexerLookaround:
@@ -182,6 +227,11 @@ class TestLexerArrows:
 
 
 class TestLexerIntegers:
+    def test_positive(self):
+        tokens = lex("42")
+        assert tokens[0].type == TokenType.INTEGER
+        assert tokens[0].value == "42"
+
     def test_negative(self):
         tokens = lex("-5")
         assert len(tokens) == 1
@@ -261,3 +311,36 @@ class TestLexerOperators:
         tokens = lex(",")
         assert tokens[0].type == TokenType.COMMA
         assert tokens[0].value == ","
+
+
+class TestLexerComments:
+    def test_single_comment_ignored(self):
+        tokens = lex('"man" # this is a comment')
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.STRING
+        assert tokens[0].value == "man"
+
+    def test_multiline_comment_ignored(self):
+        query = """"man" /* this is a
+        multiline comment */"""
+        tokens = lex(query)
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.STRING
+        assert tokens[0].value == "man"
+
+
+class TestLexerPositions:
+    def test_position_tracking(self):
+        tokens = BCQLLexer('[word="man"]').tokenize()
+        assert tokens[0].position == 0
+        assert tokens[1].position == 1
+        assert tokens[2].position == 5
+        assert tokens[3].position == 6
+        assert tokens[4].position == 11
+        assert tokens[5].position == 12
+
+
+class TestLexerErrors:
+    def test_unclosed_string(self):
+        with pytest.raises(BCQLSyntaxError):
+            BCQLLexer('"unclosed').tokenize()

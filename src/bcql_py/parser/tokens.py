@@ -36,7 +36,7 @@ class TokenType(StrEnum):
     ROOT_REL_CARET = auto()
     ALIGN_LINE = auto()  # =type= (alignment line, no field)
     ALIGN_ARROW = auto()  # =>
-    QUESTION = auto()  # ? (eg optional alignment, after field, e.g. ==>nl?)
+    QUESTION = auto()  # ? (eg optional alignment, after field, e.g. ==>nl?; regex quantifier)
 
     # Operators: comparison
     LTE = auto()  # <=
@@ -57,6 +57,34 @@ class TokenType(StrEnum):
     SEMICOLON = auto()  # ;
     DOT = auto()  # .
     COMMA = auto()  # ,
+
+    # Quantifiers
+    STAR = auto()  # *
+    PLUS = auto()  # +
+    # See QUESTION above for ?
+
+    # Reserved
+    WITHIN = auto()
+    CONTAINING = auto()
+    OVERLAP = auto()
+    IN = auto()
+    TRUE = auto()
+    FALSE = auto()
+    UNDERSCORE = auto()  # _ (matches any single token)
+    # End marker
+    EOF = auto()  # end of input
+
+
+# https://github.com/instituutnederlandsetaal/BlackLab/blob/e248fc2acf2b8cf44deb2564e8b24138b140d4ca/query-parser/src/main/antlr4/nl/inl/blacklab/queryParser/corpusql/Bcql.g4#L24
+KEYWORDS: dict[str, TokenType] = {
+    "within": TokenType.WITHIN,
+    "containing": TokenType.CONTAINING,
+    "overlap": TokenType.OVERLAP,
+    "in": TokenType.IN,
+    "true": TokenType.TRUE,
+    "false": TokenType.FALSE,
+    "_": TokenType.UNDERSCORE,
+}
 
 
 @dataclass(frozen=True, slots=True)
