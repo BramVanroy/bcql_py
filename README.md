@@ -1,5 +1,15 @@
 # A Python parser for Blacklab Corpus Query Language
 
+## Installation
+
+Not on PyPi yet so clone from Github first:
+
+```sh
+git clone https://github.com/BramVanroy/bcql_py.git --depth 1
+cd bcql_py
+uv sync
+```
+
 ## Notes
 
 ### ANTLR to generate the needed tools
@@ -46,3 +56,5 @@ If we don't do this, we'll get a Pydantic error about the forward reference not 
 
 - [Blacklab](https://blacklab.ivdnt.org/)
 - Robert Nystrom's guide on ["Crafting Interpreters"](https://craftinginterpreters.com/scanning.html), specifically the part on "Scanning". Token types and error handling in `bcql_py` is heavily inspired by his work.
+- Jamis Buck's [blog post on recursive descent parsers](https://weblog.jamisbuck.org/2015/7/30/writing-a-simple-recursive-descent-parser.html)
+- Berkeley [course notes on BNF](https://cs61a.org/study-guide/bnf/)
