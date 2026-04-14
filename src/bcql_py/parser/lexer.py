@@ -317,12 +317,18 @@ class BCQLLexer:
                 self._pos += 1
                 continue
 
-            # Minus sign or dash `-`:  could be relation arrow or negative int -
+            # Minus sign or dash `-`:  could be relation arrow, standalone `->`, or negative int
             if curr_char == "-":
-                # Check if this is a relation arrow: -type->
+                # Check if this is a full relation arrow: -type->
                 # A relation arrow starts with '-' and somewhere later has '->'
                 if self._is_arrow():
                     self._read_arrow(starting_pos)
+                    continue
+
+                # Standalone `->` (e.g. implication operator in capture constraints)
+                if self._peek_char() == ">":
+                    self._emit(TokenType.REL_ARROW, "->", starting_pos)
+                    self._pos += 2
                     continue
 
                 # Negative integer

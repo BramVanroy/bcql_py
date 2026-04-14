@@ -7,7 +7,7 @@ class TokenType(StrEnum):
     STRING = auto()  # "hello", 'world'
     LITERAL_STRING = auto()  # l"e.g.", l'fo.o'
     INTEGER = auto()  # 123, -5
-    IDENTIFIER = auto()  # word, lemma, pos, meet, union, ...
+    IDENTIFIER = auto()  # word, lemma, pos; fn name: meet, union, ...
 
     # Brackets
     LBRACKET = auto()  # [

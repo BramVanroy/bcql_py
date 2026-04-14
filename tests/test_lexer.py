@@ -484,6 +484,36 @@ class TestLexerArrowEdgeCases:
         assert tokens[2].type == TokenType.UNDERSCORE
         assert tokens[3].type == TokenType.QUESTION
 
+    def test_standalone_rel_arrow(self):
+        """Standalone `->` (e.g. implication in capture constraints)."""
+        tokens = lex("->")
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.REL_ARROW
+        assert tokens[0].value == "->"
+
+    def test_implication_in_context(self):
+        """Implication `->` surrounded by other tokens as in capture constraints."""
+        # Simplified version of: A.word = "the" -> B.pos = "noun"
+        tokens = lex('A.word = "the" -> B.pos = "noun"')
+
+        assert tokens[0].type == TokenType.IDENTIFIER
+        assert tokens[0].value == "A"
+        assert tokens[1].type == TokenType.DOT
+        assert tokens[2].type == TokenType.IDENTIFIER
+        assert tokens[2].value == "word"
+        assert tokens[3].type == TokenType.EQ
+        assert tokens[4].type == TokenType.STRING
+        assert tokens[4].value == "the"
+        assert tokens[5].type == TokenType.REL_ARROW
+        assert tokens[6].type == TokenType.IDENTIFIER
+        assert tokens[6].value == "B"
+        assert tokens[7].type == TokenType.DOT
+        assert tokens[8].type == TokenType.IDENTIFIER
+        assert tokens[8].value == "pos"
+        assert tokens[9].type == TokenType.EQ
+        assert tokens[10].type == TokenType.STRING
+        assert tokens[10].value == "noun"
+
 
 class TestLexerWhitespace:
     def test_trailing_whitespace(self):

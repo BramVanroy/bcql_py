@@ -4,54 +4,8 @@ We start from largest possible expression (i.e. global constraint) and recursive
 
 from __future__ import annotations
 
-import re
-
 from bcql_py.exceptions import BCQLSyntaxError
-from bcql_py.models.alignment import (
-    AlignmentConstraint,
-    AlignmentNode,
-    AlignmentOperator,
-)
 from bcql_py.models.base import BCQLNode
-from bcql_py.models.capture import (
-    AnnotationRef,
-    CaptureConstraintExpr,
-    CaptureNode,
-    ConstraintBoolean,
-    ConstraintComparison,
-    ConstraintFunctionCall,
-    ConstraintLiteral,
-    ConstraintNot,
-    GlobalConstraintNode,
-)
-from bcql_py.models.function import FunctionCallNode
-from bcql_py.models.lookaround import LookaheadNode, LookbehindNode
-from bcql_py.models.relation import (
-    ChildConstraint,
-    RelationNode,
-    RelationOperator,
-    RootRelationNode,
-)
-from bcql_py.models.sequence import (
-    GroupNode,
-    IntersectionNode,
-    NegationNode,
-    RepetitionNode,
-    SequenceNode,
-    UnionNode,
-    UnderscoreNode,
-)
-from bcql_py.models.span import PositionFilterNode, SpanQuery
-from bcql_py.models.token import (
-    AnnotationConstraint,
-    BoolConstraint,
-    ConstraintExpr,
-    FunctionConstraint,
-    IntegerRangeConstraint,
-    NotConstraint,
-    StringValue,
-    TokenQuery,
-)
 from bcql_py.parser.tokens import Token, TokenType
 
 
@@ -94,7 +48,11 @@ class BCQLParser:
         tok = self._current_token
         if tok.type != ttype:
             ctx = f" {context}" if context else ""
-            raise BCQLSyntaxError(f"Expected {ttype.name}{ctx}, got {tok.type.name} ({tok.value!r})", query=self.source, position=tok.position)
+            raise BCQLSyntaxError(
+                f"Expected {ttype.name}{ctx}, got {tok.type.name} ({tok.value!r})",
+                query=self.source,
+                position=tok.position,
+            )
         return self._advance()
 
     def _raise_error(self, msg: str) -> BCQLSyntaxError:
@@ -122,7 +80,7 @@ def parse_from_tokens(tokens: list[Token], source: str) -> BCQLNode:
     Args:
         tokens: The list of tokens to parse.
         source: The original source string.
-    
+
     """
     parser = BCQLParser(tokens, source=source)
     return parser.parse()
