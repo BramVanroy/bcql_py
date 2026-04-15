@@ -10,4 +10,4 @@ typecheck:
 	uv run mypy src/bcql_py tests/ scripts/
 	
 test:
-	uv run pytest
+	uv run pytest --cov=src/bcql_py --cov-report=term-missing
