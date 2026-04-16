@@ -41,24 +41,26 @@ class RelationOperator(BCQLNode):
 
 
 class ChildConstraint(BCQLNode):
-    """A single target constraint in a relation query.
+    """A single child constraint in a relation query.
 
-    Represents ``-type-> target`` inside a relation expression.
-    Multiple child constraints are separated by ``;``. Note that "target" itself can be any BCQL sub-query,
-    including another relation query, e.g.
-    _ -nsubj-> (_ -amod-> _)
+    Represents ``[-label:] -type-> target`` inside a relation expression.
+    Multiple child constraints are separated by ``;``. The target itself can be any BCQL sub-query,
+    including another relation query (e.g. ``_ -nsubj-> (_ -amod-> _)``).
 
     Attributes:
-        operator: The RelationOperator
+        operator: The relation operator (type, negation, target field).
         target: The target sub-query.
+        label: Optional capture label on this child relation (e.g. ``rel:-obj-> _``).
     """
 
     node_type: Literal["child_constraint"] = "child_constraint"
     operator: RelationOperator = Field(description="The relation operator.")
     target: BCQLNode = Field(description="Target sub-query.")
+    label: str | None = Field(default=None, description="Optional capture label on this child relation.")
 
     def to_bcql(self) -> str:
-        return f"{self.operator.to_bcql()} {self.target.to_bcql()}"
+        prefix = f"{self.label}:" if self.label else ""
+        return f"{prefix}{self.operator.to_bcql()} {self.target.to_bcql()}"
 
 
 class RelationNode(BCQLNode):
@@ -84,21 +86,22 @@ class RelationNode(BCQLNode):
 
 
 class RootRelationNode(BCQLNode):
-    """A root relation query: ``^--> target``.
+    """A root relation query: ``^-type-> target`` or ``label:^-type-> target``.
 
-    Root relations are special: they have no source, only a target.
-    See https://github.com/instituutnederlandsetaal/BlackLab/blob/dev/site/docs/guide/040_query-language/020_relations.md#root-relations
+    Root relations have no source, only a target. They match the root of a dependency tree.
 
     Attributes:
-        relation_type: Optional relation type filter (usually ``None``
-            meaning any root relation).
+        relation_type: Optional relation type filter (usually ``None`` meaning any root).
         target: The target sub-query.
+        label: Optional capture label.
     """
 
     node_type: Literal["root_relation"] = "root_relation"
     relation_type: str | None = Field(default=None, description="Optional relation type filter.")
     target: BCQLNode = Field(description="Target sub-query.")
+    label: str | None = Field(default=None, description="Optional capture label.")
 
     def to_bcql(self) -> str:
+        prefix = f"{self.label}:" if self.label else ""
         rtype = self.relation_type or ""
-        return f"^-{rtype}-> {self.target.to_bcql()}"
+        return f"{prefix}^-{rtype}-> {self.target.to_bcql()}"

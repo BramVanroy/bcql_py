@@ -23,6 +23,12 @@ from bcql_py.models.capture import (
     ConstraintNot,
     GlobalConstraintNode,
 )
+from bcql_py.models.relation import (
+    ChildConstraint,
+    RelationNode,
+    RelationOperator,
+    RootRelationNode,
+)
 from bcql_py.models.sequence import (
     GroupNode,
     NegationNode,
@@ -169,14 +175,28 @@ class BCQLParser:
         return left
 
     def _parse_rel_align(self) -> BCQLNode:
-        """``rel_align := union_intersect | union_intersect arrows | union_intersect aligns``
+        """``rel_align := union_intersect | union_intersect child_rel (';' child_rel)*``
 
-        Handles relation arrows (``-type->``) and alignment arrows (``=type=>``). Currently passes through.
+        After parsing the source query, checks for child relation arrows (``-type->``) or
+        negated relation arrows (``!-type->``). Multiple children are chained with ``;``.
+        Relations are right-recursive: the target of each child is a full ``_parse_rel_align``.
+
+        Alignment arrows (``=type=>``) will be added in step 11.
 
         Returns:
-            A ``BCQLNode``.
+            A ``RelationNode`` when relation arrows follow, otherwise the source unchanged.
         """
-        return self._parse_union_intersect()
+        source = self._parse_union_intersect()
+
+        if not self._starts_child_relation():
+            return source
+
+        children = [self._parse_child_relation()]
+        while self._current_token.type == TokenType.SEMICOLON:
+            self._advance()
+            children.append(self._parse_child_relation())
+
+        return RelationNode(source=source, children=children)
 
     def _parse_union_intersect(self) -> BCQLNode:
         """``union_intersect := sequence | union_intersect ('|' | '&' | '->') sequence``
@@ -219,6 +239,7 @@ class BCQLParser:
             TokenType.IDENTIFIER,
             TokenType.LT,
             TokenType.LT_SLASH,
+            TokenType.ROOT_REL_CARET,
         )
 
     def _parse_sequence(self) -> BCQLNode:

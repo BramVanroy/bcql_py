@@ -6,6 +6,7 @@ log.out
 schema.json
 /guides
 /parser
+questions.md
 
 .ruff_cache
 .venv
