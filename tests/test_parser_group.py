@@ -1,9 +1,9 @@
 """Tests for parenthesized groups ``(...)`` and sequence-level negation ``!``.
 
-Groups delegate back up to the lowest-precedence level (``global_cst``), so anything
-valid at the top level is valid inside parentheses. Negation sits at the span level
-(above repetition) per ``Bcql.g4``'s ``sequencePartNoCapture`` rule, so ``!"man"+``
-parses as ``!("man"+)`` rather than ``(!"man")+``.
+Groups delegate back up to the lowest-precedence level, so anything valid at the top level is
+valid inside parentheses. Negation sits at the span level above repetition per ``Bcql.g4``'s
+``sequencePartNoCapture`` rule, so ``![pos="NOUN"]+`` parses as ``!([pos="NOUN"]+)`` rather
+than ``(![pos="NOUN"]) +``.
 """
 
 from conftest import parse, round_trip
@@ -21,43 +21,47 @@ class TestGroupNode:
     """``(...)`` parenthesized groups at the sequence level."""
 
     def test_single_token_group(self):
-        node = parse('("man")')
+        """``("corpus")`` - a redundant but valid parenthesized single-token query."""
+        node = parse('("corpus")')
         assert isinstance(node, GroupNode)
         assert isinstance(node.child, TokenQuery)
         assert node.child.shorthand is not None
-        assert node.child.shorthand.value == "man"
+        assert node.child.shorthand.value == "corpus"
 
     def test_group_with_sequence(self):
-        node = parse('("the" "man")')
+        """``("in" "vitro")`` - a parenthesized two-token technical phrase."""
+        node = parse('("in" "vitro")')
         assert isinstance(node, GroupNode)
         assert isinstance(node.child, SequenceNode)
         assert len(node.child.children) == 2
 
     def test_group_with_bracket_token(self):
-        node = parse('([word="cat"])')
+        """``([word="however"])`` - parentheses around an explicit annotation constraint."""
+        node = parse('([word="however"])')
         assert isinstance(node, GroupNode)
         assert isinstance(node.child, TokenQuery)
         assert isinstance(node.child.constraint, AnnotationConstraint)
 
     def test_nested_groups(self):
-        node = parse('(("man"))')
+        """``(("corpus"))`` - doubly nested parentheses remain structurally visible."""
+        node = parse('(("corpus"))')
         assert isinstance(node, GroupNode)
         inner = node.child
         assert isinstance(inner, GroupNode)
         assert isinstance(inner.child, TokenQuery)
 
     def test_group_with_repetition(self):
-        """``("man")+``: repetition applies to the group."""
-        node = parse('("man")+')
+        """``("in" "vitro")+`` shows repetition attaching to the whole group."""
+        node = parse('("in" "vitro")+')
         assert isinstance(node, RepetitionNode)
         assert node.min_count == 1
         assert node.max_count is None
         assert isinstance(node.child, GroupNode)
-        assert isinstance(node.child.child, TokenQuery)
+        assert isinstance(node.child.child, SequenceNode)
 
     def test_group_in_sequence(self):
-        """``"the" ("big" "bad") "wolf"``: group embedded in a sequence."""
-        node = parse('"the" ("big" "bad") "wolf"')
+        """``"the" ("United" "States") "delegation"`` embeds a grouped place name in a sequence."""
+        node = parse('"the" ("United" "States") "delegation"')
         assert isinstance(node, SequenceNode)
         assert len(node.children) == 3
         assert isinstance(node.children[1], GroupNode)
@@ -66,56 +70,69 @@ class TestGroupNode:
         assert len(inner.children) == 2
 
     def test_group_with_sequence_repetition(self):
-        """``("adj" "noun"){2,3}``: brace quantifier on a group."""
-        node = parse('("adj" "noun"){2,3}')
+        """``([pos="ADJ"] [pos="NOUN"]){2,3}`` repeats an adjective-noun chunk 2 to 3 times.
+
+        The brace quantifier applies to the whole grouped phrase, not to the final token only.
+        """
+        node = parse('([pos="ADJ"] [pos="NOUN"]){2,3}')
         assert isinstance(node, RepetitionNode)
         assert node.min_count == 2
         assert node.max_count == 3
         assert isinstance(node.child, GroupNode)
 
     def test_round_trip_single(self):
-        round_trip('("man")')
+        """Round-trip: parenthesized single token preserves structure."""
+        round_trip('("corpus")')
 
     def test_round_trip_sequence_group(self):
-        round_trip('("the" "man")')
+        """Round-trip: parenthesized phrase preserves structure."""
+        round_trip('("in" "vitro")')
 
     def test_round_trip_group_with_repetition(self):
-        round_trip('("man")+')
+        """Round-trip: group with plus quantifier preserves structure."""
+        round_trip('("in" "vitro")+')
 
     def test_round_trip_group_in_sequence(self):
-        round_trip('"the" ("big" "bad") "wolf"')
+        """Round-trip: group embedded in sequence preserves structure."""
+        round_trip('"the" ("United" "States") "delegation"')
 
     def test_round_trip_nested(self):
-        round_trip('(("man"))')
+        """Round-trip: doubly-nested parentheses preserves structure."""
+        round_trip('(("corpus"))')
 
 
 class TestNegationNode:
     """``!`` sequence-level negation."""
 
     def test_negate_token_query(self):
-        node = parse('![word="cat"]')
+        """``![word="however"]`` negates an explicit word-form constraint."""
+        node = parse('![word="however"]')
         assert isinstance(node, NegationNode)
         assert isinstance(node.child, TokenQuery)
         assert isinstance(node.child.constraint, AnnotationConstraint)
         assert node.child.constraint.annotation == "word"
 
     def test_negate_bare_string(self):
-        node = parse('!"man"')
+        """``!"however"`` negates a bare-string token query."""
+        node = parse('!"however"')
         assert isinstance(node, NegationNode)
         assert isinstance(node.child, TokenQuery)
         assert node.child.shorthand is not None
-        assert node.child.shorthand.value == "man"
+        assert node.child.shorthand.value == "however"
 
     def test_negate_group(self):
-        """``!("man" "woman")``: negation of a parenthesized group."""
-        node = parse('!("man" "woman")')
+        """``!("United" "States")`` negates a parenthesized two-word name.
+
+        The negation applies to the entire group, not just to its first token.
+        """
+        node = parse('!("United" "States")')
         assert isinstance(node, NegationNode)
         assert isinstance(node.child, GroupNode)
         assert isinstance(node.child.child, SequenceNode)
 
     def test_negate_wraps_repetition(self):
-        """``!"man"+`` parses as ``!("man"+)`` per G4: negation is at span level, above repetition."""
-        node = parse('!"man"+')
+        """``![pos="NOUN"]+`` parses as ``!([pos="NOUN"]+)`` because negation sits above repetition."""
+        node = parse('![pos="NOUN"]+')
         assert isinstance(node, NegationNode)
         assert isinstance(node.child, RepetitionNode)
         assert node.child.min_count == 1
@@ -123,32 +140,43 @@ class TestNegationNode:
         assert isinstance(node.child.child, TokenQuery)
 
     def test_double_negation(self):
-        node = parse('!!"man"')
+        """``!!"however"`` keeps the nested negation structure explicit in the AST."""
+        node = parse('!!"however"')
         assert isinstance(node, NegationNode)
         assert isinstance(node.child, NegationNode)
         assert isinstance(node.child.child, TokenQuery)
 
     def test_negation_in_sequence(self):
-        """``"the" ![pos="adj"] "dog"``: negation within a sequence."""
-        node = parse('"the" ![pos="adj"] "dog"')
+        """``"the" ![pos="ADJ"] "committee"`` negates only the middle position in the sequence.
+
+        This highlights that span-level negation still composes as one child inside a larger
+        ``SequenceNode``.
+        """
+        node = parse('"the" ![pos="ADJ"] "committee"')
         assert isinstance(node, SequenceNode)
         assert len(node.children) == 3
         assert isinstance(node.children[1], NegationNode)
 
     def test_round_trip_negate_token(self):
-        round_trip('![word="cat"]')
+        """Round-trip: negated token query preserves structure."""
+        round_trip('![word="however"]')
 
     def test_round_trip_negate_bare_string(self):
-        round_trip('!"man"')
+        """Round-trip: negated bare string preserves structure."""
+        round_trip('!"however"')
 
     def test_round_trip_negate_group(self):
-        round_trip('!("man" "woman")')
+        """Round-trip: negated group preserves structure."""
+        round_trip('!("United" "States")')
 
     def test_round_trip_negate_repetition(self):
-        round_trip('!"man"+')
+        """Round-trip: negation wrapping repetition preserves structure."""
+        round_trip('![pos="NOUN"]+')
 
     def test_round_trip_double_negation(self):
-        round_trip('!!"man"')
+        """Round-trip: double negation preserves structure."""
+        round_trip('!!"however"')
 
     def test_round_trip_negation_in_sequence(self):
-        round_trip('"the" ![pos="adj"] "dog"')
+        """Round-trip: negation in sequence preserves structure."""
+        round_trip('"the" ![pos="ADJ"] "committee"')

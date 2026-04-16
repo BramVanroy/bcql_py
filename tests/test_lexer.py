@@ -59,8 +59,8 @@ class TestLexerStrings:
         assert tokens[0].value == 'say \\"yes\\"'
 
     def test_regex_in_string(self):
-        tokens = lex('"(wo)?man"')
-        assert tokens[0].value == "(wo)?man"
+        tokens = lex('"(corpus|dataset)s?"')
+        assert tokens[0].value == "(corpus|dataset)s?"
 
     def test_sensitivity_flags(self):
         tokens = lex('"(?-i)Panama"')
@@ -357,29 +357,29 @@ class TestLexerOperators:
 
 class TestLexerComments:
     def test_single_comment_ignored(self):
-        tokens = lex('"man" # this is a comment')
+        tokens = lex('"corpus" # this is a comment')
         assert len(tokens) == 1
         assert tokens[0].type == TokenType.STRING
-        assert tokens[0].value == "man"
+        assert tokens[0].value == "corpus"
 
     def test_multiline_comment_ignored(self):
-        query = """"man" /* this is a
+        query = """"corpus" /* this is a
         multiline comment */"""
         tokens = lex(query)
         assert len(tokens) == 1
         assert tokens[0].type == TokenType.STRING
-        assert tokens[0].value == "man"
+        assert tokens[0].value == "corpus"
 
 
 class TestLexerPositions:
     def test_position_tracking(self):
-        tokens = BCQLLexer('[word="man"]').tokenize()
+        tokens = BCQLLexer('[word="corpus"]').tokenize()
         assert tokens[0].position == 0
         assert tokens[1].position == 1
         assert tokens[2].position == 5
         assert tokens[3].position == 6
-        assert tokens[4].position == 11
-        assert tokens[5].position == 12
+        assert tokens[4].position == 14
+        assert tokens[5].position == 15
 
 
 class TestLexerErrors:
@@ -437,7 +437,7 @@ class TestLexerQuantifiers:
         assert tokens[-1].type == TokenType.QUESTION
 
     def test_question_standalone(self):
-        tokens = lex('"word"?')
+        tokens = lex('"the"?')
         assert tokens[0].type == TokenType.STRING
         assert tokens[1].type == TokenType.QUESTION
         assert tokens[1].value == "?"
@@ -583,7 +583,7 @@ class TestLexerLiteralStringSingleQuote:
 class TestLexerTokenizeFunction:
     def test_tokenize_function(self):
         """Test the standalone tokenize() function."""
-        result = tokenize('[word="man"]')
+        result = tokenize('[word="corpus"]')
         assert isinstance(result, tuple)
         assert result[-1].type == TokenType.EOF
-        assert len(result) == 6  # [ word = "man" ] EOF
+        assert len(result) == 6  # [ word = "corpus" ] EOF

@@ -14,26 +14,41 @@ class TestFunctionCallBasic:
     """Basic function call parsing: ``name(args)``."""
 
     def test_no_args(self):
-        node = parse("myfunc()")
+        """``queryfunc()`` - a zero-argument query function call.
+
+        Searches for: whatever hit set the function implementation defines. In this parser test,
+        the goal is syntactic recognition of an empty argument list.
+        """
+        node = parse("queryfunc()")
         assert isinstance(node, FunctionCallNode)
-        assert node.name == "myfunc"
+        assert node.name == "queryfunc"
         assert node.args == []
 
     def test_single_query_arg(self):
-        node = parse('rspan("cat")')
+        """``rspan("however")`` - compute the relation span for a lexical token query.
+
+        The ``rspan`` function returns the span covered by a match in the dependency relations.
+        The argument is a full query that is parsed as a sub-expression.
+        """
+        node = parse('rspan("however")')
         assert isinstance(node, FunctionCallNode)
         assert node.name == "rspan"
         assert len(node.args) == 1
         assert isinstance(node.args[0], TokenQuery)
 
     def test_single_int_arg(self):
-        node = parse("myfunc(3)")
+        """``window(3)`` - a query function call with one numeric argument.
+
+        Searches for: function-defined hits using a numeric parameter (e.g. a token window size).
+        """
+        node = parse("window(3)")
         assert isinstance(node, FunctionCallNode)
-        assert node.name == "myfunc"
+        assert node.name == "window"
         assert node.args == [3]
 
     def test_multiple_args_query_and_int(self):
-        node = parse('fmeet("cat", 2)')
+        """``fmeet("however", 2)`` - function with a query argument and an integer window."""
+        node = parse('fmeet("however", 2)')
         assert isinstance(node, FunctionCallNode)
         assert node.name == "fmeet"
         assert len(node.args) == 2
@@ -41,6 +56,11 @@ class TestFunctionCallBasic:
         assert node.args[1] == 2
 
     def test_multiple_query_args(self):
+        """``meet([pos="N"], [pos="V"])`` - find positions where a noun and a verb co-occur.
+
+        The ``meet`` function takes multiple query arguments and finds positions where
+        all argument patterns are satisfied.
+        """
         node = parse('meet([pos="N"], [pos="V"])')
         assert isinstance(node, FunctionCallNode)
         assert node.name == "meet"
@@ -48,12 +68,14 @@ class TestFunctionCallBasic:
         assert all(isinstance(arg, TokenQuery) for arg in node.args)
 
     def test_multiple_int_args(self):
-        node = parse("myfunc(1, 2, 3)")
+        """``window(1, 2, 3)`` - function call with three numeric parameters."""
+        node = parse("window(1, 2, 3)")
         assert isinstance(node, FunctionCallNode)
         assert node.args == [1, 2, 3]
 
     def test_negative_int_arg(self):
-        node = parse("myfunc(-5)")
+        """``window(-5)`` - function call with a negative integer argument."""
+        node = parse("window(-5)")
         assert isinstance(node, FunctionCallNode)
         assert node.args == [-5]
 
@@ -62,19 +84,20 @@ class TestFunctionCallComplexArgs:
     """Function calls with complex sub-query arguments."""
 
     def test_sequence_arg(self):
-        """A sequence as a function argument."""
-        node = parse('rspan("the" "cat")')
+        """``rspan("New" "York")`` - function taking a multi-token query argument."""
+        node = parse('rspan("New" "York")')
         assert isinstance(node, FunctionCallNode)
         assert isinstance(node.args[0], SequenceNode)
 
     def test_token_query_arg(self):
-        node = parse('rcapture([word="test"])')
+        """``rcapture([word="however"])`` - relation-capture function around a token query."""
+        node = parse('rcapture([word="however"])')
         assert isinstance(node, FunctionCallNode)
         assert isinstance(node.args[0], TokenQuery)
 
     def test_mixed_args(self):
-        """Multiple args mixing queries and integers."""
-        node = parse('fmeet([word="cat"], [word="dog"], 3)')
+        """``fmeet([word="however"], [word="therefore"], 3)`` mixes two lexical queries with a window size."""
+        node = parse('fmeet([word="however"], [word="therefore"], 3)')
         assert isinstance(node, FunctionCallNode)
         assert len(node.args) == 3
         assert isinstance(node.args[0], TokenQuery)
@@ -86,23 +109,27 @@ class TestFunctionCallInContext:
     """Function calls as part of larger query structures."""
 
     def test_in_sequence(self):
-        node = parse('"before" myfunc("x") "after"')
+        """``"before" queryfunc("however") "after"`` embeds a function call in a sequence.
+
+        Searches for: a three-part sequence where the middle element is a function query atom.
+        """
+        node = parse('"before" queryfunc("however") "after"')
         assert isinstance(node, SequenceNode)
         assert len(node.children) == 3
         assert isinstance(node.children[1], FunctionCallNode)
 
     def test_with_capture_label(self):
-        """``A:myfunc("cat")`` - captured function call."""
-        node = parse('A:myfunc("cat")')
+        """``focus:queryfunc("however")`` applies a capture label to a function call."""
+        node = parse('focus:queryfunc("however")')
         assert isinstance(node, CaptureNode)
-        assert node.label == "A"
+        assert node.label == "focus"
         assert isinstance(node.body, FunctionCallNode)
 
     def test_parenthesized(self):
-        """Function call inside parentheses."""
+        """``(queryfunc("however"))`` - parenthesized function call as a grouped query atom."""
         from bcql_py.models.sequence import GroupNode
 
-        node = parse('(myfunc("cat"))')
+        node = parse('(queryfunc("however"))')
         assert isinstance(node, GroupNode)
         assert isinstance(node.child, FunctionCallNode)
 
@@ -111,39 +138,48 @@ class TestFunctionCallRoundTrip:
     """Round-trip tests for function calls."""
 
     def test_no_args_round_trip(self):
-        round_trip("myfunc()")
+        """Round-trip: no-args function call preserves structure."""
+        round_trip("queryfunc()")
 
     def test_single_query_round_trip(self):
-        round_trip('rspan("cat")')
+        """Round-trip: single query arg preserves structure."""
+        round_trip('rspan("however")')
 
     def test_single_int_round_trip(self):
-        round_trip("myfunc(3)")
+        """Round-trip: single integer arg preserves structure."""
+        round_trip("window(3)")
 
     def test_multiple_args_round_trip(self):
+        """Round-trip: multiple query args preserve structure."""
         round_trip('meet([pos="N"], [pos="V"])')
 
     def test_mixed_args_round_trip(self):
-        round_trip('fmeet("cat", 2)')
+        """Round-trip: mixed query and integer args preserve structure."""
+        round_trip('fmeet("however", 2)')
 
     def test_complex_query_arg_round_trip(self):
-        round_trip('rspan("the" "cat")')
+        """Round-trip: sequence arg preserves structure."""
+        round_trip('rspan("New" "York")')
 
     def test_negative_int_round_trip(self):
-        round_trip("myfunc(-5)")
+        """Round-trip: negative integer arg preserves structure."""
+        round_trip("window(-5)")
 
 
 class TestFunctionCallErrors:
     """Error cases for function call parsing."""
 
     def test_missing_closing_paren(self):
+        """``queryfunc("however"`` - missing closing parenthesis after function arguments."""
         with pytest.raises(BCQLSyntaxError, match="at end of function call"):
-            parse('myfunc("cat"')
+            parse('queryfunc("however"')
 
     def test_missing_opening_paren(self):
-        """Bare IDENT without '(' is not a valid atom - handled by capture/span path."""
+        """``queryfunc`` - bare identifier without ``(`` is not a valid query atom."""
         with pytest.raises(BCQLSyntaxError):
-            parse("myfunc")
+            parse("queryfunc")
 
     def test_trailing_comma(self):
+        """``queryfunc("however",)`` - trailing comma with no following argument."""
         with pytest.raises(BCQLSyntaxError):
-            parse('myfunc("cat",)')
+            parse('queryfunc("however",)')
