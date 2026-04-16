@@ -24,6 +24,7 @@ from bcql_py.models.capture import (
     ConstraintNot,
     GlobalConstraintNode,
 )
+from bcql_py.models.function import FunctionCallNode
 from bcql_py.models.lookaround import LookaheadNode, LookbehindNode
 from bcql_py.models.relation import (
     ChildConstraint,
@@ -641,12 +642,11 @@ class BCQLParser:
         """``atom := '[' token_expr? ']' | STRING | '_' | '(' global_cst ')' | ...``
 
         The highest-precedence production in the sequence-level grammar. Handles token queries (``[...]``),
-        bare string shorthands (``"man"``), the underscore wildcard (``_``), and parenthesized groups.
+        bare string shorthands (``"man"``), the underscore wildcard (``_``), parenthesized groups,
+        root relations, lookarounds, and function calls (``IDENT '(' arg_list ')'``).
 
         A parenthesized group delegates back up to ``_parse_global_constraint`` (the lowest-precedence level),
         matching ``Bcql.g4``'s ``'(' constrainedQuery ')'`` inside ``sequencePartNoCapture``.
-
-        Remaining atom alternatives (root relations, lookarounds, functions) will be added in later steps.
 
         Returns:
             A ``BCQLNode``.
@@ -685,6 +685,10 @@ class BCQLParser:
             return self._parse_lookahead()
         if tok.type in (TokenType.LOOKBEHIND_POS, TokenType.LOOKBEHIND_NEG):
             return self._parse_lookbehind()
+
+        # Function call: IDENT '(' arg_list ')'
+        if tok.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.LPAREN:
+            return self._parse_function_call()
 
         raise self._raise_error(f"Expected a token query, string, '(', or '_', got {tok.type.name} ({tok.value!r})")
 
@@ -740,6 +744,50 @@ class BCQLParser:
         body = self._parse_global_constraint()
         self._expect(TokenType.RPAREN, "at end of lookbehind assertion")
         return LookbehindNode(positive=positive, body=body)
+
+    def _parse_function_call(self) -> FunctionCallNode:
+        """``IDENT '(' arg_list ')'`` where ``arg_list := ε | arg (',' arg)*`` and ``arg := global_cst | INT``.
+
+        Parses a built-in function call like ``fcall("query", 3)`` at the sequence level. Arguments can be
+        full sub-queries (parsed via ``_parse_global_constraint``) or bare integer d. The parser tries to
+        consume an ``INT`` first; if the current token is not an integer, it falls through to parsing a
+        full sub-query.
+
+        This matches ``Bcql.g4``'s ``queryFuctionCall`` (sic). G4's ``functionParam``
+        allows ``constrainedQuery | constraintValue``, but since a constraintValue string is also a valid
+        constrainedQuery, we simplify to ``global_cst | INT``.
+
+        Returns:
+            A ``FunctionCallNode``.
+        """
+        name_tok = self._advance()
+        self._expect(TokenType.LPAREN, "after function name")
+
+        args: list[BCQLNode | int] = []
+        if self._current_token.type != TokenType.RPAREN:
+            args.append(self._parse_function_arg())
+            while self._current_token.type == TokenType.COMMA:
+                self._advance()
+                args.append(self._parse_function_arg())
+
+        self._expect(TokenType.RPAREN, "at end of function call")
+        return FunctionCallNode(name=name_tok.value, args=args)
+
+    def _parse_function_arg(self) -> BCQLNode | int:
+        """Parse a single function argument: ``arg := global_cst | INT``.
+
+        Bare integers are returned as ``int`` values. Everything else is parsed as a full sub-query
+        via ``_parse_global_constraint``.
+
+        Returns:
+            An ``int`` for bare integer arguments, or a ``BCQLNode`` for query arguments.
+        """
+        if self._current_token.type == TokenType.INTEGER and self._peek(1).type in (
+            TokenType.COMMA,
+            TokenType.RPAREN,
+        ):
+            return int(self._advance().value)
+        return self._parse_global_constraint()
 
     def _parse_token_query(self) -> TokenQuery:
         """Parse a bracketed token query: ``[`` *token_expr*? ``]``.
