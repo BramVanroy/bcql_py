@@ -30,21 +30,25 @@ class CaptureNode(BCQLNode):
 
 
 class AnnotationRef(BCQLNode):
-    """Reference to a captured token's annotation: ``label.annotation``.
+    """Reference to a captured token's annotation: ``label.annotation``, or a bare capture label.
 
-    Example: ``A.word`` refers to the ``word`` annotation of capture ``A``.
+    Examples:
+    - ``A.word`` refers to the ``word`` annotation of capture ``A``.
+    - ``A`` as a bare label (typically used as a function argument, e.g. ``start(A)``).
 
     Attributes:
         label: Capture group name.
-        annotation: Annotation name.
+        annotation: Annotation name, or empty string for a bare label reference.
     """
 
     node_type: Literal["annotation_ref"] = "annotation_ref"
     label: str = Field(description="Capture group name")
-    annotation: str = Field(description="Annotation name.")
+    annotation: str = Field(default="", description="Annotation name, or empty for a bare label.")
 
     def to_bcql(self) -> str:
-        return f"{self.label}.{self.annotation}"
+        if self.annotation:
+            return f"{self.label}.{self.annotation}"
+        return self.label
 
 
 class ConstraintLiteral(BCQLNode):

@@ -38,7 +38,7 @@ CMP             = | != | < | <= | > | >=
 query           := global_cst EOF
 
 global_cst      := pos_filter
-                 | pos_filter '::' cc_expr
+                 | pos_filter ('::' cc_expr)*   /* left-assoc, repeating per Bcql.g4 */
 
 pos_filter     := rel_align
                  | rel_align FILTER pos_filter  /* right-recursive per Bcql.g4 */

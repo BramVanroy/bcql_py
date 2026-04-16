@@ -13,7 +13,16 @@ from typing import Sequence
 
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.base import BCQLNode
-from bcql_py.models.capture import CaptureNode
+from bcql_py.models.capture import (
+    AnnotationRef,
+    CaptureNode,
+    ConstraintBoolean,
+    ConstraintComparison,
+    ConstraintFunctionCall,
+    ConstraintLiteral,
+    ConstraintNot,
+    GlobalConstraintNode,
+)
 from bcql_py.models.sequence import (
     GroupNode,
     NegationNode,
@@ -117,15 +126,23 @@ class BCQLParser:
         return node
 
     def _parse_global_constraint(self) -> BCQLNode:
-        """``global_cst := pos_filter | pos_filter '::' cc_expr``
+        """``global_cst := pos_filter ('::' cc_expr)*``
 
-        Lowest precedence level. Currently passes through; the ``::`` capture-constraint branch will be
-        added in a later step.
+        Lowest precedence level. When ``::`` is present, wraps the body and each capture
+        constraint in a ``GlobalConstraintNode``. Multiple ``::`` are left-associative per
+        ``Bcql.g4``'s ``constrainedQuery`` rule.
 
         Returns:
-            A ``BCQLNode``.
+            A ``GlobalConstraintNode`` when ``::`` is present, otherwise the inner query unchanged.
         """
-        return self._parse_pos_filter()
+        body = self._parse_pos_filter()
+
+        while self._current_token.type == TokenType.DOUBLE_COLON:
+            self._advance()
+            constraint = self._parse_cc_bool()
+            body = GlobalConstraintNode(body=body, constraint=constraint)
+
+        return body
 
     _FILTER_OPS = {TokenType.WITHIN, TokenType.CONTAINING, TokenType.OVERLAP}
 
@@ -676,6 +693,149 @@ class BCQLParser:
 
         self._expect(TokenType.RPAREN, "in function constraint")
         return FunctionConstraint(name=name, args=args)
+
+    # Capture-constraint grammar (after ::)
+
+    def _parse_cc_bool(
+        self,
+    ) -> (
+        ConstraintComparison
+        | ConstraintBoolean
+        | ConstraintNot
+        | ConstraintLiteral
+        | AnnotationRef
+        | ConstraintFunctionCall
+    ):
+        """``cc_bool := cc_not | cc_bool ('&' | '|' | '->') cc_not``
+
+        Left-associative boolean combination of capture constraints. Same precedence rules as
+        ``_parse_token_bool``: ``&``, ``|``, and ``->`` all share equal precedence.
+
+        Returns:
+            A capture constraint expression node.
+        """
+        left = self._parse_cc_not()
+
+        while self._current_token.type in BOOL_OPS:
+            op_tok = self._advance()
+            operator = BOOL_OPS[op_tok.type]
+            right = self._parse_cc_not()
+            left = ConstraintBoolean(operator=operator, left=left, right=right)
+
+        return left
+
+    def _parse_cc_not(
+        self,
+    ) -> ConstraintComparison | ConstraintNot | ConstraintLiteral | AnnotationRef | ConstraintFunctionCall:
+        """``cc_not := cc_cmp | '!' cc_not``
+
+        Prefix negation in capture constraints.
+
+        Returns:
+            A ``ConstraintNot`` when negated, otherwise delegates to ``_parse_cc_cmp``.
+        """
+        if self._current_token.type == TokenType.BANG:
+            self._advance()
+            operand = self._parse_cc_not()
+            return ConstraintNot(operand=operand)
+
+        return self._parse_cc_cmp()
+
+    def _parse_cc_cmp(self) -> ConstraintComparison | ConstraintLiteral | AnnotationRef | ConstraintFunctionCall:
+        """``cc_cmp := cc_atom | cc_atom CMP cc_atom``
+
+        Comparison level in capture constraints. Handles ``A.word = "over"`` and similar.
+        Per ``Bcql.g4``'s ``simpleConstraint`` rule, comparisons chain left-to-right:
+        ``a CMP b CMP c`` parses as ``(a CMP b) CMP c``.
+
+        Returns:
+            A ``ConstraintComparison`` when a comparison operator is present, otherwise a plain ``cc_atom``.
+        """
+        left = self._parse_cc_atom()
+
+        while self._current_token.type in CMP_OPS:
+            op_tok = self._advance()
+            operator = CMP_OPS[op_tok.type]
+            right = self._parse_cc_atom()
+            left = ConstraintComparison(operator=operator, left=left, right=right)
+
+        return left
+
+    def _parse_cc_atom(self) -> ConstraintLiteral | AnnotationRef | ConstraintFunctionCall:
+        """``cc_atom := STRING | IDENT '.' IDENT | IDENT '(' cc_arg_list ')' | '(' cc_bool ')'``
+
+        Highest precedence in the capture constraint grammar. Dispatches based on the current token:
+
+        - **String literal** (``"over"``): produces a ``ConstraintLiteral``.
+        - **Identifier followed by ``.``** (``A.word``): produces an ``AnnotationRef``.
+        - **Identifier followed by ``(``** (``start(A)``): produces a ``ConstraintFunctionCall``.
+        - **Bare identifier** (``A``): produces an ``AnnotationRef`` with no annotation (used as a
+          function argument referring to a capture label).
+        - **Parenthesized sub-expression**: recurses into ``_parse_cc_bool``.
+
+        Returns:
+            A capture constraint atom node.
+
+        Raises:
+            BCQLSyntaxError: When the current token cannot start a capture constraint atom.
+        """
+        tok = self._current_token
+
+        # Parenthesized sub-expression
+        if tok.type == TokenType.LPAREN:
+            self._advance()
+            expr = self._parse_cc_bool()
+            self._expect(TokenType.RPAREN, "in capture constraint")
+            return expr
+
+        # String literal
+        if tok.type in (TokenType.STRING, TokenType.LITERAL_STRING):
+            self._advance()
+            return ConstraintLiteral(value=tok.value)
+
+        # Identifier-led alternatives: A.word, start(...), or bare label
+        if tok.type == TokenType.IDENTIFIER:
+            ident_tok = self._advance()
+
+            # Annotation reference: IDENT '.' IDENT
+            if self._current_token.type == TokenType.DOT:
+                self._advance()
+                prop_tok = self._expect(TokenType.IDENTIFIER, "after '.' in annotation reference")
+                return AnnotationRef(label=ident_tok.value, annotation=prop_tok.value)
+
+            # Function call: IDENT '(' cc_arg_list ')'
+            if self._current_token.type == TokenType.LPAREN:
+                return self._parse_cc_function_call(ident_tok.value)
+
+            # Bare identifier (capture label used as function argument)
+            return AnnotationRef(label=ident_tok.value, annotation="")
+
+        raise self._raise_error(
+            f"Expected a string, identifier, or '(' in capture constraint, got {tok.type.name} ({tok.value!r})"
+        )
+
+    def _parse_cc_function_call(self, name: str) -> ConstraintFunctionCall:
+        """Parse ``'(' cc_arg_list ')'`` after a function name in a capture constraint.
+
+        Example: ``start(A)`` or ``end(B)``.
+
+        Args:
+            name: The function name preceding ``(``.
+
+        Returns:
+            A ``ConstraintFunctionCall``.
+        """
+        self._expect(TokenType.LPAREN, "in capture constraint function call")
+        args = []
+
+        if self._current_token.type != TokenType.RPAREN:
+            args.append(self._parse_cc_bool())
+            while self._current_token.type == TokenType.COMMA:
+                self._advance()
+                args.append(self._parse_cc_bool())
+
+        self._expect(TokenType.RPAREN, "in capture constraint function call")
+        return ConstraintFunctionCall(name=name, args=args)
 
     def _parse_string_value(self, context: str = "") -> StringValue:
         """Consume a STRING or LITERAL_STRING token and return a ``StringValue``.
