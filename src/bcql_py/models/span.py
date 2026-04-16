@@ -59,8 +59,7 @@ class SpanQuery(BCQLNode):
 class PositionFilterNode(BCQLNode):
     """A position-filter operator: ``within``, ``containing``, or ``overlap``.
 
-    Exampl``"baker" within <person/>`` means: find ``"baker"`` that occurs
-    inside a ``<person/>`` span.
+    Example: ``"baker" within <person/>`` means find ``"baker"`` inside a ``<person/>`` span.
 
     These operators are **right-associative**, so ``A within B within C`` is parsed as ``A within (B within C)``.
 

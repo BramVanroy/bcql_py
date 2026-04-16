@@ -1,8 +1,8 @@
 """Base class for all BCQL AST nodes.
 
-Every node in the parsed BCQL tree inherits from BCQLNode. The class
-is a frozen Pydantic v2 ``BaseModel`` (immutable after construction) with a
-``node_type`` discriminator field. which we can use later to reconstruct the original query string.
+Every node in the parsed BCQL tree inherits from ``BCQLNode``, a frozen Pydantic v2
+``BaseModel`` (immutable after construction) with a ``node_type`` discriminator field
+used for serialisation and query reconstruction.
 """
 
 from __future__ import annotations
@@ -16,8 +16,8 @@ from pydantic import BaseModel, ConfigDict
 class BCQLNode(BaseModel, abc.ABC):
     """Abstract base for every node in the BCQL abstract syntax tree.
 
-    Sub-classes **must** override :pymethod:`to_bcql` and set ``node_type``
-    to a unique ``Literal`` string so that discrimination works correctly
+    Sub-classes must override ``to_bcql`` and set ``node_type``
+    to a unique ``Literal`` string so that discrimination works correctly.
 
     Configuration:
       - ``frozen = True``: instances are immutable after creation

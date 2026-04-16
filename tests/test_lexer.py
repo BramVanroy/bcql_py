@@ -102,6 +102,26 @@ class TestLexerIdentifiers:
         assert tokens[0].type == TokenType.UNDERSCORE
         assert tokens[0].value == "_"
 
+    @pytest.mark.parametrize(
+        "text, expected_type",
+        [
+            ("WITHIN", TokenType.WITHIN),
+            ("Within", TokenType.WITHIN),
+            ("CONTAINING", TokenType.CONTAINING),
+            ("Containing", TokenType.CONTAINING),
+            ("OVERLAP", TokenType.OVERLAP),
+            ("TRUE", TokenType.TRUE),
+            ("True", TokenType.TRUE),
+            ("FALSE", TokenType.FALSE),
+            ("IN", TokenType.IN),
+        ],
+    )
+    def test_keywords_case_insensitive(self, text, expected_type):
+        """Keywords match case-insensitively per Bcql.g4's `caseInsensitive = true`."""
+        tokens = lex(text)
+        assert tokens[0].type == expected_type
+        assert tokens[0].value == text
+
 
 class TestLexerBrackets:
     def test_square_brackets(self):

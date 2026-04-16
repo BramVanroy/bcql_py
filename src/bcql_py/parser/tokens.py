@@ -43,8 +43,6 @@ class TokenType(StrEnum):
     GTE = auto()  # >=
     EQ = auto()  # =
     NEQ = auto()  # !=
-    LT_CMP = auto()  # <
-    GT_CMP = auto()  # >
 
     # Operators: logical / boolean
     BANG = auto()  # !  (standalone negation)
@@ -124,4 +122,4 @@ class Token:
         return f"Token({self.type.name}, {self.value!r}, pos={self.position})"
 
 
-__all__ = ["TokenType", "Token", "KEYWORDS"]
+__all__ = ["TokenType", "Token", "KEYWORDS", "BOOL_OPS", "CMP_OPS"]

@@ -177,8 +177,8 @@ class BCQLLexer:
             self._pos += 1
 
         word = "".join(chars)
-        # Try getting a reserved keyword match, otherwise default to IDENTIFIER
-        ttype = KEYWORDS.get(word, TokenType.IDENTIFIER)
+        # Case-insensitive keyword match per Bcql.g4's `caseInsensitive = true` option
+        ttype = KEYWORDS.get(word.lower(), TokenType.IDENTIFIER)
         self._emit(ttype, word, start)
 
     def _read_integer(self, start: int) -> None:
@@ -349,7 +349,7 @@ class BCQLLexer:
                     )
                 continue
 
-            # Equals sign `=`: could be alignment arrow or just an equals sign for assigfment
+            # Equals sign `=`: could be alignment arrow or just an equals sign for assignment
             if curr_char == "=":
                 if self._is_alignment_arrow():
                     self._read_alignment_arrow(starting_pos)

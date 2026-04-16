@@ -1,9 +1,10 @@
 """Recursive descent parser for BCQL.
 
-Starting from the lowest precedence operators and working down to the highest precedence. The "trick"" is that each level immediately delegates down to the
-tighter-binding level before it looks for its own operator. (So while you start at the lowest precedence, it is in fact materialized latest.)
+Starting from the lowest precedence operators and working down to the highest. The trick is that each level
+immediately delegates down to the tighter-binding level before it looks for its own operator, so while you start
+at the lowest precedence, it is in fact materialized latest.
 
-See bnf.md for the Backus-Naur Form grammar that we're trying to implement.
+See bnf.md for the grammar that we're implementing.
 """
 
 from __future__ import annotations

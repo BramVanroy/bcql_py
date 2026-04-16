@@ -89,9 +89,10 @@ class ConstraintComparison(BCQLNode):
 class ConstraintBoolean(BCQLNode):
     """Boolean combination of capture constraints: ``left op right``.
 
-    Operators: ``&`` (AND), ``|`` (OR), ``->`` (implication).
-    The implication operator only exists within capture constraints
-    See https://github.com/instituutnederlandsetaal/BlackLab/blob/6937759aba31d79fd1a14c675135ad821c6153cd/site/docs/guide/040_query-language/050_miscellaneous.md?plain=1#L87
+    Operators: ``&`` (AND), ``|`` (OR), ``->`` (implication). All three share the same precedence
+    per ``Bcql.g4``'s ``booleanOperator`` rule. The ``->`` implication operator is most commonly
+    seen in capture constraints (e.g. ``A.word = "cat" -> B.word = "dog"``) but the grammar
+    allows it at every level.
 
     Attributes:
         operator: ``"&"``, ``"|"``, or ``"->"``.
