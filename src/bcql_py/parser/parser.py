@@ -198,6 +198,87 @@ class BCQLParser:
 
         return RelationNode(source=source, children=children)
 
+    def _starts_child_relation(self) -> bool:
+        """Check if the current position begins a child relation arrow.
+
+        A child relation starts with either ``REL_LINE`` (for ``-type->``) or ``BANG REL_LINE``
+        (for ``!-type->``). We also handle an optional capture label prefix: ``IDENT ':' [!] -type->``.
+
+        The ``BANG`` lookahead distinguishes negated relations from negated spans: at this level,
+        ``BANG`` followed by ``REL_LINE`` is always a negated relation.
+
+        Returns:
+            ``True`` if a child relation arrow follows.
+        """
+        tok = self._current_token
+        # Direct arrow: -type->
+        if tok.type == TokenType.REL_LINE:
+            return True
+        # Negated arrow: !-type->
+        if tok.type == TokenType.BANG and self._peek(1).type == TokenType.REL_LINE:
+            return True
+        # Capture label prefix: label:-type-> or label:!-type->
+        if tok.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.COLON:
+            after_colon = self._peek(2).type
+            if after_colon == TokenType.REL_LINE:
+                return True
+            if after_colon == TokenType.BANG and self._peek(3).type == TokenType.REL_LINE:
+                return True
+        return False
+
+    def _parse_child_relation(self) -> ChildConstraint:
+        """``child_rel := [IDENT ':'] relation_op rel_align``
+
+        Parses a single child constraint: optional capture label, a relation operator, and the
+        target sub-query. The target is a full ``_parse_rel_align`` (right-recursive) so that
+        ``_ -nsubj-> _ -amod-> _`` parses as ``_ -nsubj-> (_ -amod-> _)``.
+
+        Returns:
+            A ``ChildConstraint``.
+        """
+        label = None
+        if self._current_token.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.COLON:
+            label = self._advance().value
+            self._advance()  # consume ':'
+
+        operator = self._parse_relation_operator()
+        target = self._parse_rel_align()
+        return ChildConstraint(operator=operator, target=target, label=label)
+
+    def _parse_relation_operator(self) -> RelationOperator:
+        """``relation_op := [!] '-' IDENT? '->' IDENT?``
+
+        Parses the operator tokens that the lexer decomposed from a single arrow like ``-obj->``
+        or ``!-nsubj->corrected``. The lexer emits the constituent tokens:
+        ``[BANG] REL_LINE [IDENT] REL_ARROW [IDENT]``.
+
+        Returns:
+            A ``RelationOperator`` with type, negation flag, and optional target field.
+        """
+        negated = False
+        if self._current_token.type == TokenType.BANG:
+            negated = True
+            self._advance()
+
+        self._expect(TokenType.REL_LINE, "at start of relation arrow")
+
+        relation_type = None
+        if self._current_token.type == TokenType.IDENTIFIER:
+            relation_type = self._advance().value
+
+        self._expect(TokenType.REL_ARROW, "in relation arrow")
+
+        target_field = None
+        if self._current_token.type == TokenType.IDENTIFIER and not self._starts_child_relation():
+            # Only consume IDENT as target field if it's not the start of IDENT ':' (a capture label
+            # for the next child relation). We need this check because in ``_ -obj->field A:-amod-> _``
+            # the IDENT after ``->`` is a target field only if it's NOT followed by ``:``.
+            # But actually, target fields don't use ``:`` so: peek for ``IDENT COLON``
+            if self._peek(1).type != TokenType.COLON:
+                target_field = self._advance().value
+
+        return RelationOperator(relation_type=relation_type, negated=negated, target_field=target_field)
+
     def _parse_union_intersect(self) -> BCQLNode:
         """``union_intersect := sequence | union_intersect ('|' | '&' | '->') sequence``
 
@@ -226,9 +307,27 @@ class BCQLParser:
         Used by ``_parse_sequence`` to decide whether to collect another element. This set grows as new atom
         alternatives are added in later steps (lookarounds, functions, etc.).
 
+        Includes lookahead to avoid consuming tokens that belong to the ``_parse_rel_align`` level:
+        - ``BANG REL_LINE`` is a negated relation arrow, not the start of a negated span.
+        - ``IDENT ':' REL_LINE`` or ``IDENT ':' BANG REL_LINE`` is a capture-labelled child relation.
+
         Returns:
             ``True`` if the current token can start an atom.
         """
+        tok = self._current_token
+
+        # BANG followed by REL_LINE is a negated relation arrow, handled by _parse_rel_align
+        if tok.type == TokenType.BANG:
+            return self._peek(1).type != TokenType.REL_LINE
+
+        # IDENT ':' followed by a relation arrow component is a child relation label
+        if tok.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.COLON:
+            after_colon = self._peek(2).type
+            if after_colon == TokenType.REL_LINE:
+                return False
+            if after_colon == TokenType.BANG and self._peek(3).type == TokenType.REL_LINE:
+                return False
+
         return self._current_token_is_oneof(
             TokenType.LBRACKET,
             TokenType.STRING,
@@ -493,7 +592,34 @@ class BCQLParser:
             self._advance()
             return UnderscoreNode()
 
+        # Root relation: ^-type-> target
+        if tok.type == TokenType.ROOT_REL_CARET:
+            return self._parse_root_relation()
+
         raise self._raise_error(f"Expected a token query, string, '(', or '_', got {tok.type.name} ({tok.value!r})")
+
+    def _parse_root_relation(self) -> RootRelationNode:
+        """``root_rel := '^' '-' IDENT? '->' rel_align``
+
+        Root relations match the root of a dependency tree. The lexer emits
+        ``ROOT_REL_CARET REL_LINE [IDENT] REL_ARROW`` for the arrow tokens.
+        The capture label, if any, is handled by ``_parse_capture`` which sits above
+        ``_parse_atom`` in the precedence chain.
+
+        Returns:
+            A ``RootRelationNode``.
+        """
+        self._expect(TokenType.ROOT_REL_CARET, "at start of root relation")
+        self._expect(TokenType.REL_LINE, "in root relation arrow")
+
+        relation_type = None
+        if self._current_token.type == TokenType.IDENTIFIER:
+            relation_type = self._advance().value
+
+        self._expect(TokenType.REL_ARROW, "in root relation arrow")
+
+        target = self._parse_rel_align()
+        return RootRelationNode(relation_type=relation_type, target=target)
 
     def _parse_token_query(self) -> TokenQuery:
         """Parse a bracketed token query: ``[`` *token_expr*? ``]``.

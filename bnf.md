@@ -44,13 +44,11 @@ pos_filter     := rel_align
                  | rel_align FILTER pos_filter  /* right-recursive per Bcql.g4 */
 
 rel_align       := union_intersect
-                 | union_intersect arrows
+                 | union_intersect child_rel (';' child_rel)*
                  | union_intersect aligns
 
-arrows          := arrow_child
-                 | arrow_child ';' arrows
-arrow_child     := '-' IDENT? '->' IDENT? union_intersect
-                 | '!' '-' IDENT? '->' IDENT? union_intersect
+child_rel       := (IDENT ':')? '-' IDENT? '->' IDENT? rel_align   /* right-recursive */
+                 | (IDENT ':')? '!' '-' IDENT? '->' IDENT? rel_align
 
 aligns          := align_child
                  | align_child ';' aligns
