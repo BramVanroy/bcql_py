@@ -24,6 +24,7 @@ from bcql_py.models.capture import (
     ConstraintNot,
     GlobalConstraintNode,
 )
+from bcql_py.models.lookaround import LookaheadNode, LookbehindNode
 from bcql_py.models.relation import (
     ChildConstraint,
     RelationNode,
@@ -418,6 +419,10 @@ class BCQLParser:
             TokenType.LT,
             TokenType.LT_SLASH,
             TokenType.ROOT_REL_CARET,
+            TokenType.LOOKAHEAD_POS,
+            TokenType.LOOKAHEAD_NEG,
+            TokenType.LOOKBEHIND_POS,
+            TokenType.LOOKBEHIND_NEG,
         )
 
     def _parse_sequence(self) -> BCQLNode:
@@ -675,6 +680,12 @@ class BCQLParser:
         if tok.type == TokenType.ROOT_REL_CARET:
             return self._parse_root_relation()
 
+        # Lookahead / lookbehind assertions
+        if tok.type in (TokenType.LOOKAHEAD_POS, TokenType.LOOKAHEAD_NEG):
+            return self._parse_lookahead()
+        if tok.type in (TokenType.LOOKBEHIND_POS, TokenType.LOOKBEHIND_NEG):
+            return self._parse_lookbehind()
+
         raise self._raise_error(f"Expected a token query, string, '(', or '_', got {tok.type.name} ({tok.value!r})")
 
     def _parse_root_relation(self) -> RootRelationNode:
@@ -699,6 +710,36 @@ class BCQLParser:
 
         target = self._parse_rel_align()
         return RootRelationNode(relation_type=relation_type, target=target)
+
+    def _parse_lookahead(self) -> LookaheadNode:
+        """``lookahead := ('(?=' | '(?!') global_cst ')'``
+
+        The lexer emits a single compound token (``LOOKAHEAD_POS`` or ``LOOKAHEAD_NEG``), then
+        the body, then ``RPAREN``. The body is a full ``_parse_global_constraint`` (matching
+        G4's ``constrainedQuery`` inside parens).
+
+        Returns:
+            A ``LookaheadNode``.
+        """
+        tok = self._advance()
+        positive = tok.type == TokenType.LOOKAHEAD_POS
+        body = self._parse_global_constraint()
+        self._expect(TokenType.RPAREN, "at end of lookahead assertion")
+        return LookaheadNode(positive=positive, body=body)
+
+    def _parse_lookbehind(self) -> LookbehindNode:
+        """``lookbehind := ('(?<=' | '(?<!') global_cst ')'``
+
+        Same as ``_parse_lookahead`` but for lookbehind assertions.
+
+        Returns:
+            A ``LookbehindNode``.
+        """
+        tok = self._advance()
+        positive = tok.type == TokenType.LOOKBEHIND_POS
+        body = self._parse_global_constraint()
+        self._expect(TokenType.RPAREN, "at end of lookbehind assertion")
+        return LookbehindNode(positive=positive, body=body)
 
     def _parse_token_query(self) -> TokenQuery:
         """Parse a bracketed token query: ``[`` *token_expr*? ``]``.
