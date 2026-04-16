@@ -21,6 +21,7 @@ from bcql_py.models.sequence import (
     SequenceNode,
     UnderscoreNode,
 )
+from bcql_py.models.span import SpanQuery
 from bcql_py.models.token import (
     AnnotationConstraint,
     BoolConstraint,
@@ -185,6 +186,8 @@ class BCQLParser:
             TokenType.LPAREN,
             TokenType.BANG,
             TokenType.IDENTIFIER,
+            TokenType.LT,
+            TokenType.LT_SLASH,
         )
 
     def _parse_sequence(self) -> BCQLNode:
@@ -231,22 +234,80 @@ class BCQLParser:
         return self._parse_span()
 
     def _parse_span(self) -> BCQLNode:
-        """``span := repetition | '!' span | '<' tag_name ... '>' | '</' tag_name '>'``
+        """``span := repetition | '!' span | '<' tag ... '>' | '</' tag '>'``
 
-        In ``Bcql.g4``'s ``sequencePartNoCapture`` rule, negation (``! sequencePartNoCapture``) is
-        an alternative at the same level as ``(thing) repetitionAmount*``. This means negation
-        wraps repetition: ``!"man"+`` parses as ``!("man"+)`` rather than ``(!"man")+``.
+        Handles three span tag forms per ``Bcql.g4``'s ``tag`` rule:
+        - Whole span: ``<tag_name attr*/>`` - matches the entire span
+        - Start tag: ``<tag_name attr*>`` - matches the start position
+        - End tag: ``</tag_name>`` - matches the end position
 
-        XML-style span queries are not yet implemented.
+        The tag name can be an identifier or a quoted string (regex). Attributes follow the
+        pattern ``name="value"`` or ``name='value'``.
+
+        Negation (``! span``) wraps repetition per ``Bcql.g4``'s ``sequencePartNoCapture`` rule.
 
         Returns:
-            A ``BCQLNode``, possibly a ``NegationNode``.
+            A ``BCQLNode``: ``SpanQuery`` for tags, ``NegationNode`` for negation, or delegates
+            to ``_parse_repetition``.
         """
+        # Negation
         if self._current_token.type == TokenType.BANG:
             self._advance()
             operand = self._parse_span()
             return NegationNode(child=operand)
+
+        # End tag: </tag_name>
+        if self._current_token.type == TokenType.LT_SLASH:
+            self._advance()
+            tag_name = self._parse_tag_name()
+            self._expect(TokenType.GT, "at end of closing tag")
+            return self._apply_node_repetition(SpanQuery(tag_name=tag_name, position="end"))
+
+        # Start or whole tag: <tag_name attr* > or <tag_name attr* />
+        if self._current_token.type == TokenType.LT:
+            self._advance()
+            tag_name = self._parse_tag_name()
+            attributes = self._parse_tag_attributes()
+            if self._current_token.type == TokenType.SLASH_GT:
+                self._advance()
+                node = SpanQuery(tag_name=tag_name, position="whole", attributes=attributes)
+                return self._apply_node_repetition(node)
+            self._expect(TokenType.GT, "at end of opening tag")
+            node = SpanQuery(tag_name=tag_name, position="start", attributes=attributes)
+            return self._apply_node_repetition(node)
+
         return self._parse_repetition()
+
+    def _parse_tag_name(self) -> str | StringValue:
+        """Parse a tag name: either an ``IDENTIFIER`` or a quoted ``STRING``.
+
+        Returns:
+            A plain ``str`` for identifiers, or a ``StringValue`` for quoted strings.
+        """
+        tok = self._current_token
+        if tok.type == TokenType.IDENTIFIER:
+            self._advance()
+            return tok.value
+        if tok.type in (TokenType.STRING, TokenType.LITERAL_STRING):
+            self._advance()
+            return StringValue(value=tok.value, is_literal=(tok.type == TokenType.LITERAL_STRING))
+        raise self._raise_error(f"Expected tag name, got {tok.type.name} ({tok.value!r})")
+
+    def _parse_tag_attributes(self) -> dict[str, StringValue]:
+        """Parse zero or more tag attributes: ``name="value"``.
+
+        Collects attributes until the current token is ``>`` or ``/>``.
+
+        Returns:
+            A dict mapping attribute names to ``StringValue``s.
+        """
+        attrs: dict[str, StringValue] = {}
+        while self._current_token.type == TokenType.IDENTIFIER:
+            name_tok = self._advance()
+            self._expect(TokenType.EQ, f"after attribute name {name_tok.value!r}")
+            value = self._parse_string_value(f"as value for attribute {name_tok.value!r}")
+            attrs[name_tok.value] = value
+        return attrs
 
     def _parse_repetition(self) -> BCQLNode:
         """``repetition := atom | repetition quantifier``
@@ -261,8 +322,21 @@ class BCQLParser:
         Returns:
             The inner atom unchanged when no quantifier follows, or a ``RepetitionNode`` wrapping the atom.
         """
-        node = self._parse_atom()
+        return self._apply_node_repetition(self._parse_atom())
 
+    def _apply_node_repetition(self, node: BCQLNode) -> BCQLNode:
+        """Consume any postfix quantifiers (``+``, ``*``, ``?``, ``{...}``) and wrap *node* in ``RepetitionNode``s.
+
+        Called both by ``_parse_repetition`` (for atoms) and ``_parse_span`` (for tag queries),
+        since ``Bcql.g4``'s ``sequencePartNoCapture`` applies ``repetitionAmount*`` to both tags
+        and position clauses.
+
+        Args:
+            node: The node to which quantifiers are applied.
+
+        Returns:
+            The node unchanged when no quantifier follows, or wrapped in ``RepetitionNode``(s).
+        """
         while self._current_token_is_oneof(TokenType.PLUS, TokenType.STAR, TokenType.QUESTION, TokenType.LBRACE):
             tok = self._current_token
 

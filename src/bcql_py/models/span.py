@@ -13,19 +13,26 @@ from bcql_py.models.token import StringValue
 class SpanQuery(BCQLNode):
     """A span (XML tag) query.
 
+    Three forms exist per ``Bcql.g4``'s ``tag`` rule:
+    - Whole span: ``<s/>`` or ``<ne type="PERS"/>``
+    - Start tag: ``<s>``
+    - End tag: ``</s>``
+
+    The tag name can be a plain identifier (``s``, ``ne``) or a quoted string
+    for regex patterns (``<"person|location"/>``).
+
     Attributes:
-        tag_name: The tag name as a plain string, (or StringValue for regex)
-            when the name is a regex (e.g. ``<"person|location"/>``).
-        position: ``"whole"`` for ``<s/>``, ``"start"`` for ``<s>``,
-            ``"end"`` for ``</s>``.
-        attributes: XML attributes expressed as ``name=value`` pairs.
-            Values are plain strings (regex allowed inside them).
+        tag_name: The tag name as a plain string or ``StringValue`` for regex.
+        position: ``"whole"`` for ``<s/>``, ``"start"`` for ``<s>``, ``"end"`` for ``</s>``.
+        attributes: XML attributes as ``name: StringValue`` pairs (e.g. ``type="PERS"``).
     """
 
     node_type: Literal["span_query"] = "span_query"
-    tag_name: str | StringValue = Field(description="Tag name (plain string or StringValue for regex")
-    position: Literal["whole", "start", "end"] = Field(description="Which part of the span to match")
-    attributes: dict[str, str] = Field(default_factory=dict, description="XML attributes as name:value pairs")
+    tag_name: str | StringValue = Field(description="Tag name (plain string or StringValue for regex).")
+    position: Literal["whole", "start", "end"] = Field(description="Which part of the span to match.")
+    attributes: dict[str, StringValue] = Field(
+        default_factory=dict, description="XML attributes as name: StringValue pairs."
+    )
 
     @property
     def tag_str(self) -> str:
@@ -37,18 +44,16 @@ class SpanQuery(BCQLNode):
     def attrs_str(self) -> str:
         if not self.attributes:
             return ""
-        parts = [f' {k}="{v}"' for k, v in self.attributes.items()]
-        return "".join(parts)
+        return "".join(f" {k}={v.to_bcql()}" for k, v in self.attributes.items())
 
     def to_bcql(self) -> str:
-        tag = self.tag_str()
-        attrs = self.attrs_str()
+        tag = self.tag_str
+        attrs = self.attrs_str
         if self.position == "whole":
             return f"<{tag}{attrs}/>"
-        elif self.position == "start":
+        if self.position == "start":
             return f"<{tag}{attrs}>"
-        else:
-            return f"</{tag}>"
+        return f"</{tag}>"
 
 
 class PositionFilterNode(BCQLNode):
