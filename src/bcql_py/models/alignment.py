@@ -22,7 +22,7 @@ class AlignmentOperator(BCQLNode):
         target_field: The target field name (e.g. ``"nl"``).
         optional: ``True`` when alignment is optional (``==>nl?``).
         relation_type: Optional type filter (e.g. ``"word"`` in ``=word=>nl``).  ``None`` means any alignment relation
-        capture_name: Override for the capture group name (default ``"rels"``).  Set by ``name:==>field`` syntax
+        capture_name: Override for the capture group name (default ``"rels"``). Set by ``name:==>field`` syntax
     """
 
     node_type: Literal["alignment_operator"] = "alignment_operator"

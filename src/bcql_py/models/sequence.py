@@ -94,7 +94,7 @@ class SequenceBoolNode(BCQLNode):
     """Sequence-level boolean combination (``&``, ``|``, ``->``).
 
     Binary, left-associative node mirroring the ``booleanOperator`` rule in ``Bcql.g4``:
-    all three operators share the same precedence.  For example, ``"a" | "b" & "c"``
+    all three operators share the same precedence. For example, ``"a" | "b" & "c"``
     parses as ``("a" | "b") & "c"``.
 
     Attributes:

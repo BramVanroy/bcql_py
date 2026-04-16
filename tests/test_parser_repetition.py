@@ -1,5 +1,5 @@
 """Tests for repetition/quantifier parsing: ``+``, ``*``, ``?``,
-``{n}``, ``{n,m}``, ``{n,}``, ``{,m}``.
+``{n}``, ``{n,m}``, ``{n,}``, ``{,m}``. Unlike bcql.g4m we do support {,m} quantifiers
 """
 
 from conftest import parse, round_trip

@@ -1,7 +1,4 @@
-"""Tests for sequence parsing: juxtaposition of tokens and sub-queries.
 
-See ``010_token-based.md`` for sequence examples.
-"""
 
 from conftest import parse, round_trip
 

@@ -1,7 +1,7 @@
 """Tests for parenthesized groups ``(...)`` and sequence-level negation ``!``.
 
 Groups delegate back up to the lowest-precedence level (``global_cst``), so anything
-valid at the top level is valid inside parentheses.  Negation sits at the span level
+valid at the top level is valid inside parentheses. Negation sits at the span level
 (above repetition) per ``Bcql.g4``'s ``sequencePartNoCapture`` rule, so ``!"man"+``
 parses as ``!("man"+)`` rather than ``(!"man")+``.
 """

@@ -134,7 +134,7 @@ class NotConstraint(BCQLNode):
 class BoolConstraint(BCQLNode):
     """Boolean combination of token-level constraints: ``left op right``.
 
-    The operator is ``&`` (AND), ``|`` (OR), or ``->`` (implication).  Per the BCQL spec / ``Bcql.g4``,
+    The operator is ``&`` (AND), ``|`` (OR), or ``->`` (implication). Per the BCQL spec / ``Bcql.g4``,
     all three share **identical** precedence and are left-associative. See the ``booleanOperator`` rule
     in ``Bcql.g4``. Naming-wise calling it "boolean" might be somewhat confusing for the implication case though
 
@@ -184,7 +184,7 @@ class TokenQuery(BCQLNode):
         negated: ``True`` for the negated form ``![...]``.
         shorthand: When the query was written as a bare string like
             ``"man"`` (shorthand for ``[word="man"]``), this stores
-            the StringValue].  If set, ``constraint`` is ``None``.
+            the StringValue]. If set, ``constraint`` is ``None``.
     """
 
     node_type: Literal["token_query"] = "token_query"

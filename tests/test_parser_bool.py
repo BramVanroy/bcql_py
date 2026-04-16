@@ -1,7 +1,7 @@
-"""Tests for sequence-level boolean operators ``|``, ``&``, and ``->``.
+"""Tests for sequence-level "boolean" operators ``|``, ``&``, and ``->``.
 
 Per ``Bcql.g4``'s ``booleanOperator`` rule, all three share the same precedence
-and are left-associative.  Boolean operators bind looser than juxtaposition
+and are left-associative. Boolean operators bind looser than juxtaposition
 (sequence), so ``"a" "b" | "c" "d"`` is ``("a" "b") | ("c" "d")``.
 """
 

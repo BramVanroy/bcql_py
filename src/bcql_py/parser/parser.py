@@ -12,6 +12,7 @@ from typing import Sequence
 
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.base import BCQLNode
+from bcql_py.models.capture import CaptureNode
 from bcql_py.models.sequence import (
     GroupNode,
     NegationNode,
@@ -138,7 +139,7 @@ class BCQLParser:
     def _parse_rel_align(self) -> BCQLNode:
         """``rel_align := union_intersect | union_intersect arrows | union_intersect aligns``
 
-        Handles relation arrows (``-type->``) and alignment arrows (``=type=>``).  Currently passes through.
+        Handles relation arrows (``-type->``) and alignment arrows (``=type=>``). Currently passes through.
 
         Returns:
             A ``BCQLNode``.
@@ -149,7 +150,7 @@ class BCQLParser:
         """``union_intersect := sequence | union_intersect ('|' | '&' | '->') sequence``
 
         Left-associative boolean combination of sequences.  ``&``, ``|``, and ``->`` all share the **same**
-        precedence, matching ``Bcql.g4``'s ``booleanOperator`` rule.  For example, ``"a" | "b" & "c"`` parses
+        precedence, matching ``Bcql.g4``'s ``booleanOperator`` rule. For example, ``"a" | "b" & "c"`` parses
         as ``("a" | "b") & "c"``.
 
         This is the same as ``_parse_token_bool`` but at the sequence level instead of inside brackets.
@@ -183,6 +184,7 @@ class BCQLParser:
             TokenType.UNDERSCORE,
             TokenType.LPAREN,
             TokenType.BANG,
+            TokenType.IDENTIFIER,
         )
 
     def _parse_sequence(self) -> BCQLNode:
@@ -210,19 +212,29 @@ class BCQLParser:
     def _parse_capture(self) -> BCQLNode:
         """``capture := span | IDENT ':' capture``
 
-        Handles named captures like ``A:[word="hello"]``.
-        Currently passes through; will be implemented in a later step.
+        Handles named captures like ``A:[word="hello"]``. Multiple labels can be chained
+        (e.g. ``A:B:[word="cat"]``) because the rule is right-recursive. This matches
+        ``Bcql.g4``'s ``captureQuery: (captureLabel ':')* sequencePartNoCapture``.
+
+        The parser peeks ahead for ``IDENT ':'`` to distinguish a capture label from an
+        identifier that starts a function call (step 13) or any other production.
 
         Returns:
-            A ``BCQLNode``.
+            A ``CaptureNode`` when a label is present, otherwise delegates to ``_parse_span``.
         """
+        if self._current_token.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.COLON:
+            label_tok = self._advance()
+            self._advance()  # consume ':'
+            body = self._parse_capture()
+            return CaptureNode(label=label_tok.value, body=body)
+
         return self._parse_span()
 
     def _parse_span(self) -> BCQLNode:
         """``span := repetition | '!' span | '<' tag_name ... '>' | '</' tag_name '>'``
 
         In ``Bcql.g4``'s ``sequencePartNoCapture`` rule, negation (``! sequencePartNoCapture``) is
-        an alternative at the same level as ``(thing) repetitionAmount*``.  This means negation
+        an alternative at the same level as ``(thing) repetitionAmount*``. This means negation
         wraps repetition: ``!"man"+`` parses as ``!("man"+)`` rather than ``(!"man")+``.
 
         XML-style span queries are not yet implemented.
@@ -240,11 +252,11 @@ class BCQLParser:
         """``repetition := atom | repetition quantifier``
 
         Parses the inner atom first, then greedily consumes any postfix quantifiers (``+``, ``*``, ``?``, ``{n}``,
-        ``{n,m}``, ``{n,}``, ``{,m}``).  Multiple consecutive quantifiers each wrap the previous result in a new
+        ``{n,m}``, ``{n,}``, ``{,m}``). Multiple consecutive quantifiers each wrap the previous result in a new
         ``RepetitionNode``.
 
         The BNF rule is left-recursive (``repetition quantifier``), which we implement here as an iterative
-        while-loop.  See ``token-based.md`` for repetition examples.
+        while-loop. See ``token-based.md`` for repetition examples.
 
         Returns:
             The inner atom unchanged when no quantifier follows, or a ``RepetitionNode`` wrapping the atom.
@@ -277,7 +289,7 @@ class BCQLParser:
         Called after the child node has been parsed and we see ``{``.
 
         Note: ``{,m}`` (no minimum) is a bcql_py extension not present in ``Bcql.g4``'s ``repetitionAmount`` rule,
-        which requires at least one INTEGER before the comma.  We accept it as a convenience since it is a common
+        which requires at least one INTEGER before the comma. We accept it as a convenience since it is a common
         regex convention meaning "up to m repetitions".
 
         Args:
@@ -408,8 +420,8 @@ class BCQLParser:
         """``token_bool := token_not | token_bool ('|' | '&' | '->') token_not``
 
         Left-associative boolean combination.  ``&``, ``|``, and ``->`` all share the **same** precedence at every
-        grammar level (token constraints, sequence-level, and capture constraints).  This matches the
-        ``booleanOperator`` rule in ``Bcql.g4``.  The ``->`` operator is implication, primarily used in capture
+        grammar level (token constraints, sequence-level, and capture constraints). This matches the
+        ``booleanOperator`` rule in ``Bcql.g4``. The ``->`` operator is implication, primarily used in capture
         constraints (e.g. ``A.word = "cat" -> B.word = "dog"``) but allowed at every level by the grammar.
 
         TODO: ask why `->` is part of "bool" operators since it does not feel like a standard boolean.
@@ -430,7 +442,7 @@ class BCQLParser:
     def _parse_token_not(self) -> ConstraintExpr:
         """``token_not := token_cmp | '!' token_not``
 
-        Prefix negation inside token constraints.  Recursively handles chained negations like ``!!expr``
+        Prefix negation inside token constraints. Recursively handles chained negations like ``!!expr``
         (though unusual in practice).
 
         Returns:
@@ -446,10 +458,10 @@ class BCQLParser:
     def _parse_token_cmp(self) -> ConstraintExpr:
         """``token_cmp := IDENT CMP STRING | IDENT '=' 'in' '[' INT ',' INT ']' | IDENT '(' string_list ')' | '(' token_bool ')'``
 
-        Highest-precedence level inside token constraints.  Dispatches based on the tokens following the identifier:
+        Highest-precedence level inside token constraints. Dispatches based on the tokens following the identifier:
 
         - **Annotation comparison** (``word="man"``, ``pos!="noun"``, ``score>="5"``): Produces an
-          ``AnnotationConstraint``.  All six comparison operators from ``Bcql.g4``'s ``comparisonOperator`` rule are
+          ``AnnotationConstraint``. All six comparison operators from ``Bcql.g4``'s ``comparisonOperator`` rule are
           supported: ``=``, ``!=``, ``<``, ``<=``, ``>``, ``>=``.
         - **Integer range** (``pos_confidence=in[50,100]``): Produces an ``IntegerRangeConstraint``.
         - **Function/pseudo-annotation** (``word("man","woman")``): Produces a ``FunctionConstraint``.
@@ -504,7 +516,7 @@ class BCQLParser:
     def _parse_annotation_value(self, annotation: str, operator: str) -> AnnotationConstraint:
         """Parse the string value after ``annotation <op>`` where op is any comparison operator.
 
-        Handles both regular strings (``"man"``) and literal strings (``l"e.g."``).  See ``token-based.md``
+        Handles both regular strings (``"man"``) and literal strings (``l"e.g."``). See ``token-based.md``
         for discussion of literal strings and regex escaping.
 
         Args:
