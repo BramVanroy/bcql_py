@@ -43,19 +43,24 @@ global_cst      := pos_filter
 pos_filter     := rel_align
                  | rel_align FILTER pos_filter  /* right-recursive per Bcql.g4 */
 
-rel_align       := union_intersect
-                 | union_intersect child_rel (';' child_rel)*
-                 | union_intersect aligns
+rel_align       := sequence_bool
+                 | sequence_bool child_rel (';' child_rel)*
+                 | sequence_bool aligns
+
+/* G4 divergence (intentional): Bcql.g4's `relationType` rule allows mixing DEP_OP and
+   ALIGNMENT_OP in the same semicolon chain. We separate child relations (dep arrows)
+   from alignments (alignment arrows) into distinct alternatives so that mixed chains
+   like `_ -obj-> _ ; ==>nl _` are rejected. More of a semantic thing but useful nonetheless. */
 
 child_rel       := (IDENT ':')? '-' IDENT? '->' IDENT? rel_align   /* right-recursive */
                  | (IDENT ':')? '!' '-' IDENT? '->' IDENT? rel_align
 
 aligns          := align_child
                  | align_child ';' aligns
-align_child     := '=' IDENT? '=>' IDENT '?'? union_intersect
+align_child     := '=' IDENT? '=>' IDENT '?'? rel_align
 
-union_intersect := sequence
-                 | union_intersect ('|' | '&' | '->') sequence  /* booleanOperator in Bcql.g4 */
+sequence_bool   := sequence
+                 | sequence_bool ('|' | '&' | '->') sequence  /* booleanOperator in Bcql.g4 */
 
 sequence        := capture
                  | capture sequence
@@ -81,9 +86,15 @@ atom            := '[' token_expr? ']'
                  | STRING
                  | '_'
                  | '(' global_cst ')'
-                 | '^' '-' IDENT? '->' union_intersect
+                 | '^' '-' IDENT? '->' rel_align
                  | lookaround
                  | IDENT '(' arg_list ')'
+
+/* G4 divergence (intentional): Bcql.g4 places `rootRelationType` as a standalone alternative
+   in `relationQuery` (our `rel_align`). We place it in `atom` instead, which is more permissive:
+   it allows root relations inside sequences, boolean combinations, and captures without needing
+   parentheses. The capture label (e.g. `A:^-obj-> _`) is naturally handled by the `capture` level
+   rather than requiring special-case grammar like G4's `(captureLabel ':')?` prefix. */
 
 lookaround      := ('(?=' | '(?!')  global_cst ')'
                  | ('(?<=' | '(?<!') global_cst ')'
