@@ -64,6 +64,9 @@ class TestSequenceIntersection:
     """``&`` at the sequence level."""
 
     def test_simple_intersection(self):
+        # ``"double" [] & [] "trouble"``: intersection of two sequences with match-all gap.
+        # Effectively the same as "double" "trouble" but intended to show how intersection
+        # of queries works.
         node = parse('"double" [] & [] "trouble"')
         assert isinstance(node, SequenceBoolNode)
         assert node.operator == "&"
@@ -75,7 +78,7 @@ class TestSequenceIntersection:
 
 
 class TestSequenceImplication:
-    """``->`` at the sequence level."""
+    """``->`` implication at the sequence level."""
 
     def test_simple_implication(self):
         node = parse('"a" -> "b"')

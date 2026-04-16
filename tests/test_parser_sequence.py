@@ -1,5 +1,3 @@
-
-
 from conftest import parse, round_trip
 
 from bcql_py.models.sequence import RepetitionNode, SequenceNode
