@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from bcql_py.exceptions import BCQLSyntaxError
+from bcql_py.models.alignment import AlignmentConstraint, AlignmentNode, AlignmentOperator
 from bcql_py.models.base import BCQLNode
 from bcql_py.models.capture import (
     AnnotationRef,
@@ -175,28 +176,36 @@ class BCQLParser:
         return left
 
     def _parse_rel_align(self) -> BCQLNode:
-        """``rel_align := union_intersect | union_intersect child_rel (';' child_rel)*``
+        """``rel_align := sequence_bool | sequence_bool child_rel (';' child_rel)* | sequence_bool align_child (';' align_child)*``
 
         After parsing the source query, checks for child relation arrows (``-type->``) or
-        negated relation arrows (``!-type->``). Multiple children are chained with ``;``.
-        Relations are right-recursive: the target of each child is a full ``_parse_rel_align``.
+        negated relation arrows (``!-type->``), then for alignment arrows (``=type=>``). Multiple
+        children/alignments are chained with ``;``. Both are right-recursive: the target of each
+        child is a full ``_parse_rel_align``.
 
-        Alignment arrows (``=type=>``) will be added in step 11.
+        Child relations and alignment arrows are kept in separate alternatives per our BNF, so
+        mixing them in the same ``;``-chain is not allowed (see ``questions.md`` Q3).
 
         Returns:
-            A ``RelationNode`` when relation arrows follow, otherwise the source unchanged.
+            A ``RelationNode``, ``AlignmentNode``, or the source unchanged.
         """
-        source = self._parse_union_intersect()
+        source = self._parse_sequence_bool()
 
-        if not self._starts_child_relation():
-            return source
+        if self._starts_child_relation():
+            children = [self._parse_child_relation()]
+            while self._current_token.type == TokenType.SEMICOLON:
+                self._advance()
+                children.append(self._parse_child_relation())
+            return RelationNode(source=source, children=children)
 
-        children = [self._parse_child_relation()]
-        while self._current_token.type == TokenType.SEMICOLON:
-            self._advance()
-            children.append(self._parse_child_relation())
+        if self._starts_alignment():
+            alignments = [self._parse_alignment_child()]
+            while self._current_token.type == TokenType.SEMICOLON:
+                self._advance()
+                alignments.append(self._parse_alignment_child())
+            return AlignmentNode(source=source, alignments=alignments)
 
-        return RelationNode(source=source, children=children)
+        return source
 
     def _starts_child_relation(self) -> bool:
         """Check if the current position begins a child relation arrow.
@@ -279,14 +288,83 @@ class BCQLParser:
 
         return RelationOperator(relation_type=relation_type, negated=negated, target_field=target_field)
 
-    def _parse_union_intersect(self) -> BCQLNode:
-        """``union_intersect := sequence | union_intersect ('|' | '&' | '->') sequence``
+    def _starts_alignment(self) -> bool:
+        """Check if the current position begins an alignment arrow.
+
+        An alignment starts with ``ALIGN_LINE`` (for ``=type=>``), or an optional capture label
+        prefix ``IDENT ':' ALIGN_LINE``.
+
+        Returns:
+            ``True`` if an alignment arrow follows.
+        """
+        tok = self._current_token
+        if tok.type == TokenType.ALIGN_LINE:
+            return True
+        if tok.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.COLON:
+            return self._peek(2).type == TokenType.ALIGN_LINE
+        return False
+
+    def _parse_alignment_child(self) -> AlignmentConstraint:
+        """``align_child := [IDENT ':'] '=' IDENT? '=>' IDENT '?'? rel_align``
+
+        Parses a single alignment constraint: optional capture name, alignment operator, and
+        the target sub-query. The target is a full ``_parse_rel_align`` (right-recursive).
+
+        Returns:
+            An ``AlignmentConstraint``.
+        """
+        capture_name = None
+        if self._current_token.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.COLON:
+            capture_name = self._advance().value
+            self._advance()  # consume ':'
+
+        operator = self._parse_alignment_operator(capture_name)
+        target = self._parse_rel_align()
+        return AlignmentConstraint(operator=operator, target=target)
+
+    def _parse_alignment_operator(self, capture_name: str | None = None) -> AlignmentOperator:
+        """``align_op := '=' IDENT? '=>' IDENT '?'?``
+
+        Parses the alignment operator tokens from the lexer decomposition:
+        ``ALIGN_LINE [IDENT] ALIGN_ARROW IDENT [QUESTION]``.
+
+        Args:
+            capture_name: Optional capture label parsed from the ``name:`` prefix.
+
+        Returns:
+            An ``AlignmentOperator``.
+        """
+        self._expect(TokenType.ALIGN_LINE, "at start of alignment arrow")
+
+        relation_type = None
+        if self._current_token.type == TokenType.IDENTIFIER:
+            relation_type = self._advance().value
+
+        self._expect(TokenType.ALIGN_ARROW, "in alignment arrow")
+
+        target_field_tok = self._expect(TokenType.IDENTIFIER, "as target field after '=>'")
+        target_field = target_field_tok.value
+
+        optional = False
+        if self._current_token.type == TokenType.QUESTION:
+            optional = True
+            self._advance()
+
+        return AlignmentOperator(
+            target_field=target_field,
+            optional=optional,
+            relation_type=relation_type,
+            capture_name=capture_name,
+        )
+
+    def _parse_sequence_bool(self) -> BCQLNode:
+        """``sequence_bool := sequence | sequence_bool ('|' | '&' | '->') sequence``
 
         Left-associative boolean combination of sequences.  ``&``, ``|``, and ``->`` all share the **same**
-        precedence, matching ``Bcql.g4``'s ``booleanOperator`` rule. For example, ``"a" | "b" & "c"`` parses
-        as ``("a" | "b") & "c"``.
+        precedence, matching ``Bcql.g4``'s ``booleanQuery`` / ``booleanOperator`` rules. For example,
+        ``"a" | "b" & "c"`` parses as ``("a" | "b") & "c"``.
 
-        This is the same as ``_parse_token_bool`` but at the sequence level instead of inside brackets.
+        Symmetric with ``_parse_token_bool`` which does the same thing inside ``[...]``.
 
         Returns:
             A ``SequenceBoolNode`` when an operator is present, otherwise the inner sequence unchanged.
@@ -310,6 +388,7 @@ class BCQLParser:
         Includes lookahead to avoid consuming tokens that belong to the ``_parse_rel_align`` level:
         - ``BANG REL_LINE`` is a negated relation arrow, not the start of a negated span.
         - ``IDENT ':' REL_LINE`` or ``IDENT ':' BANG REL_LINE`` is a capture-labelled child relation.
+        - ``IDENT ':' ALIGN_LINE`` is a capture-labelled alignment.
 
         Returns:
             ``True`` if the current token can start an atom.
@@ -320,10 +399,10 @@ class BCQLParser:
         if tok.type == TokenType.BANG:
             return self._peek(1).type != TokenType.REL_LINE
 
-        # IDENT ':' followed by a relation arrow component is a child relation label
+        # IDENT ':' followed by a relation/alignment arrow component is a child relation/alignment label
         if tok.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.COLON:
             after_colon = self._peek(2).type
-            if after_colon == TokenType.REL_LINE:
+            if after_colon in (TokenType.REL_LINE, TokenType.ALIGN_LINE):
                 return False
             if after_colon == TokenType.BANG and self._peek(3).type == TokenType.REL_LINE:
                 return False

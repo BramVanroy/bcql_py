@@ -57,7 +57,7 @@ child_rel       := (IDENT ':')? '-' IDENT? '->' IDENT? rel_align   /* right-recu
 
 aligns          := align_child
                  | align_child ';' aligns
-align_child     := '=' IDENT? '=>' IDENT '?'? rel_align
+align_child     := (IDENT ':')? '=' IDENT? '=>' IDENT '?'? rel_align
 
 sequence_bool   := sequence
                  | sequence_bool ('|' | '&' | '->') sequence  /* booleanOperator in Bcql.g4 */

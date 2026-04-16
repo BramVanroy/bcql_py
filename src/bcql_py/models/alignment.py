@@ -72,5 +72,8 @@ class AlignmentNode(BCQLNode):
     )
 
     def to_bcql(self) -> str:
-        parts = [self.source.to_bcql()] + [a.to_bcql() for a in self.alignments]
-        return " ".join(parts)
+        first = f"{self.source.to_bcql()} {self.alignments[0].to_bcql()}"
+        if len(self.alignments) == 1:
+            return first
+        rest = " ; ".join(a.to_bcql() for a in self.alignments[1:])
+        return f"{first} ; {rest}"
