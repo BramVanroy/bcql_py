@@ -110,9 +110,6 @@ class BCQLLexer:
                 break
             rtype_chars.append(self._current_char)
             self._pos += 1
-        else:
-            expected_arrow = "=>" if is_parallel_relation else "->"
-            raise self._raise_error(f"Expected '{expected_arrow}' to close relation arrow")
 
         self._pos += 2  # skip '->' or '=>'
 
