@@ -22,7 +22,7 @@ from bcql_py.models.sequence import (
     SequenceNode,
     UnderscoreNode,
 )
-from bcql_py.models.span import SpanQuery
+from bcql_py.models.span import PositionFilterNode, SpanQuery
 from bcql_py.models.token import (
     AnnotationConstraint,
     BoolConstraint,
@@ -127,16 +127,29 @@ class BCQLParser:
         """
         return self._parse_pos_filter()
 
-    def _parse_pos_filter(self) -> BCQLNode:
-        """``pos_filter := rel_align | pos_filter FILTER rel_align``
+    _FILTER_OPS = {TokenType.WITHIN, TokenType.CONTAINING, TokenType.OVERLAP}
 
-        Handles ``within``, ``containing``, ``overlap`` operators.
-        Currently passes through; will be implemented in a later step.
+    def _parse_pos_filter(self) -> BCQLNode:
+        """``pos_filter := rel_align | rel_align FILTER pos_filter``
+
+        Handles ``within``, ``containing``, ``overlap`` operators. Right-recursive per
+        ``Bcql.g4``'s ``containingWithinQuery`` rule, so ``A within B within C`` parses
+        as ``A within (B within C)``.
+
+        Note that the grammar does not specify case-sensitivity, so we accept any case for the operators and normalise to lowercase in the AST.
 
         Returns:
-            A ``BCQLNode``.
+            A ``PositionFilterNode`` when a filter operator is present, otherwise the inner
+            ``rel_align`` unchanged.
         """
-        return self._parse_rel_align()
+        left = self._parse_rel_align()
+
+        if self._current_token.type in self._FILTER_OPS:
+            op_tok = self._advance()
+            right = self._parse_pos_filter()  # right-recursive
+            return PositionFilterNode(operator=op_tok.value.lower(), left=left, right=right)
+
+        return left
 
     def _parse_rel_align(self) -> BCQLNode:
         """``rel_align := union_intersect | union_intersect arrows | union_intersect aligns``

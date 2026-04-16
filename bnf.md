@@ -41,7 +41,7 @@ global_cst      := pos_filter
                  | pos_filter '::' cc_expr
 
 pos_filter     := rel_align
-                 | pos_filter FILTER rel_align
+                 | rel_align FILTER pos_filter  /* right-recursive per Bcql.g4 */
 
 rel_align       := union_intersect
                  | union_intersect arrows
