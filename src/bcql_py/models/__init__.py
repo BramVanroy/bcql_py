@@ -24,12 +24,11 @@ from bcql_py.models.relation import (
 )
 from bcql_py.models.sequence import (
     GroupNode,
-    IntersectionNode,
     NegationNode,
     RepetitionNode,
+    SequenceBoolNode,
     SequenceNode,
     UnderscoreNode,
-    UnionNode,
 )
 from bcql_py.models.span import PositionFilterNode, SpanQuery
 from bcql_py.models.token import (
@@ -58,8 +57,7 @@ __all__ = [
     "SequenceNode",
     "RepetitionNode",
     "GroupNode",
-    "UnionNode",
-    "IntersectionNode",
+    "SequenceBoolNode",
     "NegationNode",
     "UnderscoreNode",
     # lookaround

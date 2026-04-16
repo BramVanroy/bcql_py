@@ -90,38 +90,26 @@ class GroupNode(BCQLNode):
         return f"({self.child.to_bcql()})"
 
 
-class UnionNode(BCQLNode):
-    """Sequence-level union (``|``): matches if *any* alternative matches.
+class SequenceBoolNode(BCQLNode):
+    """Sequence-level boolean combination (``&``, ``|``, ``->``).
 
-    E.g. ``"happy" "dog" | "sad" "cat"``
-    TODO: check what to do with more than two alternatives, or which precedence rules applies.
-
-    Attributes:
-        children: The alternative sub-queries.
-    """
-
-    node_type: Literal["union"] = "union"
-    children: list[BCQLNode] = Field(min_length=2, description="")
-
-    def to_bcql(self) -> str:
-        return " | ".join(child.to_bcql() for child in self.children)
-
-
-class IntersectionNode(BCQLNode):
-    """Sequence-level intersection (``&``): matches if *all* operands match.
-
-    E.g. ``"double" [] & [] "trouble`` which should match the "intersection" of
-    sequences matching ``"double" []`` and sequences matching ``[] "trouble"``.
+    Binary, left-associative node mirroring the ``booleanOperator`` rule in ``Bcql.g4``:
+    all three operators share the same precedence.  For example, ``"a" | "b" & "c"``
+    parses as ``("a" | "b") & "c"``.
 
     Attributes:
-        children: The sub-queries that must all match.
+        operator: The boolean operator.
+        left: The left operand.
+        right: The right operand.
     """
 
-    node_type: Literal["intersection"] = "intersection"
-    children: list[BCQLNode] = Field(min_length=2, description="Sub-queries that must all match.")
+    node_type: Literal["sequence_bool"] = "sequence_bool"
+    operator: Literal["&", "|", "->"] = Field(description="Boolean operator.")
+    left: BCQLNode = Field(description="Left operand.")
+    right: BCQLNode = Field(description="Right operand.")
 
     def to_bcql(self) -> str:
-        return " & ".join(child.to_bcql() for child in self.children)
+        return f"{self.left.to_bcql()} {self.operator} {self.right.to_bcql()}"
 
 
 class NegationNode(BCQLNode):

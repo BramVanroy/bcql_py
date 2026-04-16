@@ -138,8 +138,8 @@ class BoolConstraint(BCQLNode):
     all three share **identical** precedence and are left-associative. See the ``booleanOperator`` rule
     in ``Bcql.g4``. Naming-wise calling it "boolean" might be somewhat confusing for the implication case though
 
-    Not to be confused with sequence-level boolean operators (also ``&`` and ``|``) which
-    combine whole sub-queries instead of token constraints. See sequence.UnionNode and sequence.IntersectionNode for those.
+    Not to be confused with sequence-level boolean operators (also ``&``, ``|``, and ``->``) which
+    combine whole sub-queries instead of token constraints. See ``sequence.SequenceBoolNode`` for those.
 
     Attributes:
         operator: ``"&"``, ``"|"``, or ``"->"``.

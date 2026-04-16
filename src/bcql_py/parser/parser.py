@@ -12,7 +12,14 @@ from typing import Sequence
 
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.base import BCQLNode
-from bcql_py.models.sequence import GroupNode, NegationNode, RepetitionNode, SequenceNode, UnderscoreNode
+from bcql_py.models.sequence import (
+    GroupNode,
+    NegationNode,
+    RepetitionNode,
+    SequenceBoolNode,
+    SequenceNode,
+    UnderscoreNode,
+)
 from bcql_py.models.token import (
     AnnotationConstraint,
     BoolConstraint,
@@ -139,15 +146,26 @@ class BCQLParser:
         return self._parse_union_intersect()
 
     def _parse_union_intersect(self) -> BCQLNode:
-        """``union_intersect := sequence | union_intersect ('|' | '&') sequence``
+        """``union_intersect := sequence | union_intersect ('|' | '&' | '->') sequence``
 
-        Handles sequence-level ``|`` (union) and ``&`` (intersection). Currently passes through; will be
-        implemented in a later step.
+        Left-associative boolean combination of sequences.  ``&``, ``|``, and ``->`` all share the **same**
+        precedence, matching ``Bcql.g4``'s ``booleanOperator`` rule.  For example, ``"a" | "b" & "c"`` parses
+        as ``("a" | "b") & "c"``.
+
+        This is the same as ``_parse_token_bool`` but at the sequence level instead of inside brackets.
 
         Returns:
-            A ``BCQLNode``.
+            A ``SequenceBoolNode`` when an operator is present, otherwise the inner sequence unchanged.
         """
-        return self._parse_sequence()
+        left = self._parse_sequence()
+
+        while self._current_token.type in BOOL_OPS:
+            op_tok = self._advance()
+            operator = BOOL_OPS[op_tok.type]
+            right = self._parse_sequence()
+            left = SequenceBoolNode(operator=operator, left=left, right=right)
+
+        return left
 
     def _can_start_capture(self) -> bool:
         """Check if the current token can begin a new ``capture`` production.
