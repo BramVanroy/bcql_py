@@ -66,6 +66,7 @@ capture         := span
                  | IDENT ':' capture
 
 span            := repetition
+                 | '!' span                     /* negation wraps repetition per Bcql.g4 */
                  | '<' tag_name attr* '/>'
                  | '<' tag_name attr* '>'
                  | '</' tag_name '>'
@@ -82,7 +83,6 @@ atom            := '[' token_expr? ']'
                  | STRING
                  | '_'
                  | '(' global_cst ')'
-                 | '!' atom
                  | '^' '-' IDENT? '->' union_intersect
                  | lookaround
                  | IDENT '(' arg_list ')'

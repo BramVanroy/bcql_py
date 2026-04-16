@@ -127,6 +127,11 @@ class IntersectionNode(BCQLNode):
 class NegationNode(BCQLNode):
     """Sequence-level negation (``!``).
 
+    Negation sits at the span level in the precedence chain (above repetition), so
+    ``!"man"+`` parses as ``!("man"+)`` per ``Bcql.g4``'s ``sequencePartNoCapture`` rule.
+    The child is always a single span-level node (never a bare sequence), so
+    ``to_bcql`` just prepends ``!`` without extra parentheses.
+
     Attributes:
         child: The sub-query being negated.
     """
@@ -135,11 +140,7 @@ class NegationNode(BCQLNode):
     child: BCQLNode = Field(description="The sub-query to negate.")
 
     def to_bcql(self) -> str:
-        inner = self.child.to_bcql()
-        # If the child is a group ``GroupNode``, the parens are already there
-        if isinstance(self.child, GroupNode):
-            return f"!{inner}"
-        return f"!({inner})"
+        return f"!{self.child.to_bcql()}"
 
 
 class UnderscoreNode(BCQLNode):

@@ -12,7 +12,7 @@ from typing import Sequence
 
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.base import BCQLNode
-from bcql_py.models.sequence import RepetitionNode, SequenceNode, UnderscoreNode
+from bcql_py.models.sequence import GroupNode, NegationNode, RepetitionNode, SequenceNode, UnderscoreNode
 from bcql_py.models.token import (
     AnnotationConstraint,
     BoolConstraint,
@@ -153,7 +153,7 @@ class BCQLParser:
         """Check if the current token can begin a new ``capture`` production.
 
         Used by ``_parse_sequence`` to decide whether to collect another element. This set grows as new atom
-        alternatives are added in later steps (groups, negation, lookarounds, functions, etc.).
+        alternatives are added in later steps (lookarounds, functions, etc.).
 
         Returns:
             ``True`` if the current token can start an atom.
@@ -163,6 +163,8 @@ class BCQLParser:
             TokenType.STRING,
             TokenType.LITERAL_STRING,
             TokenType.UNDERSCORE,
+            TokenType.LPAREN,
+            TokenType.BANG,
         )
 
     def _parse_sequence(self) -> BCQLNode:
@@ -173,7 +175,7 @@ class BCQLParser:
         (e.g. ``"the" "tall" "man"``). When only one element is found, returns it directly.
         Two or more elements produce a ``SequenceNode``.
 
-        See ``010_token-based.md`` for sequence examples.
+        See ``token-based.md`` for sequence examples.
 
         Returns:
             A single child ``BCQLNode`` or a ``SequenceNode``.
@@ -199,14 +201,21 @@ class BCQLParser:
         return self._parse_span()
 
     def _parse_span(self) -> BCQLNode:
-        """``span := repetition | '<' tag_name ... '>' | '</' tag_name '>'``
+        """``span := repetition | '!' span | '<' tag_name ... '>' | '</' tag_name '>'``
 
-        Handles XML-style span queries.
-        Currently passes through; will be implemented in a later step.
+        In ``Bcql.g4``'s ``sequencePartNoCapture`` rule, negation (``! sequencePartNoCapture``) is
+        an alternative at the same level as ``(thing) repetitionAmount*``.  This means negation
+        wraps repetition: ``!"man"+`` parses as ``!("man"+)`` rather than ``(!"man")+``.
+
+        XML-style span queries are not yet implemented.
 
         Returns:
-            A ``BCQLNode``.
+            A ``BCQLNode``, possibly a ``NegationNode``.
         """
+        if self._current_token.type == TokenType.BANG:
+            self._advance()
+            operand = self._parse_span()
+            return NegationNode(child=operand)
         return self._parse_repetition()
 
     def _parse_repetition(self) -> BCQLNode:
@@ -217,7 +226,7 @@ class BCQLParser:
         ``RepetitionNode``.
 
         The BNF rule is left-recursive (``repetition quantifier``), which we implement here as an iterative
-        while-loop.  See ``010_token-based.md`` for repetition examples.
+        while-loop.  See ``token-based.md`` for repetition examples.
 
         Returns:
             The inner atom unchanged when no quantifier follows, or a ``RepetitionNode`` wrapping the atom.
@@ -290,21 +299,30 @@ class BCQLParser:
         return RepetitionNode(child=child, min_count=min_val, max_count=int(max_tok.value))
 
     def _parse_atom(self) -> BCQLNode:
-        """``atom := '[' token_expr? ']' | STRING | '_' | ...``
+        """``atom := '[' token_expr? ']' | STRING | '_' | '(' global_cst ')' | ...``
 
-        The highest-precedence production in the sequence-level grammar. Currently handles token queries (``[...]``),
-        bare string shorthands (``"man"``), and the underscore wildcard (``_``).
+        The highest-precedence production in the sequence-level grammar. Handles token queries (``[...]``),
+        bare string shorthands (``"man"``), the underscore wildcard (``_``), and parenthesized groups.
 
-        Other atom alternatives (parenthesized groups, negation, root relations, lookarounds, functions) will be
-        added in later steps.
+        A parenthesized group delegates back up to ``_parse_global_constraint`` (the lowest-precedence level),
+        matching ``Bcql.g4``'s ``'(' constrainedQuery ')'`` inside ``sequencePartNoCapture``.
+
+        Remaining atom alternatives (root relations, lookarounds, functions) will be added in later steps.
 
         Returns:
-            A ``TokenQuery`` for ``[...]`` and bare strings, or an ``UnderscoreNode`` for ``_``.
+            A ``BCQLNode``.
 
         Raises:
             BCQLSyntaxError: When the current token cannot start an atom.
         """
         tok = self._current_token
+
+        # Parenthesized group: ( global_cst )
+        if tok.type == TokenType.LPAREN:
+            self._advance()
+            inner = self._parse_global_constraint()
+            self._expect(TokenType.RPAREN, "at end of parenthesized group")
+            return GroupNode(child=inner)
 
         # Token query: [constraint]  or  []
         if tok.type == TokenType.LBRACKET:
@@ -319,7 +337,7 @@ class BCQLParser:
             self._advance()
             return UnderscoreNode()
 
-        raise self._raise_error(f"Expected a token query, string, or '_', got {tok.type.name} ({tok.value!r})")
+        raise self._raise_error(f"Expected a token query, string, '(', or '_', got {tok.type.name} ({tok.value!r})")
 
     def _parse_token_query(self) -> TokenQuery:
         """Parse a bracketed token query: ``[`` *token_expr*? ``]``.
@@ -346,7 +364,7 @@ class BCQLParser:
 
         Per the BCQL spec, a bare string is shorthand for ``[<default_annotation>="..."]``. The parser stores it
         as a ``TokenQuery`` with the ``shorthand`` field set so that the original surface form is preserved during
-        round-tripping. See ``010_token-based.md`` for details on the default annotation convention.
+        round-tripping. See ``token-based.md`` for details on the default annotation convention.
 
         Returns:
             A ``TokenQuery`` with ``shorthand`` set to a ``StringValue``.
@@ -375,6 +393,8 @@ class BCQLParser:
         grammar level (token constraints, sequence-level, and capture constraints).  This matches the
         ``booleanOperator`` rule in ``Bcql.g4``.  The ``->`` operator is implication, primarily used in capture
         constraints (e.g. ``A.word = "cat" -> B.word = "dog"``) but allowed at every level by the grammar.
+
+        TODO: ask why `->` is part of "bool" operators since it does not feel like a standard boolean.
 
         Returns:
             A ``BoolConstraint`` when an operator is present, otherwise the inner constraint unchanged.
@@ -415,7 +435,7 @@ class BCQLParser:
           supported: ``=``, ``!=``, ``<``, ``<=``, ``>``, ``>=``.
         - **Integer range** (``pos_confidence=in[50,100]``): Produces an ``IntegerRangeConstraint``.
         - **Function/pseudo-annotation** (``word("man","woman")``): Produces a ``FunctionConstraint``.
-          See ``010_token-based.md`` for details on pseudo-annotation functions (e.g. ``punctAfter``).
+          See ``token-based.md`` for details on pseudo-annotation functions (e.g. ``punctAfter``).
         - **Parenthesized sub-expression** (``(word="a" | word="the")``): Recurses into ``_parse_token_bool``.
 
         Returns:
@@ -466,7 +486,7 @@ class BCQLParser:
     def _parse_annotation_value(self, annotation: str, operator: str) -> AnnotationConstraint:
         """Parse the string value after ``annotation <op>`` where op is any comparison operator.
 
-        Handles both regular strings (``"man"``) and literal strings (``l"e.g."``).  See ``010_token-based.md``
+        Handles both regular strings (``"man"``) and literal strings (``l"e.g."``).  See ``token-based.md``
         for discussion of literal strings and regex escaping.
 
         Args:
@@ -518,7 +538,7 @@ class BCQLParser:
         """Parse ``'(' string_list ')'`` after a function/pseudo-annotation name.
 
         Example: ``word("man", "woman")`` or ``punctAfter(",")``.
-        See ``010_token-based.md`` for the pseudo-annotation convention where ``[punctAfter=","]`` is syntactic
+        See ``token-based.md`` for the pseudo-annotation convention where ``[punctAfter=","]`` is syntactic
         sugar for ``[punctAfter(",")]``.
 
         Args:
@@ -554,16 +574,13 @@ class BCQLParser:
         tok = self._current_token
         if tok.type not in (TokenType.STRING, TokenType.LITERAL_STRING):
             ctx = f" {context}" if context else ""
-            raise self._raise_error(f"Expected a string{ctx}, got {tok.type.name} ({tok.value!r})")
+            raise self._raise_error(f"Expected a string {ctx}, got {tok.type.name} ({tok.value!r})")
         self._advance()
-        return StringValue(
-            value=tok.value,
-            is_literal=(tok.type == TokenType.LITERAL_STRING),
-        )
+        return StringValue(value=tok.value, is_literal=(tok.type == TokenType.LITERAL_STRING))
 
 
 def parse_from_tokens(tokens: list[Token], source: str) -> BCQLNode:
-    """Parse a BCQL token list into an AST.
+    """Parse a BCQL token list into an abstract syntax tree.
 
     Args:
         tokens: The list of tokens to parse (from ``tokenize``).
