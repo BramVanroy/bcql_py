@@ -9,7 +9,7 @@ See bnf.md for the grammar that we're implementing.
 
 from __future__ import annotations
 
-from functools import cached_property
+from functools import lru_cache
 from typing import Sequence
 
 from bcql_py.exceptions import BCQLSyntaxError
@@ -62,12 +62,14 @@ class BCQLParser:
         tokens: Token list produced by ``BCQLLexer``
         source: The original query string (used in error messages).
     """
-    __slots__ = ("_source", "_pos", "_tokens")
+
+    __slots__ = ("_source", "_pos", "_tokens", "_ast")
 
     def __init__(self, tokens: Sequence[Token], source: str = "") -> None:
         self._source = source
         self._pos = 0
         self._tokens = tokens
+        self._ast: BCQLNode | None = None
 
         if not self._tokens:
             raise BCQLSyntaxError("No tokens to parse", bcql_query=source)
@@ -88,11 +90,13 @@ class BCQLParser:
     def tokens(self) -> tuple[Token, ...]:
         return tuple(self._tokens)
 
-    @cached_property
+    @property
     def ast(self) -> BCQLNode:
         """Parse the token stream and return the root AST node."""
-        return self.parse()
-    
+        if self._ast is None:
+            self.parse()
+        return self._ast
+
     @property
     def _current_token(self) -> Token:
         """Return the token at the current position"""
@@ -138,8 +142,12 @@ class BCQLParser:
         """Build a ``BCQLSyntaxError`` pointing at the current token."""
         return BCQLSyntaxError(msg, bcql_query=self._source, error_position=self._current_token.position)
 
-    def parse(self) -> BCQLNode:
-        """Parse the token stream and return the root AST node.
+    def parse(self, force_reparse: bool = False) -> BCQLNode:
+        """Parse the token stream and return the root AST node. Sets ``self._ast`` to the result for caching.
+
+        Args:
+            force_reparse: If ``True``, forces reparsing even if an AST is already cached. This allows retrying
+              after a syntax error without creating a new parser instance. Should rarely be needed.
 
         Raises:
             BCQLSyntaxError: On any syntax error.
@@ -147,10 +155,16 @@ class BCQLParser:
         Returns:
             The root ``BCQLNode``.
         """
+        if self._ast is not None and not force_reparse:
+            return self._ast  # Return cached AST if already parsed
+
+        self._ast = None  # Clear the cached AST before parsing to allow retrying after an error
+
         node = self._parse_global_constraint()
         if not self._current_token_is_oneof(TokenType.EOF):
             tok = self._current_token
             raise self._raise_error(f"Unexpected token {tok.value!r} after end of query")
+        self._ast = node
         return node
 
     def _parse_global_constraint(self) -> BCQLNode:
@@ -1191,7 +1205,8 @@ class BCQLParser:
         return StringValue(value=tok.value, is_literal=(tok.type == TokenType.LITERAL_STRING))
 
 
-def parse_from_tokens(tokens: list[Token], source: str) -> BCQLNode:
+@lru_cache(maxsize=64)
+def parse_from_tokens(tokens: Sequence[Token], source: str) -> BCQLNode:
     """Parse a BCQL token list into an abstract syntax tree.
 
     Args:

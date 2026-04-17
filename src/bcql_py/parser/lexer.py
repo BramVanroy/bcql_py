@@ -10,6 +10,8 @@ class BCQLLexer:
     def __init__(self, source: str) -> None:
         self._source = source
         self._pos = 0
+        # Private attr: a list during processing so we can append
+        # but self.tokens (public) is a tuple to avoid mutability
         self._tokens: list[Token] = []
 
     @property
@@ -23,6 +25,8 @@ class BCQLLexer:
     @property
     def tokens(self) -> tuple[Token, ...]:
         # Return a tuple to prevent accidental modification of the token list from outside the lexer
+        if not self._tokens:
+            self.tokenize()
         return tuple(self._tokens)
 
     @property
@@ -189,7 +193,7 @@ class BCQLLexer:
             self._pos += 1
         self._emit(TokenType.INTEGER, "".join(chars), start)
 
-    def tokenize(self) -> tuple[Token]:
+    def tokenize(self) -> tuple[Token, ...]:
         """
         We assume the base case where the token can be a sequence of `[]` tokens or `""` or `''` or a sequence of alphanumeric characters and underscores.
         """
@@ -442,10 +446,10 @@ class BCQLLexer:
         else:
             self._emit(TokenType.EOF, "", self._pos)
 
-        return self.tokens
+        return tuple(self._tokens)
 
 
-def tokenize(source: str) -> tuple[Token]:
+def tokenize(source: str) -> tuple[Token, ...]:
     lexer = BCQLLexer(source)
     return lexer.tokenize()
 
