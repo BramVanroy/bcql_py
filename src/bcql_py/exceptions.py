@@ -6,7 +6,6 @@ class BCQLSyntaxError(Exception):
         super().__init__(str(self))
 
     def __str__(self) -> str:
-        # Improve error message by having a pointing arrow to the error position in the query
         # Potential issue: this assumes there are no newlines in the query
         # TODO: check that bcql cannot/should not contain newlines which might mess with this error formatting
         parts = [self.message]

@@ -1,13 +1,12 @@
 """Tests for parser error reporting: syntax errors with position information."""
 
 import pytest
-from conftest import parse, round_trip
+from conftest import round_trip_test
 
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.capture import AnnotationRef, GlobalConstraintNode
 from bcql_py.models.token import NotConstraint, TokenQuery
-from bcql_py.parser.parser import BCQLParser, parse_from_tokens
-from bcql_py.parser.tokens import Token, TokenType
+from bcql_py.parser import BCQLParser, BCQLLexer, Token, TokenType, parse_from_tokens, parse
 
 
 class TestParserErrors:
@@ -124,7 +123,7 @@ class TestNotConstraintParenWrap:
         The NotConstraint wraps a BoolConstraint, requiring parens in the round-trip output
         to preserve the grouping.
         """
-        round_trip('[!(word="however" & pos="ADV")]')
+        round_trip_test('[!(word="however" & pos="ADV")]')
 
     def test_not_bool_constraint_structure(self):
         """``[!(word="however" & pos="ADV")]`` - grouped negation stays explicit in the AST."""
@@ -133,14 +132,39 @@ class TestNotConstraintParenWrap:
         assert isinstance(node.constraint, NotConstraint)
 
 
-class TestBcqlCachedProperty:
-    """The .bcql cached property delegates to to_bcql()."""
+class TestErrorPosition:
+    """BCQLSyntaxError.position points at the offending token with ``^``, not past it."""
 
-    def test_bcql_property(self):
-        """``"however"`` - the ``.bcql`` cached property delegates to ``to_bcql()``."""
-        node = parse('"however"')
-        assert node.bcql == node.to_bcql()
+    def test_unterminated_string_position(self):
+        """``[lemma='etc]`` - caret should point at the opening quote, not end of input."""
+        with pytest.raises(BCQLSyntaxError) as exc_info:
+            parse("[lemma='etc]")
+        # `'` is at index 7; must NOT be at end-of-string (len=12)
+        assert exc_info.value.position == 7
 
+    def test_unterminated_literal_string_position(self):
+        """``[lemma=l'etc]`` - caret should point at the ``l`` prefix, not end of input."""
+        with pytest.raises(BCQLSyntaxError) as exc_info:
+            parse("[lemma=l'etc]")
+        # `l` is at index 7; must NOT be at end-of-string (len=13)
+        assert exc_info.value.position == 7
+
+    def test_missing_value_position(self):
+        """``[word=]`` - caret should point at the ``]``, not elsewhere."""
+        with pytest.raises(BCQLSyntaxError) as exc_info:
+            parse("[word=]")
+        # `]` is at index 6
+        assert exc_info.value.position == 6
+
+    def test_error_position_not_past_end(self):
+        """Error position must always be a valid index into the query string."""
+        queries = ["[lemma='etc]", "[lemma=l'etc]", "[word=]"]
+        for query in queries:
+            with pytest.raises(BCQLSyntaxError) as exc_info:
+                parse(query)
+            assert exc_info.value.position < len(query), (
+                f"position {exc_info.value.position} is past end of {query!r} (len={len(query)})"
+            )
 
 class TestTokenRepr:
     """Token __repr__ for debugging."""
@@ -158,8 +182,6 @@ class TestParseFromTokens:
 
     def test_basic(self):
         """``"however"`` - convenience function parses a pre-lexed token list into an AST."""
-        from bcql_py.parser.lexer import BCQLLexer
-
-        tokens = list(BCQLLexer('"however"').tokenize())
+        tokens = BCQLLexer('"however"').tokenize()
         node = parse_from_tokens(tokens, source='"however"')
         assert isinstance(node, TokenQuery)
