@@ -1,12 +1,14 @@
 """Tests for alignment parsing (Step 11): alignment arrows, optional flag, capture names, semicolon chains."""
 
 import pytest
-from conftest import parse, round_trip
+from bcql_py.models.capture import CaptureNode
+from conftest import parse, round_trip_test
 
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.alignment import AlignmentNode
 from bcql_py.models.sequence import SequenceNode, UnderscoreNode
 from bcql_py.models.token import StringValue, TokenQuery
+from bcql_py.models.span import PositionFilterNode
 
 
 class TestBasicAlignment:
@@ -15,8 +17,9 @@ class TestBasicAlignment:
     def test_simple(self):
         """``_ ==>nl _`` - find any token aligned with any token in the Dutch parallel field.
 
-        In a parallel corpus (e.g. English-Dutch), the ``==>`` alignment operator queries
-        cross-language correspondences. This finds all tokens that have a Dutch counterpart.
+        In a parallel corpus (e.g. English<>Dutch), the ``==>`` alignment operator queries
+        cross-language correspondences. In the "parallel" documentation, it is said that the field
+        "nl" can be quired if the corpus has a field "contents__nl".
         """
         node = parse("_ ==>nl _")
         assert isinstance(node, AlignmentNode)
@@ -32,8 +35,11 @@ class TestBasicAlignment:
     def test_optional(self):
         """``_ ==>nl? _`` - optional alignment: match even if no Dutch counterpart exists.
 
-        The ``?`` after the field name makes the alignment optional. Tokens without a
-        Dutch translation still match.
+        From the documentation: 
+        > For example, if you're searching for translations of cat to Dutch, with ==>nl you will 
+        > only see instances where cat is aligned to a Dutch word; 
+        > on the other hand, with ==>nl? you will see both English cat hits where the 
+        > translation to Dutch was found, and cat hits where it wasn't.
         """
         node = parse("_ ==>nl? _")
         assert isinstance(node, AlignmentNode)
@@ -42,11 +48,11 @@ class TestBasicAlignment:
 
     def test_typed(self):
         """``_ =word=>nl _`` - word-level alignment to Dutch field.
-
-        The ``=word=>`` prefix filters by alignment type; here only word-level
-        (as opposed to sentence-level) alignments are considered.
+        I *assume* that this means that both source and target constraints "fluffy" and "pluizig" will
+        be "looked up" in the "word" attributes but I am not sure. 
+        NOTE: see questions.md for the related question
         """
-        node = parse("_ =word=>nl _")
+        node = parse('"fluffy" =word=>nl "pluizig"')
         assert isinstance(node, AlignmentNode)
         op = node.alignments[0].operator
         assert op.relation_type == "word"
@@ -64,7 +70,7 @@ class TestBasicAlignment:
         """``"fluffy" ==>nl "pluizig"`` - English "fluffy" aligned with Dutch "pluizig".
 
         Finds exact translation pairs in a parallel corpus: the English word "fluffy"
-        that is aligned with the Dutch word "pluizig" (fluffy/fuzzy).
+        that is aligned with the Dutch word "pluizig".
         """
         node = parse('"fluffy" ==>nl "pluizig"')
         assert isinstance(node, AlignmentNode)
@@ -73,15 +79,13 @@ class TestBasicAlignment:
         assert isinstance(node.alignments[0].target, TokenQuery)
 
     def test_token_query_target(self):
-        """``_ ==>nl [pos="N"]`` - any token aligned with a Dutch noun."""
+        """``_ ==>nl [pos="N"]`` - any token aligned with a Dutch noun"""
         node = parse('_ ==>nl [pos="N"]')
         assert isinstance(node, AlignmentNode)
         assert isinstance(node.alignments[0].target, TokenQuery)
 
 
 class TestAlignmentCaptureName:
-    """Capture name override: ``name:==>field target``."""
-
     def test_named(self):
         """``_ alignments:==>nl _`` - custom capture name for the alignment set.
 
@@ -102,13 +106,16 @@ class TestAlignmentCaptureName:
 
 
 class TestAlignmentSemicolonChain:
-    """Multiple alignment constraints separated by ``;``."""
+    """Multiple alignment constraints can be separated by ``;``, similar to relations"""
 
     def test_two_targets(self):
         """``_ ==>nl _ ; ==>fr _`` - aligned with both Dutch and French parallel fields.
 
         Semicolons chain multiple alignment constraints. This finds tokens that have
         counterparts in both Dutch and French.
+
+        TODO: I believe that that means this is in fact an intersection: the same source token must be aligned
+          with both a Dutch and a French token. If it were a union, then we would find tokens that are aligned with Dutch OR French. Verify?
         """
         node = parse("_ ==>nl _ ; ==>fr _")
         assert isinstance(node, AlignmentNode)
@@ -154,9 +161,7 @@ class TestAlignmentInContext:
 
     def test_alignment_in_position_filter(self):
         """Position filters wrap alignment queries: ``containing "however" ==>nl _``."""
-        from bcql_py.models.span import PositionFilterNode
-
-        node = parse('(<s/>) containing "however" ==>nl _')
+        node = parse('<s/> containing "however" ==>nl _')
         assert isinstance(node, PositionFilterNode)
         assert isinstance(node.right, AlignmentNode)
 
@@ -169,8 +174,18 @@ class TestAlignmentInContext:
 
         node = parse('"and" w1:[] ==>nl "en" w2:[]')
         assert isinstance(node, AlignmentNode)
-        # Source is a sequence with a capture
+
         assert isinstance(node.source, SequenceNode)
+        assert len(node.source.children) == 2
+        assert isinstance(node.source.children[0], TokenQuery)
+        assert isinstance(node.source.children[1], CaptureNode)
+        assert node.source.children[1].label == "w1"
+
+        assert isinstance(node.alignments[0].target, SequenceNode)
+        assert len(node.alignments[0].target.children) == 2
+        assert isinstance(node.alignments[0].target.children[0], TokenQuery)
+        assert isinstance(node.alignments[0].target.children[1], CaptureNode)
+        assert node.alignments[0].target.children[1].label == "w2"
 
 
 class TestAlignmentRightRecursive:
@@ -181,6 +196,8 @@ class TestAlignmentRightRecursive:
 
         The Dutch-side target is itself a relation query: find tokens aligned with
         Dutch tokens that have an object dependent.
+
+        So with brackets that would read like ``_ ==>nl (_ -obj-> _)``.
         """
         node = parse("_ ==>nl _ -obj-> _")
         assert isinstance(node, AlignmentNode)
@@ -189,7 +206,7 @@ class TestAlignmentRightRecursive:
         assert isinstance(node.alignments[0].target, RelationNode)
 
 
-class TestRoundTrips:
+class TestAlignmentRoundTrips:
     """Round-trip tests: parse -> to_bcql -> parse produces identical AST."""
 
     @pytest.mark.parametrize(
@@ -212,7 +229,7 @@ class TestRoundTrips:
         ],
     )
     def test_round_trip(self, query: str):
-        round_trip(query)
+        round_trip_test(query)
 
 
 class TestAlignmentErrors:
