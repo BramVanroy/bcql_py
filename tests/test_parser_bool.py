@@ -1,13 +1,12 @@
-"""Tests for sequence-level boolean operators ``|``, ``&``, and ``->``.
+"""Tests for sequence-level boolean operators ``|``, ``&``, and (perhaps unexpectedly) ``->``.
 
-Per ``Bcql.g4``'s ``booleanOperator`` rule, all three share the same precedence
-and are left-associative. That is a parser peculiarity worth calling out because
-readers often expect ``&`` to bind tighter than ``|``. Boolean operators also bind
-looser than sequence juxtaposition, so ``"New" "York" | "Los" "Angeles"`` is
+Per ``Bcql.g4``'s ``booleanOperator`` rule, all three share the same precedence and are left-associative.
+That is a parser peculiarity worth calling out because readers often expect ``&`` to bind tighter than ``|``.
+Boolean operators also bind looser than sequence juxtaposition, so ``"New" "York" | "Los" "Angeles"`` is
 parsed as ``("New" "York") | ("Los" "Angeles")``.
 """
 
-from conftest import parse, round_trip
+from conftest import parse, round_trip_test
 
 from bcql_py.models.sequence import (
     GroupNode,
@@ -26,7 +25,7 @@ class TestSequenceUnion:
         """``[lemma="go"] | [lemma="come"]`` - alternative lemma queries on one token position.
 
         Searches for: tokens whose lemma is ``go`` OR whose lemma is ``come``.
-        Example intuition: this would match forms like "go", "goes", "went", "come", "comes", "came"
+        Interpretation: this would match forms like "go", "goes", "went", "come", "comes", "came"
         at the same token position, depending on corpus lemmatization.
         """
         node = parse('[lemma="go"] | [lemma="come"]')
@@ -47,6 +46,8 @@ class TestSequenceUnion:
         Searches for: the two-token phrase ``New York`` OR the two-token phrase ``Los Angeles``.
         Sequence juxtaposition binds tighter than ``|``, so each place name is parsed as one phrase
         before the union is applied.
+
+        So with parens that is the same as ``("New" "York") | ("Los" "Angeles")``
         """
         node = parse('"New" "York" | "Los" "Angeles"')
         assert isinstance(node, SequenceBoolNode)
@@ -72,15 +73,15 @@ class TestSequenceUnion:
 
     def test_round_trip_union(self):
         """Round-trip: lemma-level union preserves alternative structure."""
-        round_trip('[lemma="go"] | [lemma="come"]')
+        round_trip_test('[lemma="go"] | [lemma="come"]')
 
     def test_round_trip_union_sequences(self):
         """Round-trip: multi-token alternatives preserve sequence grouping."""
-        round_trip('"New" "York" | "Los" "Angeles"')
+        round_trip_test('"New" "York" | "Los" "Angeles"')
 
     def test_round_trip_three_way(self):
         """Round-trip: three-way union preserves left-associative grouping."""
-        round_trip('"although" | "because" | "while"')
+        round_trip_test('"although" | "because" | "while"')
 
 
 class TestSequenceIntersection:
@@ -91,7 +92,7 @@ class TestSequenceIntersection:
 
         Searches for: positions satisfying BOTH sequence constraints: one side anchored by lemma
         ``search`` and the other side anchored by a noun constraint.
-        Example intuition: think of two query lenses over the same region; ``&`` keeps only hits
+        Interpretation: think of two query lenses over the same region; ``&`` keeps only hits
         that survive both lenses.
         """
         node = parse('[lemma="search"] [] & [] [pos="NOUN"]')
@@ -102,7 +103,7 @@ class TestSequenceIntersection:
 
     def test_round_trip_intersection(self):
         """Round-trip: sequence intersection preserves both sequence operands."""
-        round_trip('[lemma="search"] [] & [] [pos="NOUN"]')
+        round_trip_test('[lemma="search"] [] & [] [pos="NOUN"]')
 
 
 class TestSequenceImplication:
@@ -115,9 +116,12 @@ class TestSequenceImplication:
     def test_simple_implication(self):
         """``[word="not"] -> [pos="ADV"]`` - if the token is ``not``, it must parse as an adverb.
 
+        NOTE: it is my assumption that by default this holds for the same token position, but maybe that is
+        not true and we need an explicit capture to enforce that?
+
         Searches for: a conditional constraint at sequence-bool level: if ``word="not"`` holds,
         then ``pos="ADV"`` must also hold at that position.
-        Example intuition: this encodes a consistency rule for an annotation layer.
+        Interpretation: this encodes a consistency rule for an annotation layer.
         """
         node = parse('[word="not"] -> [pos="ADV"]')
         assert isinstance(node, SequenceBoolNode)
@@ -127,13 +131,13 @@ class TestSequenceImplication:
 
     def test_round_trip_implication(self):
         """Round-trip: sequence-level implication preserves structure."""
-        round_trip('[word="not"] -> [pos="ADV"]')
+        round_trip_test('[word="not"] -> [pos="ADV"]')
 
 
 class TestMixedBoolOperators:
     """Mixed ``&``, ``|``, ``->`` at the same precedence level.
 
-    The important parser behaviour is that there is no built-in precedence ladder between these
+    The important parser behaviour is that there is no built-in precedence priority between these
     three operators. Grouping is driven solely by left-associativity unless parentheses intervene.
     """
 
@@ -143,7 +147,7 @@ class TestMixedBoolOperators:
         Searches for: the intersection of ``([pos="NN"] | [pos="NNS"])`` with ``[lemma="analysis"]``.
         In plain language: first allow singular OR plural noun tags, then require lemma
         ``analysis`` as well.
-        Parser detail: readers often expect ``&`` to bind tighter than ``|``, but BCQL keeps them
+        NOTE: in other languages we might expect ``&`` to bind tighter than ``|``, but BCQL keeps them
         at the same precedence, so grouping is left-to-right.
         """
         node = parse('[pos="NN"] | [pos="NNS"] & [lemma="analysis"]')
@@ -170,9 +174,10 @@ class TestMixedBoolOperators:
         """``[word="not"] -> [pos="ADV"] | [word="never"]`` groups implication first.
 
         Searches for: ``([word="not"] -> [pos="ADV"])`` OR ``[word="never"]``.
-        Example intuition: enforce a conditional for ``not``, while also allowing ``never`` as an
+        Interpretation: enforce a conditional for ``not``, while also allowing ``never`` as an
         alternative branch.
         Because ``->`` shares precedence with ``|``, left-to-right grouping yields exactly that AST.
+        With parentheses that is the same as ``([word="not"] -> [pos="ADV"]) | [word="never"]``.
         """
         node = parse('[word="not"] -> [pos="ADV"] | [word="never"]')
         assert isinstance(node, SequenceBoolNode)
@@ -182,11 +187,11 @@ class TestMixedBoolOperators:
 
     def test_round_trip_mixed_union_intersection(self):
         """Round-trip: mixed ``|`` and ``&`` preserves left-associative grouping."""
-        round_trip('[pos="NN"] | [pos="NNS"] & [lemma="analysis"]')
+        round_trip_test('[pos="NN"] | [pos="NNS"] & [lemma="analysis"]')
 
     def test_round_trip_mixed_implication(self):
         """Round-trip: mixed ``->`` and ``|`` preserves left-associative grouping."""
-        round_trip('[word="not"] -> [pos="ADV"] | [word="never"]')
+        round_trip_test('[word="not"] -> [pos="ADV"] | [word="never"]')
 
 
 class TestBoolWithGroups:
@@ -197,8 +202,7 @@ class TestBoolWithGroups:
 
         Searches for: [a form with lemma ``go``] OR [the intersection ``&`` of a token that is a
         verb AND is the word ``went``].
-        Example intuition: this behaves like "tokens lemmatized as go OR tokens simultaneously tagged
-        as verbs and surface-form ``went``".
+        Interpretation: "tokens lemmatized as go OR tokens simultaneously tagged as verbs and surface-form ``went``".
         Without parentheses the parser would group left-to-right; here the grouped right branch is
         preserved as a ``GroupNode``.
         """
@@ -215,7 +219,7 @@ class TestBoolWithGroups:
         """``[word="however"] | [word="therefore"]`` - explicit annotation syntax on both sides.
 
         Searches for: tokens whose ``word`` annotation is either ``however`` or ``therefore``.
-        Example intuition: find either of two discourse connectors in running text.
+        Interpretation: find either of two discourse connectors in running text.
         This is the same sequence-level union as a bare-string alternative, but with explicit
         annotation names.
         """
@@ -231,7 +235,7 @@ class TestBoolWithGroups:
         """``![pos="DET"] | [word="the"]`` shows that negation binds tighter than ``|``.
 
         Searches for: tokens that are NOT determiners, OR tokens whose word is exactly ``the``.
-        Example intuition: this broad branch demonstrates precedence, not a typical search strategy.
+        Interpretation: this broad branch demonstrates precedence, not a typical search strategy.
         The parser reads this as ``(![pos="DET"]) | [word="the"]``, not as negation of the whole
         union.
         """
@@ -245,7 +249,7 @@ class TestBoolWithGroups:
         """``[pos="ADJ"]+ | [pos="ADV"]*`` keeps each quantifier attached to its own operand.
 
         Searches for: one-or-more adjectives OR zero-or-more adverbs.
-        Example intuition: the left branch can match adjective runs like "very large" (if tagged
+        Interpretation: the left branch can match adjective runs like "big green" (if tagged
         ADJ ADJ), while the right branch can match optional adverb stretches.
         Repetition applies before the boolean union, so both branches arrive as
         ``RepetitionNode`` operands.
@@ -258,16 +262,16 @@ class TestBoolWithGroups:
 
     def test_round_trip_group_overrides(self):
         """Round-trip: parentheses preserve explicit grouping inside boolean expressions."""
-        round_trip('[lemma="go"] | ([pos="V"] & [word="went"])')
+        round_trip_test('[lemma="go"] | ([pos="V"] & [word="went"])')
 
     def test_round_trip_bracket_union(self):
         """Round-trip: annotation-based union preserves explicit token constraints."""
-        round_trip('[word="however"] | [word="therefore"]')
+        round_trip_test('[word="however"] | [word="therefore"]')
 
     def test_round_trip_negation_in_union(self):
         """Round-trip: negation-in-union preserves span-level precedence."""
-        round_trip('![pos="DET"] | [word="the"]')
+        round_trip_test('![pos="DET"] | [word="the"]')
 
     def test_round_trip_repetition_in_union(self):
         """Round-trip: repetition-in-union preserves quantified operands."""
-        round_trip('[pos="ADJ"]+ | [pos="ADV"]*')
+        round_trip_test('[pos="ADJ"]+ | [pos="ADV"]*')
