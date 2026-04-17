@@ -9,7 +9,6 @@ See bnf.md for the grammar that we're implementing.
 
 from __future__ import annotations
 
-from functools import lru_cache
 from typing import Sequence
 
 from bcql_py.exceptions import BCQLSyntaxError
@@ -59,7 +58,7 @@ class BCQLParser:
     """Parse a list of BCQL tokens into an AST.
 
     Args:
-        tokens: Token list produced by ``BCQLLexer``
+        tokens: Token sequence produced by ``BCQLLexer``
         source: The original query string (used in error messages).
     """
 
@@ -68,7 +67,7 @@ class BCQLParser:
     def __init__(self, tokens: Sequence[Token], source: str = "") -> None:
         self._source = source
         self._pos = 0
-        self._tokens = tokens
+        self._tokens = tuple(tokens)
         self._ast: BCQLNode | None = None
 
         if not self._tokens:
@@ -88,7 +87,7 @@ class BCQLParser:
 
     @property
     def tokens(self) -> tuple[Token, ...]:
-        return tuple(self._tokens)
+        return self._tokens
 
     @property
     def ast(self) -> BCQLNode:
@@ -1203,18 +1202,3 @@ class BCQLParser:
             raise self._raise_error(f"Expected a string {ctx}, got {tok.type.name} ({tok.value!r})")
         self._advance()
         return StringValue(value=tok.value, is_literal=(tok.type == TokenType.LITERAL_STRING))
-
-
-@lru_cache(maxsize=64)
-def parse_from_tokens(tokens: Sequence[Token], source: str) -> BCQLNode:
-    """Parse a BCQL token list into an abstract syntax tree.
-
-    Args:
-        tokens: The list of tokens to parse (from ``tokenize``).
-        source: The original source string.
-
-    Returns:
-        The root ``BCQLNode``.
-    """
-    parser = BCQLParser(tokens, source=source)
-    return parser.parse()
