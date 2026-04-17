@@ -6,7 +6,8 @@ forming a flat list. Captures bind tighter than sequence juxtaposition but loose
 level operators wrapped by ``sequencePartNoCapture``.
 """
 
-from conftest import parse, round_trip
+from bcql_py.models import UnderscoreNode
+from conftest import parse, round_trip_test
 
 from bcql_py.models.capture import CaptureNode
 from bcql_py.models.sequence import (
@@ -23,17 +24,14 @@ class TestCaptureBasic:
     """Basic ``label:body`` capture syntax."""
 
     def test_capture_bracket_token(self):
-        """``A:[pos="ADJ"]`` - capture an adjective token under the label "A".
-
-        Searches for: adjective tokens, captured under label ``A`` for later constraint logic.
-        Example intuition: ``A:[pos="ADJ"] "analysis" :: A.lemma = "comparative"``.
-        """
+        """``A:[pos="ADJ"]`` - capture an adjective token under the label "A"."""
         node = parse('A:[pos="ADJ"]')
         assert isinstance(node, CaptureNode)
         assert node.label == "A"
         assert isinstance(node.body, TokenQuery)
         assert isinstance(node.body.constraint, AnnotationConstraint)
         assert node.body.constraint.annotation == "pos"
+        assert node.body.constraint.value.value == "ADJ"
 
     def test_capture_bare_string(self):
         """``head:"corpus"`` captures a lexical token under a descriptive label."""
@@ -49,6 +47,7 @@ class TestCaptureBasic:
         node = parse("token:_")
         assert isinstance(node, CaptureNode)
         assert node.label == "token"
+        assert isinstance(node.body, UnderscoreNode)
 
     def test_capture_empty_brackets(self):
         """``token:[]`` captures any token via the match-all pattern."""
@@ -70,19 +69,19 @@ class TestCaptureBasic:
 
     def test_round_trip_capture_token(self):
         """Round-trip: capture with bracket token preserves structure."""
-        round_trip('A:[pos="ADJ"]')
+        round_trip_test('A:[pos="ADJ"]')
 
     def test_round_trip_capture_string(self):
         """Round-trip: capture with bare string preserves structure."""
-        round_trip('head:"corpus"')
+        round_trip_test('head:"corpus"')
 
     def test_round_trip_capture_underscore(self):
         """Round-trip: capture with underscore wildcard preserves structure."""
-        round_trip("token:_")
+        round_trip_test("token:_")
 
     def test_round_trip_capture_empty(self):
         """Round-trip: capture with match-all token preserves structure."""
-        round_trip("token:[]")
+        round_trip_test("token:[]")
 
 
 class TestCaptureChained:
@@ -93,6 +92,10 @@ class TestCaptureChained:
 
         Chained labels nest as separate ``CaptureNode`` wrappers so both labels can be referenced
         later in global constraints.
+
+        NOTE: I am not sure what the use-case for this is...
+
+        Assignment `:` is right-associative, so the parse is `head:(focus:[word="however"])`
         """
         node = parse('head:focus:[word="however"]')
         assert isinstance(node, CaptureNode)
@@ -116,7 +119,7 @@ class TestCaptureChained:
 
     def test_round_trip_two_labels(self):
         """Round-trip: chained capture labels preserve structure."""
-        round_trip('head:focus:[word="however"]')
+        round_trip_test('head:focus:[word="however"]')
 
 
 class TestCaptureInSequence:
@@ -135,25 +138,25 @@ class TestCaptureInSequence:
         assert isinstance(node.children[1], TokenQuery)
 
     def test_multiple_captures_in_sequence(self):
-        """``source:[] "by" agent:[]`` captures both sides of an English by-phrase.
+        """``pastry:[] "by" baker:[]`` captures both sides of an English by-phrase.
 
         This is a realistic shape for passive constructions such as ``written by Shakespeare``.
         """
-        node = parse('source:[] "by" agent:[]')
+        node = parse('pastry:[] "by" baker:[]')
         assert isinstance(node, SequenceNode)
         assert len(node.children) == 3
         assert isinstance(node.children[0], CaptureNode)
-        assert node.children[0].label == "source"
+        assert node.children[0].label == "pastry"
         assert isinstance(node.children[2], CaptureNode)
-        assert node.children[2].label == "agent"
+        assert node.children[2].label == "baker"
 
     def test_round_trip_capture_in_sequence(self):
         """Round-trip: capture in sequence preserves structure."""
-        round_trip('modifier:[pos="ADJ"] "analysis"')
+        round_trip_test('modifier:[pos="ADJ"] "analysis"')
 
     def test_round_trip_multiple_captures(self):
         """Round-trip: multiple captures in sequence preserves structure."""
-        round_trip('source:[] "by" agent:[]')
+        round_trip_test('pastry:[] "by" baker:[]')
 
 
 class TestCaptureWithRepetition:
@@ -161,7 +164,9 @@ class TestCaptureWithRepetition:
 
     def test_capture_with_repetition(self):
         """``A:[pos="ADJ"]+``: repetition applies to the body, not the capture itself.
-        Since capture is above span in precedence, ``A:X+`` means ``A:(X+)``.
+        Since capture is above span in precedence, ``A:X+`` means ``A:(X+)``
+        
+        That means ``A`` captures the full span of one or more adjectives, not just a single adjective token.
         """
         node = parse('A:[pos="ADJ"]+')
         assert isinstance(node, CaptureNode)
@@ -187,15 +192,15 @@ class TestCaptureWithRepetition:
 
     def test_round_trip_capture_repetition(self):
         """Round-trip: capture with repetition preserves structure."""
-        round_trip('A:[pos="ADJ"]+')
+        round_trip_test('A:[pos="ADJ"]+')
 
     def test_round_trip_capture_group(self):
         """Round-trip: capture group preserves structure."""
-        round_trip('phrase:("in" "vitro")')
+        round_trip_test('phrase:("in" "vitro")')
 
     def test_round_trip_capture_negation(self):
         """Round-trip: capture negation preserves structure."""
-        round_trip('focus:![pos="ADJ"]')
+        round_trip_test('focus:![pos="ADJ"]')
 
 
 class TestCaptureWithBoolOps:
@@ -204,7 +209,11 @@ class TestCaptureWithBoolOps:
     def test_capture_in_union(self):
         """``left:"however" | right:"therefore"`` captures each side of a lexical alternative.
 
-        This makes it possible for later constraints to know which alternative branch matched.
+        NOTE: This makes it possible for later constraints to know which alternative branch matched, though
+        I'm curious how people would actually use this. Maybe in global constraints, like
+        ``left:"baker" | right:"bake" :: left.pos = "N" | right.pos = "V"``
+
+        which would be a roundabout way of writing ``[word="baker" & pos="N"] | [word="bake" & pos="V"]``
         """
         node = parse('left:"however" | right:"therefore"')
         assert isinstance(node, SequenceBoolNode)
@@ -216,4 +225,4 @@ class TestCaptureWithBoolOps:
 
     def test_round_trip_capture_in_union(self):
         """Round-trip: captures in union preserves structure."""
-        round_trip('left:"however" | right:"therefore"')
+        round_trip_test('left:"however" | right:"therefore"')
