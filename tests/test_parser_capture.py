@@ -6,9 +6,9 @@ forming a flat list. Captures bind tighter than sequence juxtaposition but loose
 level operators wrapped by ``sequencePartNoCapture``.
 """
 
-from bcql_py.models import UnderscoreNode
 from conftest import parse, round_trip_test
 
+from bcql_py.models import UnderscoreNode
 from bcql_py.models.capture import CaptureNode
 from bcql_py.models.sequence import (
     GroupNode,
@@ -176,8 +176,8 @@ class TestCaptureWithRepetition:
         assert isinstance(node.body.child, TokenQuery)
 
     def test_capture_group(self):
-        """``phrase:("in" "vitro")`` captures a grouped two-token phrase."""
-        node = parse('phrase:("in" "vitro")')
+        """``phrase:("in" "terminis")`` captures a grouped two-token phrase."""
+        node = parse('phrase:("in" "terminis")')
         assert isinstance(node, CaptureNode)
         assert node.label == "phrase"
         assert isinstance(node.body, GroupNode)
@@ -196,7 +196,7 @@ class TestCaptureWithRepetition:
 
     def test_round_trip_capture_group(self):
         """Round-trip: capture group preserves structure."""
-        round_trip_test('phrase:("in" "vitro")')
+        round_trip_test('phrase:("in" "terminis")')
 
     def test_round_trip_capture_negation(self):
         """Round-trip: capture negation preserves structure."""

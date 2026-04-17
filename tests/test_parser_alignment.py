@@ -1,14 +1,14 @@
 """Tests for alignment parsing (Step 11): alignment arrows, optional flag, capture names, semicolon chains."""
 
 import pytest
-from bcql_py.models.capture import CaptureNode
 from conftest import parse, round_trip_test
 
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.alignment import AlignmentNode
+from bcql_py.models.capture import CaptureNode
 from bcql_py.models.sequence import SequenceNode, UnderscoreNode
-from bcql_py.models.token import StringValue, TokenQuery
 from bcql_py.models.span import PositionFilterNode
+from bcql_py.models.token import StringValue, TokenQuery
 
 
 class TestBasicAlignment:
@@ -35,10 +35,10 @@ class TestBasicAlignment:
     def test_optional(self):
         """``_ ==>nl? _`` - optional alignment: match even if no Dutch counterpart exists.
 
-        From the documentation: 
-        > For example, if you're searching for translations of cat to Dutch, with ==>nl you will 
-        > only see instances where cat is aligned to a Dutch word; 
-        > on the other hand, with ==>nl? you will see both English cat hits where the 
+        From the documentation:
+        > For example, if you're searching for translations of cat to Dutch, with ==>nl you will
+        > only see instances where cat is aligned to a Dutch word;
+        > on the other hand, with ==>nl? you will see both English cat hits where the
         > translation to Dutch was found, and cat hits where it wasn't.
         """
         node = parse("_ ==>nl? _")
@@ -49,7 +49,7 @@ class TestBasicAlignment:
     def test_typed(self):
         """``_ =word=>nl _`` - word-level alignment to Dutch field.
         I *assume* that this means that both source and target constraints "fluffy" and "pluizig" will
-        be "looked up" in the "word" attributes but I am not sure. 
+        be "looked up" in the "word" attributes but I am not sure.
         NOTE: see questions.md for the related question
         """
         node = parse('"fluffy" =word=>nl "pluizig"')

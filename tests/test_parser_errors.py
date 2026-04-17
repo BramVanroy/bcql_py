@@ -6,7 +6,7 @@ from conftest import round_trip_test
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.capture import AnnotationRef, GlobalConstraintNode
 from bcql_py.models.token import NotConstraint, TokenQuery
-from bcql_py.parser import BCQLParser, BCQLLexer, Token, TokenType, parse_from_tokens, parse
+from bcql_py.parser import BCQLLexer, BCQLParser, Token, TokenType, parse, parse_from_tokens
 
 
 class TestParserErrors:

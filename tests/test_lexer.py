@@ -53,7 +53,7 @@ class TestLexerStrings:
         assert len(tokens) == 1
         assert tokens[0].type == TokenType.LITERAL_STRING
         assert tokens[0].value == "e.g."
-    
+
     def test_literal_single_quoted(self):
         tokens = lex("l'e.g.'")
         assert len(tokens) == 1
@@ -599,7 +599,7 @@ class TestLexerPropertiesAccess:
         assert lexer.pos == 0
         lexer.tokenize()
         assert lexer.pos == len("hello")
-    
+
     def test_tokens_property(self):
         lexer = BCQLLexer('"kat" ==>en _')
         # Calling public `lexer.tokens` will trigger tokenization
@@ -607,7 +607,6 @@ class TestLexerPropertiesAccess:
         lexer.tokenize()
         # kat, =, =>, en, _, EOF
         assert len(lexer._tokens) == 6
-
 
 
 class TestLexerTokenizeFunction:

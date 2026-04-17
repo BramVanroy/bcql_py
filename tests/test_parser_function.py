@@ -1,10 +1,10 @@
 """Tests for function call parsing (Step 13): sequence-level query functions."""
 
 import pytest
-from bcql_py.models import RelationNode, UnderscoreNode
 from conftest import parse, round_trip_test
 
 from bcql_py.exceptions import BCQLSyntaxError
+from bcql_py.models import RelationNode, UnderscoreNode
 from bcql_py.models.capture import CaptureNode
 from bcql_py.models.function import FunctionCallNode
 from bcql_py.models.sequence import SequenceNode
@@ -108,7 +108,7 @@ class TestFunctionCallComplexArgs:
         assert isinstance(node, FunctionCallNode)
         assert len(node.args) == 1
         assert isinstance(node.args[0], RelationNode)
-    
+
     def test_multiple_args_embedded_rel_types(self):
         """``rspan(_ -nsubj-> (_ -amod-> _) ; -obj-> _, "all")``"""
         node = parse('rspan(_ -nsubj-> (_ -amod-> _) ; -obj-> _, "all")')
