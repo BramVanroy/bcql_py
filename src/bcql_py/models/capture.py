@@ -127,6 +127,22 @@ class ConstraintNot(BCQLNode):
         return f"!{self.operand.to_bcql()}"
 
 
+class ConstraintInteger(BCQLNode):
+    """An integer literal in a capture constraint.
+
+    Example: the ``5`` in ``focus.pos > 5``.
+
+    Attributes:
+        value: The integer value.
+    """
+
+    node_type: Literal["constraint_integer"] = "constraint_integer"
+    value: int = Field(description="Integer value.")
+
+    def to_bcql(self) -> str:
+        return str(self.value)
+
+
 class ConstraintFunctionCall(BCQLNode):
     """A function call in a capture constraint.
 
@@ -152,6 +168,7 @@ CaptureConstraintExpr = Annotated[
     Union[
         AnnotationRef,
         ConstraintLiteral,
+        ConstraintInteger,
         ConstraintComparison,
         ConstraintBoolean,
         ConstraintNot,

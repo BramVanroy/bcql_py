@@ -76,7 +76,11 @@ class BCQLLexer:
             else:
                 chars.append(char)
                 self._pos += 1
-        raise self._raise_error(f"Unterminated string (expected closing {initial_quote_char!r})")
+        raise BCQLSyntaxError(
+            f"Unterminated string (expected closing {initial_quote_char!r})",
+            bcql_query=self._source,
+            error_position=starting_pos,
+        )
 
     def _is_arrow(self, offset: int = 0, is_parallel_relation: bool = False) -> bool:
         """Check if from current pos + offset we have ``-type->`` or ``=type=>`` pattern."""

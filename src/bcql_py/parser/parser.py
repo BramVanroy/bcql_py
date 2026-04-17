@@ -20,6 +20,7 @@ from bcql_py.models.capture import (
     ConstraintBoolean,
     ConstraintComparison,
     ConstraintFunctionCall,
+    ConstraintInteger,
     ConstraintLiteral,
     ConstraintNot,
     GlobalConstraintNode,
@@ -630,7 +631,7 @@ class BCQLParser:
 
         Called after the child node has been parsed and we see ``{``.
 
-        Note: ``{,m}`` (no minimum) is a bcql_py extension not present in ``Bcql.g4``'s ``repetitionAmount`` rule,
+        NOTE: ``{,m}`` (no minimum) is a bcql_py extension not present in ``Bcql.g4``'s ``repetitionAmount`` rule,
         which requires at least one INTEGER before the comma. We accept it as a convenience since it is a common
         regex convention meaning "up to m repetitions".
 
@@ -1073,7 +1074,7 @@ class BCQLParser:
 
     def _parse_cc_not(
         self,
-    ) -> ConstraintComparison | ConstraintNot | ConstraintLiteral | AnnotationRef | ConstraintFunctionCall:
+    ) -> ConstraintComparison | ConstraintNot | ConstraintLiteral | ConstraintInteger | AnnotationRef | ConstraintFunctionCall:
         """``cc_not := cc_cmp | '!' cc_not``
 
         Prefix negation in capture constraints.
@@ -1088,7 +1089,7 @@ class BCQLParser:
 
         return self._parse_cc_cmp()
 
-    def _parse_cc_cmp(self) -> ConstraintComparison | ConstraintLiteral | AnnotationRef | ConstraintFunctionCall:
+    def _parse_cc_cmp(self) -> ConstraintComparison | ConstraintLiteral | ConstraintInteger | AnnotationRef | ConstraintFunctionCall:
         """``cc_cmp := cc_atom | cc_atom CMP cc_atom``
 
         Comparison level in capture constraints. Handles ``A.word = "over"`` and similar.
@@ -1108,12 +1109,13 @@ class BCQLParser:
 
         return left
 
-    def _parse_cc_atom(self) -> ConstraintLiteral | AnnotationRef | ConstraintFunctionCall:
-        """``cc_atom := STRING | IDENT '.' IDENT | IDENT '(' cc_arg_list ')' | '(' cc_bool ')'``
+    def _parse_cc_atom(self) -> ConstraintLiteral | ConstraintInteger | AnnotationRef | ConstraintFunctionCall:
+        """``cc_atom := STRING | INTEGER | IDENT '.' IDENT | IDENT '(' cc_arg_list ')' | '(' cc_bool ')'``
 
         Highest precedence in the capture constraint grammar. Dispatches based on the current token:
 
         - **String literal** (``"over"``): produces a ``ConstraintLiteral``.
+        - **Integer literal** (``5``): produces a ``ConstraintInteger``.
         - **Identifier followed by ``.``** (``A.word``): produces an ``AnnotationRef``.
         - **Identifier followed by ``(``** (``start(A)``): produces a ``ConstraintFunctionCall``.
         - **Bare identifier** (``A``): produces an ``AnnotationRef`` with no annotation (used as a
@@ -1140,6 +1142,11 @@ class BCQLParser:
             self._advance()
             return ConstraintLiteral(value=tok.value)
 
+        # Integer literal
+        if tok.type == TokenType.INTEGER:
+            self._advance()
+            return ConstraintInteger(value=int(tok.value))
+
         # Identifier-led alternatives: A.word, start(...), or bare label
         if tok.type == TokenType.IDENTIFIER:
             ident_tok = self._advance()
@@ -1158,7 +1165,7 @@ class BCQLParser:
             return AnnotationRef(label=ident_tok.value, annotation="")
 
         raise self._raise_error(
-            f"Expected a string, identifier, or '(' in capture constraint, got {tok.type.name} ({tok.value!r})"
+            f"Expected a string, identifier, integer, or '(' in capture constraint, got {tok.type.name} ({tok.value!r})"
         )
 
     def _parse_cc_function_call(self, name: str) -> ConstraintFunctionCall:

@@ -7,11 +7,10 @@ from bcql_py.parser.parser import BCQLParser
 from bcql_py.parser.tokens import Token, TokenType
 
 
-
 @lru_cache(maxsize=64)
 def tokenize(source: str) -> tuple[Token, ...]:
     """Tokenize a BCQL query string into a tuple of Tokens.
-    
+
     Args:
         source (str): The BCQL query to tokenize.
 

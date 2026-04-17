@@ -58,7 +58,6 @@ class AlignmentConstraint(BCQLNode):
 
 class AlignmentNode(BCQLNode):
     """A parallel alignment query: ``source ==>field target [; ==>field target]*``.
-
     Attributes:
         source: The source query in the primary field
         alignments: One or more alignment constraints.
@@ -66,10 +65,7 @@ class AlignmentNode(BCQLNode):
 
     node_type: Literal["alignment"] = "alignment"
     source: BCQLNode = Field(description="Source query in primary field.")
-    alignments: list[AlignmentConstraint] = Field(
-        min_length=1,
-        description="Alignment constraints.",
-    )
+    alignments: list[AlignmentConstraint] = Field(min_length=1, description="Alignment constraint(s)")
 
     def to_bcql(self) -> str:
         first = f"{self.source.to_bcql()} {self.alignments[0].to_bcql()}"

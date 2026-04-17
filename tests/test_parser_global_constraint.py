@@ -6,13 +6,14 @@ changing the grouping, unless they introduce a nested sub-expression that the AS
 """
 
 import pytest
-from conftest import parse, round_trip
+from conftest import parse, round_trip_test
 
 from bcql_py.models.capture import (
     AnnotationRef,
     ConstraintBoolean,
     ConstraintComparison,
     ConstraintFunctionCall,
+    ConstraintInteger,
     ConstraintLiteral,
     ConstraintNot,
     GlobalConstraintNode,
@@ -54,27 +55,44 @@ class TestGlobalConstraint:
     def test_chained_double_colon(self):
         """``left:[] right:[] :: left.word = "however" :: right.word = "therefore"`` chains ``::`` twice.
 
-        ``::`` is left-associative: the first constraint attaches to the body, and the second wraps
-        that whole constrained query.
+        Unlike capture groups ``:``, ``::`` is left-associative: the first constraint attaches to the body, and the second wraps
+        that whole constrained query, i.e. (parens for clarity only):
+
+        (left:[] right:[] :: left.word = "however") :: right.word = "therefore"
+
         """
         node = parse('left:[] right:[] :: left.word = "however" :: right.word = "therefore"')
         assert isinstance(node, GlobalConstraintNode)
-        # Outer :: wraps everything
-        assert isinstance(node.constraint, ConstraintComparison)
-        assert node.constraint.left.label == "right"
-        # Inner :: is the body
-        assert isinstance(node.body, GlobalConstraintNode)
-        assert isinstance(node.body.constraint, ConstraintComparison)
-        assert node.body.constraint.left.label == "left"
+
+        outer = node.constraint  # right.word = "therefore"
+        assert isinstance(outer, ConstraintComparison)
+        assert outer.operator == "="
+        assert isinstance(outer.left, AnnotationRef)
+        assert outer.left.label == "right"
+        assert outer.left.annotation == "word"
+        assert isinstance(outer.right, ConstraintLiteral)
+        assert outer.right.value == "therefore"
+
+        inner = node.body  # left:[] right:[] :: left.word = "however"
+        assert isinstance(inner, GlobalConstraintNode)
+        inner_cmp = inner.constraint
+        assert isinstance(inner_cmp, ConstraintComparison)
+        assert inner_cmp.operator == "="
+        assert isinstance(inner_cmp.left, AnnotationRef)
+        assert inner_cmp.left.label == "left"
+        assert inner_cmp.left.annotation == "word"
+        assert isinstance(inner_cmp.right, ConstraintLiteral)
+        assert inner_cmp.right.value == "however"
+
 
     def test_round_trip(self):
         """Round-trip: global constraints preserve structure."""
-        round_trip('A:[] "by" B:[] :: A.word = B.word')
-        round_trip('A:[] :: A.word = "over"')
+        round_trip_test('A:[] "by" B:[] :: A.word = B.word')
+        round_trip_test('A:[] :: A.word = "over"')
 
     def test_chained_round_trip(self):
         """Round-trip: chained global constraints preserve left-associative structure."""
-        round_trip('left:[] right:[] :: left.word = "however" :: right.word = "therefore"')
+        round_trip_test('left:[] right:[] :: left.word = "however" :: right.word = "therefore"')
 
 
 class TestAnnotationRef:
@@ -99,7 +117,7 @@ class TestAnnotationRef:
 
     def test_annotation_ref_round_trip(self):
         """Round-trip: annotation reference comparison preserves structure."""
-        round_trip("A:[] :: A.lemma = B.lemma")
+        round_trip_test("A:[] :: A.lemma = B.lemma")
 
 
 class TestConstraintComparison:
@@ -116,7 +134,7 @@ class TestConstraintComparison:
 
     @pytest.mark.parametrize("op", ["=", "!=", "<", "<=", ">", ">="])
     def test_comparison_round_trips(self, op):
-        round_trip(f'focus:[] :: focus.word {op} "however"')
+        round_trip_test(f'focus:[] :: focus.word {op} "however"')
 
 
 class TestConstraintBoolean:
@@ -169,9 +187,9 @@ class TestConstraintBoolean:
 
     def test_boolean_round_trips(self):
         """Round-trip: boolean capture constraints preserve structure."""
-        round_trip('left:[] right:[] :: left.word = "however" & right.word = "therefore"')
-        round_trip('focus:[] :: focus.word = "however" | focus.word = "therefore"')
-        round_trip('cue:[] verb:[] :: cue.word = "if" -> verb.pos = "V"')
+        round_trip_test('left:[] right:[] :: left.word = "however" & right.word = "therefore"')
+        round_trip_test('focus:[] :: focus.word = "however" | focus.word = "therefore"')
+        round_trip_test('cue:[] verb:[] :: cue.word = "if" -> verb.pos = "V"')
 
 
 class TestConstraintNot:
@@ -198,7 +216,7 @@ class TestConstraintNot:
 
     def test_not_round_trip(self):
         """Round-trip: negated capture constraint preserves structure."""
-        round_trip('focus:[] :: !focus.word = "however"')
+        round_trip_test('focus:[] :: !focus.word = "however"')
 
 
 class TestConstraintFunctionCall:
@@ -246,8 +264,8 @@ class TestConstraintFunctionCall:
 
     def test_function_round_trips(self):
         """Round-trip: function calls in capture constraints preserve structure."""
-        round_trip("A:[] B:[] :: start(B) < start(A)")
-        round_trip('focus:[] :: func(focus.word, "ADV")')
+        round_trip_test("A:[] B:[] :: start(B) < start(A)")
+        round_trip_test('focus:[] :: func(focus.word, "ADV")')
 
 
 class TestConstraintParentheses:
@@ -271,10 +289,44 @@ class TestConstraintParentheses:
 
     def test_parens_round_trip(self):
         # Parens are structural only; since & | -> have same precedence, the flat form is equivalent
-        round_trip(
+        round_trip_test(
             'focus:[] :: (focus.word = "however" | focus.word = "therefore") & focus.pos = "ADV"',
             expected='focus:[] :: focus.word = "however" | focus.word = "therefore" & focus.pos = "ADV"',
         )
+
+
+class TestConstraintInteger:
+    """Integer literals in capture constraints."""
+
+    @pytest.mark.parametrize("op", ["=", "!=", "<", "<=", ">", ">="])
+    def test_integer_rhs(self, op):
+        """``:: focus.pos {op} 5`` - compare an annotation ref to an integer literal."""
+        node = parse(f"focus:[] :: focus.pos {op} 5")
+        assert isinstance(node, GlobalConstraintNode)
+        cmp = node.constraint
+        assert isinstance(cmp, ConstraintComparison)
+        assert cmp.operator == op
+        assert isinstance(cmp.left, AnnotationRef)
+        assert cmp.left.label == "focus"
+        assert cmp.left.annotation == "pos"
+        assert isinstance(cmp.right, ConstraintInteger)
+        assert cmp.right.value == 5
+
+    @pytest.mark.parametrize("op", ["=", "!=", "<", "<=", ">", ">="])
+    def test_integer_lhs(self, op):
+        """``:: 5 {op} focus.pos`` - integer on the left-hand side."""
+        node = parse(f"focus:[] :: 5 {op} focus.pos")
+        assert isinstance(node, GlobalConstraintNode)
+        cmp = node.constraint
+        assert isinstance(cmp, ConstraintComparison)
+        assert isinstance(cmp.left, ConstraintInteger)
+        assert cmp.left.value == 5
+        assert isinstance(cmp.right, AnnotationRef)
+
+    def test_integer_round_trips(self):
+        """Round-trip: integer comparisons in capture constraints preserve structure."""
+        round_trip_test("focus:[] :: focus.pos > 5")
+        round_trip_test("focus:[] :: 0 <= focus.pos")
 
 
 class TestBareLabel:
@@ -291,4 +343,4 @@ class TestBareLabel:
 
     def test_bare_label_round_trips(self):
         """Round-trip: bare label in function argument preserves structure."""
-        round_trip("A:[] :: start(A)")
+        round_trip_test("A:[] :: start(A)")
