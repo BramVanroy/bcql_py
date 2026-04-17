@@ -1,13 +1,14 @@
 """Tests for function call parsing (Step 13): sequence-level query functions."""
 
 import pytest
-from conftest import parse, round_trip
+from bcql_py.models import RelationNode, UnderscoreNode
+from conftest import parse, round_trip_test
 
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.capture import CaptureNode
 from bcql_py.models.function import FunctionCallNode
 from bcql_py.models.sequence import SequenceNode
-from bcql_py.models.token import TokenQuery
+from bcql_py.models.token import StringValue, TokenQuery
 
 
 class TestFunctionCallBasic:
@@ -15,9 +16,6 @@ class TestFunctionCallBasic:
 
     def test_no_args(self):
         """``queryfunc()`` - a zero-argument query function call.
-
-        Searches for: whatever hit set the function implementation defines. In this parser test,
-        the goal is syntactic recognition of an empty argument list.
         """
         node = parse("queryfunc()")
         assert isinstance(node, FunctionCallNode)
@@ -104,6 +102,26 @@ class TestFunctionCallComplexArgs:
         assert isinstance(node.args[1], TokenQuery)
         assert node.args[2] == 3
 
+    def test_single_arg_relation(self):
+        """``rspan(_ -amod-> _)`` - function call with a complex query string as an argument."""
+        node = parse('rspan(_ -amod-> _)')
+        assert isinstance(node, FunctionCallNode)
+        assert len(node.args) == 1
+        assert isinstance(node.args[0], RelationNode)
+    
+    def test_multiple_args_embedded_rel_types(self):
+        """``rspan(_ -nsubj-> (_ -amod-> _) ; -obj-> _, "all")``"""
+        node = parse('rspan(_ -nsubj-> (_ -amod-> _) ; -obj-> _, "all")')
+        assert isinstance(node, FunctionCallNode)
+        assert len(node.args) == 2
+        assert isinstance(node.args[0], RelationNode)
+        assert isinstance(node.args[0].source, UnderscoreNode)
+        assert len(node.args[0].children) == 2
+
+        assert isinstance(node.args[1], TokenQuery)
+        assert isinstance(node.args[1].shorthand, StringValue)
+        assert node.args[1].shorthand.value == "all"
+
 
 class TestFunctionCallInContext:
     """Function calls as part of larger query structures."""
@@ -139,31 +157,31 @@ class TestFunctionCallRoundTrip:
 
     def test_no_args_round_trip(self):
         """Round-trip: no-args function call preserves structure."""
-        round_trip("queryfunc()")
+        round_trip_test("queryfunc()")
 
     def test_single_query_round_trip(self):
         """Round-trip: single query arg preserves structure."""
-        round_trip('rspan("however")')
+        round_trip_test('rspan("however")')
 
     def test_single_int_round_trip(self):
         """Round-trip: single integer arg preserves structure."""
-        round_trip("window(3)")
+        round_trip_test("window(3)")
 
     def test_multiple_args_round_trip(self):
         """Round-trip: multiple query args preserve structure."""
-        round_trip('meet([pos="N"], [pos="V"])')
+        round_trip_test('meet([pos="N"], [pos="V"])')
 
     def test_mixed_args_round_trip(self):
         """Round-trip: mixed query and integer args preserve structure."""
-        round_trip('fmeet("however", 2)')
+        round_trip_test('fmeet("however", 2)')
 
     def test_complex_query_arg_round_trip(self):
         """Round-trip: sequence arg preserves structure."""
-        round_trip('rspan("New" "York")')
+        round_trip_test('rspan("New" "York")')
 
     def test_negative_int_round_trip(self):
         """Round-trip: negative integer arg preserves structure."""
-        round_trip("window(-5)")
+        round_trip_test("window(-5)")
 
 
 class TestFunctionCallErrors:
