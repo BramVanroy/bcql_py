@@ -9,6 +9,7 @@ See bnf.md for the grammar that we're implementing.
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Sequence
 
 from bcql_py.exceptions import BCQLSyntaxError
@@ -61,28 +62,46 @@ class BCQLParser:
         tokens: Token list produced by ``BCQLLexer``
         source: The original query string (used in error messages).
     """
+    __slots__ = ("_source", "_pos", "_tokens")
 
     def __init__(self, tokens: Sequence[Token], source: str = "") -> None:
-        self.tokens = tokens
-        self.source = source
-        self.pos = 0
+        self._source = source
+        self._pos = 0
+        self._tokens = tokens
 
-        if not self.tokens:
+        if not self._tokens:
             raise BCQLSyntaxError("No tokens to parse", bcql_query=source)
-        if self.tokens[-1].type != TokenType.EOF:
+        if self._tokens[-1].type != TokenType.EOF:
             raise BCQLSyntaxError("Token list must end with EOF", bcql_query=source)
-        if sum(1 for t in self.tokens if t.type == TokenType.EOF) > 1:
+        if sum(1 for t in self._tokens if t.type == TokenType.EOF) > 1:
             raise BCQLSyntaxError("Token list must contain exactly one EOF", bcql_query=source)
 
     @property
+    def source(self) -> str:
+        return self._source
+
+    @property
+    def pos(self) -> int:
+        return self._pos
+
+    @property
+    def tokens(self) -> tuple[Token, ...]:
+        return tuple(self._tokens)
+
+    @cached_property
+    def ast(self) -> BCQLNode:
+        """Parse the token stream and return the root AST node."""
+        return self.parse()
+    
+    @property
     def _current_token(self) -> Token:
         """Return the token at the current position"""
-        return self.tokens[self.pos]
+        return self._tokens[self._pos]
 
     def _peek(self, offset: int = 0) -> Token:
         """Look ahead by *offset* tokens from current position."""
-        idx = self.pos + offset
-        return self.tokens[idx]
+        idx = self._pos + offset
+        return self._tokens[idx]
 
     def _current_token_is_oneof(self, *types: TokenType) -> bool:
         """Check if current token is one of the given types."""
@@ -92,7 +111,7 @@ class BCQLParser:
         """Consume and return the current token, advancing the position."""
         tok = self._current_token
         if tok.type != TokenType.EOF:
-            self.pos += 1
+            self._pos += 1
         return tok
 
     def _expect(self, ttype: TokenType, context: str = "") -> Token:
@@ -110,14 +129,14 @@ class BCQLParser:
             ctx = f" {context}" if context else ""
             raise BCQLSyntaxError(
                 f"Expected {ttype.name}{ctx}, got {tok.type.name} ({tok.value!r})",
-                bcql_query=self.source,
+                bcql_query=self._source,
                 error_position=tok.position,
             )
         return self._advance()
 
     def _raise_error(self, msg: str) -> BCQLSyntaxError:
         """Build a ``BCQLSyntaxError`` pointing at the current token."""
-        return BCQLSyntaxError(msg, bcql_query=self.source, error_position=self._current_token.position)
+        return BCQLSyntaxError(msg, bcql_query=self._source, error_position=self._current_token.position)
 
     def parse(self) -> BCQLNode:
         """Parse the token stream and return the root AST node.
