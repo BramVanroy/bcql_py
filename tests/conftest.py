@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from bcql_py.parser import parse
 
 

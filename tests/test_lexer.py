@@ -47,11 +47,17 @@ class TestLexerStrings:
         assert tokens[0].value == "hello"
 
     def test_literal_string(self):
+        # Note that the 'l' prefix is not included in the token value! It's just a marker for the lexer to treat the string as literal.
+        # The full string content, including any escaped characters, is stored in the token value.
         tokens = lex('l"e.g."')
         assert len(tokens) == 1
         assert tokens[0].type == TokenType.LITERAL_STRING
-        # Note that the 'l' prefix is not included in the token value! It's just a marker for the lexer to treat the string as literal.
-        # The full string content, including any escaped characters, is stored in the token value.
+        assert tokens[0].value == "e.g."
+    
+    def test_literal_single_quoted(self):
+        tokens = lex("l'e.g.'")
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.LITERAL_STRING
         assert tokens[0].value == "e.g."
 
     def test_escaped_quote(self):
@@ -579,7 +585,6 @@ class TestLexerWhitespace:
     def test_empty_source(self):
         lexer = BCQLLexer("")
         result = lexer.tokenize()
-        # Empty string still produces an EOF token
         assert len(result) == 1
         assert result[0].type == TokenType.EOF
 
@@ -592,14 +597,17 @@ class TestLexerPropertiesAccess:
     def test_pos_property(self):
         lexer = BCQLLexer("hello")
         assert lexer.pos == 0
+        lexer.tokenize()
+        assert lexer.pos == len("hello")
+    
+    def test_tokens_property(self):
+        lexer = BCQLLexer('"kat" ==>en _')
+        # Calling public `lexer.tokens` will trigger tokenization
+        assert len(lexer._tokens) == 0
+        lexer.tokenize()
+        # kat, =, =>, en, _, EOF
+        assert len(lexer._tokens) == 6
 
-
-class TestLexerLiteralStringSingleQuote:
-    def test_literal_single_quoted(self):
-        tokens = lex("l'e.g.'")
-        assert len(tokens) == 1
-        assert tokens[0].type == TokenType.LITERAL_STRING
-        assert tokens[0].value == "e.g."
 
 
 class TestLexerTokenizeFunction:
@@ -608,4 +616,4 @@ class TestLexerTokenizeFunction:
         result = tokenize('[word="corpus"]')
         assert isinstance(result, tuple)
         assert result[-1].type == TokenType.EOF
-        assert len(result) == 6  # [ word = "corpus" ] EOF
+        assert len(result) == 6  # [, word, =, "corpus", ], EOF
