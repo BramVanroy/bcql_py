@@ -443,9 +443,8 @@ class BCQLLexer:
                 continue
 
             raise self._raise_error(f"Unexpected character {curr_char!r}")
-        else:
-            self._emit(TokenType.EOF, "", self._pos)
 
+        self._emit(TokenType.EOF, "", self._pos)
         return tuple(self._tokens)
 
 

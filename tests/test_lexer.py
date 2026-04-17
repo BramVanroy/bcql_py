@@ -1,14 +1,14 @@
 import pytest
 
-from bcql_py.parser.lexer import BCQLLexer, BCQLSyntaxError, tokenize
-from bcql_py.parser.tokens import Token, TokenType
+from bcql_py.exceptions import BCQLSyntaxError
+from bcql_py.parser import BCQLLexer, Token, TokenType, tokenize
 
 
-def lex(source: str) -> list[Token]:
-    """Tokenize *source* and return tokens (excl. EOF)."""
+def lex(source: str) -> tuple[Token, ...]:
+    """Tokenize *source* and return tokens but excludes EOF for easier testing."""
     tokens = BCQLLexer(source).tokenize()
     tokens = [token for token in tokens if token.type != TokenType.EOF]
-    return tokens
+    return tuple(tokens)
 
 
 class TestLexerReadOnlyState:
@@ -26,8 +26,8 @@ class TestLexerReadOnlyState:
 
     def test_tokens_property_is_immutable(self):
         lexer = BCQLLexer("lemma")
-        _ = lexer.tokenize()  # Populate the tokens property
-
+        # Calling `tokens` will return a tuple, which is immutable, so attempts to modify it should raise an error.
+        # No need to call `tokenize`; calling lexer.tokens will trigger the tokenization and return the tokens as needed
         assert isinstance(lexer.tokens, tuple)
         assert lexer.tokens[0].value == "lemma"
         assert len(lexer.tokens) == 2  # includes EOF
@@ -55,6 +55,7 @@ class TestLexerStrings:
         assert tokens[0].value == "e.g."
 
     def test_escaped_quote(self):
+        # i.e. preserve escaping slashes in the token value
         tokens = lex('"say \\"yes\\""')
         assert tokens[0].value == 'say \\"yes\\"'
 
@@ -73,30 +74,6 @@ class TestLexerIdentifiers:
         assert tokens[0].type == TokenType.IDENTIFIER
         assert tokens[0].value == "lemma"
 
-    def test_keyword_within(self):
-        tokens = lex("within")
-        assert tokens[0].type == TokenType.WITHIN
-
-    def test_keyword_containing(self):
-        tokens = lex("containing")
-        assert tokens[0].type == TokenType.CONTAINING
-
-    def test_keyword_overlap(self):
-        tokens = lex("overlap")
-        assert tokens[0].type == TokenType.OVERLAP
-
-    def test_keyword_in(self):
-        tokens = lex("in")
-        assert tokens[0].type == TokenType.IN
-
-    def test_keyword_true(self):
-        tokens = lex("true")
-        assert tokens[0].type == TokenType.TRUE
-
-    def test_keyword_false(self):
-        tokens = lex("false")
-        assert tokens[0].type == TokenType.FALSE
-
     def test_keyword_underscore(self):
         tokens = lex("_")
         assert tokens[0].type == TokenType.UNDERSCORE
@@ -110,14 +87,17 @@ class TestLexerIdentifiers:
             ("CONTAINING", TokenType.CONTAINING),
             ("Containing", TokenType.CONTAINING),
             ("OVERLAP", TokenType.OVERLAP),
+            ("Overlap", TokenType.OVERLAP),
             ("TRUE", TokenType.TRUE),
             ("True", TokenType.TRUE),
             ("FALSE", TokenType.FALSE),
+            ("False", TokenType.FALSE),
             ("IN", TokenType.IN),
+            ("In", TokenType.IN),
         ],
     )
-    def test_keywords_case_insensitive(self, text, expected_type):
-        """Keywords match case-insensitively per Bcql.g4's `caseInsensitive = true`."""
+    def test_keywords_case_sensitivity(self, text, expected_type):
+        """Keywords match case-insensitively so we test both upper/lowercase versions per Bcql.g4's `caseInsensitive = true`."""
         tokens = lex(text)
         assert tokens[0].type == expected_type
         assert tokens[0].value == text
@@ -141,6 +121,7 @@ class TestLexerBrackets:
 
 
 class TestLexerLookaround:
+    # Look-around starters are a single token
     def test_positive_lookahead(self):
         tokens = lex("(?=")
         assert len(tokens) == 1
@@ -168,6 +149,7 @@ class TestLexerXML:
         assert tokens[0].type == TokenType.LT
 
     def test_lt_slash(self):
+        # for end-tags like </s>
         tokens = lex("</")
         assert len(tokens) == 1
         assert tokens[0].type == TokenType.LT_SLASH
@@ -177,6 +159,7 @@ class TestLexerXML:
         assert tokens[0].type == TokenType.GT
 
     def test_slash_gt(self):
+        # for self-closing tags like <ne type="PERS"/>
         tokens = lex("/>")
         assert len(tokens) == 1
         assert tokens[0].type == TokenType.SLASH_GT
@@ -184,17 +167,20 @@ class TestLexerXML:
 
 class TestLexerArrows:
     def test_rel_arrow(self):
-        tokens = lex("-obj->")
-        assert tokens[0].type == TokenType.REL_LINE
-        assert tokens[0].value == "-"
+        # find an object relation between two underspecified tokens
+        tokens = lex("_ -obj-> _")
+        assert tokens[1].type == TokenType.REL_LINE
+        assert tokens[1].value == "-"
 
-        assert tokens[1].type == TokenType.IDENTIFIER
-        assert tokens[1].value == "obj"
+        assert tokens[2].type == TokenType.IDENTIFIER
+        assert tokens[2].value == "obj"
 
-        assert tokens[2].type == TokenType.REL_ARROW
-        assert tokens[2].value == "->"
+        assert tokens[3].type == TokenType.REL_ARROW
+        assert tokens[3].value == "->"
 
     def test_root_rel_arrow(self):
+        # grammar allows ^-TYPE-> but this seems semantically questionable? root relations
+        # have no source and are conventionally untyped, at least in UD (see questions.md Q9)
         tokens = lex("^-obj->")
         assert tokens[0].type == TokenType.ROOT_REL_CARET
         assert tokens[0].value == "^"
@@ -227,7 +213,30 @@ class TestLexerArrows:
         assert tokens[2].type == TokenType.REL_ARROW
         assert tokens[2].value == "->"
 
+    def test_multi_relation_same_source(self):
+        # the same token that has both a subject and object relation to other tokens
+        # e.g. source word "have" in "I have a good cat"
+        tokens = lex("""_ -nsubj-> _ ;
+  -obj-> _""")
+        assert tokens[0].type == TokenType.UNDERSCORE
+        assert tokens[1].type == TokenType.REL_LINE
+        assert tokens[1].value == "-"
+        assert tokens[2].type == TokenType.IDENTIFIER
+        assert tokens[2].value == "nsubj"
+        assert tokens[3].type == TokenType.REL_ARROW
+
+        assert tokens[4].type == TokenType.UNDERSCORE
+        assert tokens[5].type == TokenType.SEMICOLON
+
+        assert tokens[6].type == TokenType.REL_LINE
+        assert tokens[6].value == "-"
+        assert tokens[7].type == TokenType.IDENTIFIER
+        assert tokens[7].value == "obj"
+        assert tokens[8].type == TokenType.REL_ARROW
+        assert tokens[9].type == TokenType.UNDERSCORE
+
     def test_untyped_align_arrow(self):
+        # Unlike g4 we make a clear distinction between align and relation arrows
         tokens = lex("==>nl")
         assert tokens[0].type == TokenType.ALIGN_LINE
         assert tokens[0].value == "="
@@ -356,6 +365,8 @@ class TestLexerOperators:
 
 
 class TestLexerComments:
+    # Tokens are NOT included
+    # TODO: should we store comments separately in the lexer obj?
     def test_single_comment_ignored(self):
         tokens = lex('"corpus" # this is a comment')
         assert len(tokens) == 1
@@ -400,12 +411,17 @@ class TestLexerErrors:
             BCQLLexer("@").tokenize()
 
     def test_root_parallel_relation_error(self):
-        """'^' only starts '-' arrows, not '=' arrows, so '^==>' is an unexpected '^'."""
+        """'^' only starts '-' arrows, not '=' arrows, so '^==>' is an unexpected '^'.
+        NOTE: this is allowed by the g4 grammar but seems semantically questionable.
+        Alignment relations do not have a "root"
+        """
         with pytest.raises(BCQLSyntaxError, match="Unexpected character '\\^'"):
             BCQLLexer("^==>").tokenize()
 
     def test_unterminated_arrow(self):
-        """'-foo' is not recognized as an arrow (no '->'), so '-' is unexpected."""
+        """relation and align arrows are detected by peeking ahead
+        '-foo' is not recognized as an arrow (no '->'), so '-' is unexpected.
+        """
         with pytest.raises(BCQLSyntaxError, match="Unexpected character '-'"):
             BCQLLexer("-foo").tokenize()
 
@@ -466,7 +482,9 @@ class TestLexerSlash:
         assert tokens[0].type == TokenType.SLASH_GT
 
     def test_multiline_comment_still_works(self):
-        tokens = lex('"a" /* comment */ "b"')
+        tokens = lex(""""a" /* comment
+ */ "b"
+""")
         assert len(tokens) == 2
         assert tokens[0].value == "a"
         assert tokens[1].value == "b"
@@ -474,7 +492,7 @@ class TestLexerSlash:
 
 class TestLexerArrowEdgeCases:
     def test_arrow_field_underscore(self):
-        """Arrow with underscore field: -obj->_"""
+        """Arrow with underscore field: object relation to an underspecified token: -obj->_"""
         tokens = lex("-obj->_")
         assert tokens[0].type == TokenType.REL_LINE
         assert tokens[1].type == TokenType.IDENTIFIER
@@ -503,7 +521,12 @@ class TestLexerArrowEdgeCases:
         assert tokens[3].value == "word"
 
     def test_optional_alignment_field_underscore(self):
-        """Alignment with optional underscore: ==>_?"""
+        """Alignment with optional underscore: ==>_?
+
+        NOTE: the semantic meaning of `_` as the target corpus field is unclear. The parallel guide
+        does not document an unspecified/wildcard field after `==>`. It is uncertain whether the
+        query engine would fall back to the first indexed field or raise an error. See questions.md.
+        """
         tokens = lex("==>_?")
         assert tokens[0].type == TokenType.ALIGN_LINE
         assert tokens[1].type == TokenType.ALIGN_ARROW
@@ -550,9 +573,8 @@ class TestLexerWhitespace:
     def test_only_whitespace(self):
         lexer = BCQLLexer("   ")
         result = lexer.tokenize()
-        # Only whitespace produces no tokens (not even EOF from the else branch)
-        # The while loop ends because _skip_whitespace moves _pos past len
-        assert len(result) == 0
+        assert len(result) == 1
+        assert result[0].type == TokenType.EOF
 
     def test_empty_source(self):
         lexer = BCQLLexer("")
