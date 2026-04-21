@@ -1,7 +1,7 @@
 """Tests for function call parsing (Step 13): sequence-level query functions."""
 
 import pytest
-from conftest import parse, round_trip_test
+from conftest import round_trip_test
 
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models import RelationNode, UnderscoreNode
@@ -9,14 +9,14 @@ from bcql_py.models.capture import CaptureNode
 from bcql_py.models.function import FunctionCallNode
 from bcql_py.models.sequence import SequenceNode
 from bcql_py.models.token import StringValue, TokenQuery
+from bcql_py.parser import parse
 
 
 class TestFunctionCallBasic:
     """Basic function call parsing: ``name(args)``."""
 
     def test_no_args(self):
-        """``queryfunc()`` - a zero-argument query function call.
-        """
+        """``queryfunc()`` - a zero-argument query function call."""
         node = parse("queryfunc()")
         assert isinstance(node, FunctionCallNode)
         assert node.name == "queryfunc"
@@ -104,7 +104,7 @@ class TestFunctionCallComplexArgs:
 
     def test_single_arg_relation(self):
         """``rspan(_ -amod-> _)`` - function call with a complex query string as an argument."""
-        node = parse('rspan(_ -amod-> _)')
+        node = parse("rspan(_ -amod-> _)")
         assert isinstance(node, FunctionCallNode)
         assert len(node.args) == 1
         assert isinstance(node.args[0], RelationNode)

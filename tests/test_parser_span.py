@@ -9,11 +9,12 @@ Tag names can be identifiers or quoted strings (for regex patterns).
 Attributes follow the pattern ``name="value"``.
 """
 
-from conftest import parse, round_trip
+from conftest import round_trip_test
 
 from bcql_py.models.sequence import RepetitionNode, SequenceNode
 from bcql_py.models.span import SpanQuery
 from bcql_py.models.token import StringValue, TokenQuery
+from bcql_py.parser import parse
 
 
 class TestWholeSpan:
@@ -66,19 +67,19 @@ class TestWholeSpan:
 
     def test_round_trip_whole_span(self):
         """Round-trip: simple whole span preserves structure."""
-        round_trip("<s/>")
+        round_trip_test("<s/>")
 
     def test_round_trip_with_attribute(self):
         """Round-trip: span with attribute preserves structure."""
-        round_trip('<ne type="PERS"/>')
+        round_trip_test('<ne type="PERS"/>')
 
     def test_round_trip_regex_name(self):
         """Round-trip: span with regex tag name preserves structure."""
-        round_trip('<"person|location"/>')
+        round_trip_test('<"person|location"/>')
 
     def test_round_trip_multiple_attrs(self):
         """Round-trip: span with multiple attributes preserves structure."""
-        round_trip('<ne type="PERS" subtype="first"/>')
+        round_trip_test('<ne type="PERS" subtype="first"/>')
 
 
 class TestStartTag:
@@ -102,7 +103,7 @@ class TestStartTag:
 
     def test_round_trip_start_tag(self):
         """Round-trip: start tag preserves structure."""
-        round_trip("<s>")
+        round_trip_test("<s>")
 
 
 class TestEndTag:
@@ -118,7 +119,7 @@ class TestEndTag:
 
     def test_round_trip_end_tag(self):
         """Round-trip: end tag preserves structure."""
-        round_trip("</s>")
+        round_trip_test("</s>")
 
 
 class TestSpanInSequence:
@@ -151,12 +152,12 @@ class TestSpanInSequence:
 
     def test_round_trip_start_tag_sequence(self):
         """Round-trip: start tag in sequence preserves structure."""
-        round_trip("<s> []")
+        round_trip_test("<s> []")
 
     def test_round_trip_token_end_tag(self):
         """Round-trip: token before end tag preserves structure."""
-        round_trip('"that" </s>')
+        round_trip_test('"that" </s>')
 
     def test_round_trip_span_repetition(self):
         """Round-trip: span with repetition preserves structure."""
-        round_trip("<s/>+")
+        round_trip_test("<s/>+")

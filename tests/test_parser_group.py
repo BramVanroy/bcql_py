@@ -6,7 +6,7 @@ valid inside parentheses. Negation sits at the span level above repetition per `
 than ``(![pos="NOUN"]) +``.
 """
 
-from conftest import parse, round_trip_test
+from conftest import round_trip_test
 
 from bcql_py.models.sequence import (
     GroupNode,
@@ -15,6 +15,7 @@ from bcql_py.models.sequence import (
     SequenceNode,
 )
 from bcql_py.models.token import AnnotationConstraint, TokenQuery
+from bcql_py.parser import parse
 
 
 class TestGroupNode:
@@ -43,7 +44,7 @@ class TestGroupNode:
         assert isinstance(node.child.constraint, AnnotationConstraint)
 
     def test_nested_groups(self):
-        """``(("corpus"))`` - doubly nested parentheses remain structurally visible. 
+        """``(("corpus"))`` - doubly nested parentheses remain structurally visible.
         Group nodes can be embedded indefinitely.
         """
         node = parse('(("corpus"))')

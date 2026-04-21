@@ -1074,7 +1074,14 @@ class BCQLParser:
 
     def _parse_cc_not(
         self,
-    ) -> ConstraintComparison | ConstraintNot | ConstraintLiteral | ConstraintInteger | AnnotationRef | ConstraintFunctionCall:
+    ) -> (
+        ConstraintComparison
+        | ConstraintNot
+        | ConstraintLiteral
+        | ConstraintInteger
+        | AnnotationRef
+        | ConstraintFunctionCall
+    ):
         """``cc_not := cc_cmp | '!' cc_not``
 
         Prefix negation in capture constraints.
@@ -1089,7 +1096,9 @@ class BCQLParser:
 
         return self._parse_cc_cmp()
 
-    def _parse_cc_cmp(self) -> ConstraintComparison | ConstraintLiteral | ConstraintInteger | AnnotationRef | ConstraintFunctionCall:
+    def _parse_cc_cmp(
+        self,
+    ) -> ConstraintComparison | ConstraintLiteral | ConstraintInteger | AnnotationRef | ConstraintFunctionCall:
         """``cc_cmp := cc_atom | cc_atom CMP cc_atom``
 
         Comparison level in capture constraints. Handles ``A.word = "over"`` and similar.

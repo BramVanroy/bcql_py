@@ -6,7 +6,7 @@ Boolean operators also bind looser than sequence juxtaposition, so ``"New" "York
 parsed as ``("New" "York") | ("Los" "Angeles")``.
 """
 
-from conftest import parse, round_trip_test
+from conftest import round_trip_test
 
 from bcql_py.models.sequence import (
     GroupNode,
@@ -16,6 +16,7 @@ from bcql_py.models.sequence import (
     SequenceNode,
 )
 from bcql_py.models.token import AnnotationConstraint, TokenQuery
+from bcql_py.parser import parse
 
 
 class TestSequenceUnion:

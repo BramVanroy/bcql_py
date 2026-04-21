@@ -166,6 +166,7 @@ class TestErrorPosition:
                 f"position {exc_info.value.position} is past end of {query!r} (len={len(query)})"
             )
 
+
 class TestTokenRepr:
     """Token __repr__ for debugging."""
 

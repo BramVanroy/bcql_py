@@ -1,12 +1,13 @@
 """Tests for lookaround parsing (Step 12): lookahead and lookbehind assertions."""
 
 import pytest
-from conftest import parse, round_trip
+from conftest import round_trip_test
 
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.lookaround import LookaheadNode, LookbehindNode
 from bcql_py.models.sequence import SequenceNode
 from bcql_py.models.token import TokenQuery
+from bcql_py.parser import parse
 
 
 class TestLookahead:
@@ -136,7 +137,7 @@ class TestRoundTrips:
         ],
     )
     def test_round_trip(self, query: str):
-        round_trip(query)
+        round_trip_test(query)
 
 
 class TestLookaroundErrors:

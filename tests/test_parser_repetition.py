@@ -4,10 +4,11 @@ The final form ``{,m}`` is a bcql_py extension: it is accepted by this parser ev
 present in ``Bcql.g4``.
 """
 
-from conftest import parse, round_trip
+from conftest import round_trip_test
 
 from bcql_py.models.sequence import RepetitionNode, UnderscoreNode
 from bcql_py.models.token import TokenQuery
+from bcql_py.parser import parse
 
 
 class TestRepetitionPlus:
@@ -30,7 +31,7 @@ class TestRepetitionPlus:
 
     def test_round_trip_plus(self):
         """Round-trip: one-or-more adjective quantifier preserves structure."""
-        round_trip('[pos="ADJ"]+')
+        round_trip_test('[pos="ADJ"]+')
 
 
 class TestRepetitionStar:
@@ -45,7 +46,7 @@ class TestRepetitionStar:
 
     def test_round_trip_star(self):
         """Round-trip: zero-or-more adjective quantifier preserves structure."""
-        round_trip('[pos="ADJ"]*')
+        round_trip_test('[pos="ADJ"]*')
 
 
 class TestRepetitionQuestion:
@@ -60,7 +61,7 @@ class TestRepetitionQuestion:
 
     def test_round_trip_question(self):
         """Round-trip: optional quantifier preserves structure."""
-        round_trip('"the"?')
+        round_trip_test('"the"?')
 
 
 class TestRepetitionBrace:
@@ -107,19 +108,19 @@ class TestRepetitionBrace:
 
     def test_round_trip_exact(self):
         """Round-trip: exact brace quantifier preserves structure."""
-        round_trip("[]{2}")
+        round_trip_test("[]{2}")
 
     def test_round_trip_range(self):
         """Round-trip: range brace quantifier preserves structure."""
-        round_trip('[pos="ADJ"]{2,3}')
+        round_trip_test('[pos="ADJ"]{2,3}')
 
     def test_round_trip_min_only(self):
         """Round-trip: min-only brace quantifier preserves structure."""
-        round_trip('[pos="ADJ"]{2,}')
+        round_trip_test('[pos="ADJ"]{2,}')
 
     def test_round_trip_max_only(self):
         """Round-trip: max-only brace quantifier preserves the bcql_py extension syntax."""
-        round_trip("[]{,3}")
+        round_trip_test("[]{,3}")
 
     def test_underscore_with_quantifier(self):
         """``_+`` - one or more relation wildcards.

@@ -1,4 +1,4 @@
-from conftest import parse, round_trip
+from conftest import round_trip_test
 
 from bcql_py.models.sequence import RepetitionNode, SequenceNode
 from bcql_py.models.token import (
@@ -6,6 +6,7 @@ from bcql_py.models.token import (
     BoolConstraint,
     TokenQuery,
 )
+from bcql_py.parser import parse
 
 
 class TestSimpleSequence:
@@ -34,7 +35,7 @@ class TestSimpleSequence:
 
     def test_round_trip_three_words(self):
         """Round-trip: a three-token place name preserves sequence structure."""
-        round_trip('"the" "United" "States"')
+        round_trip_test('"the" "United" "States"')
 
 
 class TestMixedSequence:
@@ -65,7 +66,7 @@ class TestMixedSequence:
 
     def test_round_trip_mixed(self):
         """Round-trip: mixed bare string, bracket query, and string preserves structure."""
-        round_trip('"the" [pos="ADJ"] "analysis"')
+        round_trip_test('"the" [pos="ADJ"] "analysis"')
 
 
 class TestSequenceWithRepetition:
@@ -116,11 +117,11 @@ class TestSequenceWithRepetition:
 
     def test_round_trip_repetition_sequence(self):
         """Round-trip: adjective+ noun sequence preserves structure."""
-        round_trip('[pos="ADJ"]+ "analysis"')
+        round_trip_test('[pos="ADJ"]+ "analysis"')
 
     def test_round_trip_brace_sequence(self):
         """Round-trip: brace quantifier in sequence preserves structure."""
-        round_trip('[pos="ADJ"]{2,3} "analysis"')
+        round_trip_test('[pos="ADJ"]{2,3} "analysis"')
 
 
 class TestSequenceWithConstraints:
@@ -141,11 +142,11 @@ class TestSequenceWithConstraints:
 
     def test_round_trip_bigram(self):
         """Round-trip: Dutch compound bigram normalises whitespace around ``&``."""
-        round_trip(
+        round_trip_test(
             '[word="mij"&lemma="ik"] [word="gegeven"&lemma="geven"]',
             expected='[word="mij" & lemma="ik"] [word="gegeven" & lemma="geven"]',
         )
 
     def test_round_trip_min_only_in_sequence(self):
         """Round-trip: min-only brace quantifier in sequence preserves structure."""
-        round_trip('[pos="ADJ"]{2,} "analysis"')
+        round_trip_test('[pos="ADJ"]{2,} "analysis"')

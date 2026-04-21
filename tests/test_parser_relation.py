@@ -1,12 +1,13 @@
 """Tests for relation parsing (Step 10): child relations, root relations, and semicolon chains."""
 
 import pytest
-from conftest import parse, round_trip
+from conftest import round_trip_test
 
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.relation import RelationNode, RootRelationNode
 from bcql_py.models.sequence import GroupNode, SequenceNode, UnderscoreNode
 from bcql_py.models.token import StringValue, TokenQuery
+from bcql_py.parser import parse
 
 
 class TestChildRelation:
@@ -16,7 +17,7 @@ class TestChildRelation:
         """``_ -obj-> _`` - find any head token that has a direct object ("obj") dependent.
 
         Searches for: dependency heads that have an ``obj`` child relation.
-        Example intuition: in ``Researchers analyzed corpora``, ``analyzed`` can head an ``obj``
+        Interpretation: in ``Researchers analyzed corpora``, ``analyzed`` can head an ``obj``
         relation to ``corpora``.
         """
         node = parse("_ -obj-> _")
@@ -130,7 +131,7 @@ class TestSemicolonChain:
         """``_ -nsubj-> _ ; -obj-> _`` - find a verb with both a subject and an object.
 
         Searches for: heads that satisfy both child-relation constraints simultaneously.
-        Example intuition: a transitive verb with both ``nsubj`` and ``obj`` dependents.
+        Interpretation: a transitive verb with both ``nsubj`` and ``obj`` dependents.
         """
         node = parse("_ -nsubj-> _ ; -obj-> _")
         assert isinstance(node, RelationNode)
@@ -299,7 +300,7 @@ class TestRoundTrips:
         ],
     )
     def test_round_trip(self, query: str):
-        round_trip(query)
+        round_trip_test(query)
 
 
 class TestRelationErrors:

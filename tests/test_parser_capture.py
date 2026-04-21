@@ -6,7 +6,7 @@ forming a flat list. Captures bind tighter than sequence juxtaposition but loose
 level operators wrapped by ``sequencePartNoCapture``.
 """
 
-from conftest import parse, round_trip_test
+from conftest import round_trip_test
 
 from bcql_py.models import UnderscoreNode
 from bcql_py.models.capture import CaptureNode
@@ -18,6 +18,7 @@ from bcql_py.models.sequence import (
     SequenceNode,
 )
 from bcql_py.models.token import AnnotationConstraint, TokenQuery
+from bcql_py.parser import parse
 
 
 class TestCaptureBasic:
@@ -165,7 +166,7 @@ class TestCaptureWithRepetition:
     def test_capture_with_repetition(self):
         """``A:[pos="ADJ"]+``: repetition applies to the body, not the capture itself.
         Since capture is above span in precedence, ``A:X+`` means ``A:(X+)``
-        
+
         That means ``A`` captures the full span of one or more adjectives, not just a single adjective token.
         """
         node = parse('A:[pos="ADJ"]+')

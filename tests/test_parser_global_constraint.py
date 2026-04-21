@@ -6,7 +6,7 @@ changing the grouping, unless they introduce a nested sub-expression that the AS
 """
 
 import pytest
-from conftest import parse, round_trip_test
+from conftest import round_trip_test
 
 from bcql_py.models.capture import (
     AnnotationRef,
@@ -19,6 +19,7 @@ from bcql_py.models.capture import (
     GlobalConstraintNode,
 )
 from bcql_py.models.sequence import SequenceNode
+from bcql_py.parser import parse
 
 
 class TestGlobalConstraint:
@@ -83,7 +84,6 @@ class TestGlobalConstraint:
         assert inner_cmp.left.annotation == "word"
         assert isinstance(inner_cmp.right, ConstraintLiteral)
         assert inner_cmp.right.value == "however"
-
 
     def test_round_trip(self):
         """Round-trip: global constraints preserve structure."""

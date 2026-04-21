@@ -2,7 +2,7 @@
 constraint grammar (``&``, ``|``, ``!``, functions, integer ranges, parenthesised sub-expressions).
 """
 
-from conftest import parse, round_trip
+from conftest import round_trip_test
 
 from bcql_py.models.sequence import UnderscoreNode
 from bcql_py.models.token import (
@@ -13,6 +13,7 @@ from bcql_py.models.token import (
     NotConstraint,
     TokenQuery,
 )
+from bcql_py.parser import parse
 
 
 class TestTokenQueryEmpty:
@@ -28,7 +29,7 @@ class TestTokenQueryEmpty:
 
     def test_empty_brackets_round_trip(self):
         """``[]`` survives parse -> to_bcql -> parse unchanged."""
-        round_trip("[]")
+        round_trip_test("[]")
 
 
 class TestBareStringShorthand:
@@ -71,11 +72,11 @@ class TestBareStringShorthand:
 
     def test_round_trip_double_quoted(self):
         """``"corpus"`` round-trips unchanged."""
-        round_trip('"corpus"')
+        round_trip_test('"corpus"')
 
     def test_round_trip_literal(self):
         """``l"e.g."`` round-trips unchanged."""
-        round_trip('l"e.g."')
+        round_trip_test('l"e.g."')
 
 
 class TestUnderscore:
@@ -88,7 +89,7 @@ class TestUnderscore:
 
     def test_underscore_round_trip(self):
         """``_`` round-trips unchanged."""
-        round_trip("_")
+        round_trip_test("_")
 
 
 class TestAnnotationConstraint:
@@ -133,11 +134,11 @@ class TestAnnotationConstraint:
 
     def test_round_trip_equals(self):
         """``[word="corpus"]`` round-trips unchanged."""
-        round_trip('[word="corpus"]')
+        round_trip_test('[word="corpus"]')
 
     def test_round_trip_not_equals(self):
         """``[pos!="noun"]`` normalises spacing around ``!=`` during round-trip."""
-        round_trip('[pos!="noun"]')
+        round_trip_test('[pos!="noun"]')
 
 
 class TestAnnotationComparisonOperators:
@@ -178,19 +179,19 @@ class TestAnnotationComparisonOperators:
 
     def test_round_trip_lt(self):
         """Round-trip: ``<`` comparison preserves structure."""
-        round_trip('[pos_confidence<"50"]')
+        round_trip_test('[pos_confidence<"50"]')
 
     def test_round_trip_lte(self):
         """Round-trip: ``<=`` comparison preserves structure."""
-        round_trip('[pos_confidence<="50"]')
+        round_trip_test('[pos_confidence<="50"]')
 
     def test_round_trip_gt(self):
         """Round-trip: ``>`` comparison preserves structure."""
-        round_trip('[pos_confidence>"50"]')
+        round_trip_test('[pos_confidence>"50"]')
 
     def test_round_trip_gte(self):
         """Round-trip: ``>=`` comparison preserves structure."""
-        round_trip('[pos_confidence>="50"]')
+        round_trip_test('[pos_confidence>="50"]')
 
 
 class TestBoolConstraint:
@@ -240,15 +241,15 @@ class TestBoolConstraint:
 
     def test_round_trip_embedded(self):
         """Round-trip: mixed boolean constraint preserves left-associative structure."""
-        round_trip('[lemma="be" & pos="V" | word="is"]')
+        round_trip_test('[lemma="be" & pos="V" | word="is"]')
 
     def test_round_trip_and(self):
         """Round-trip: conjunction inside brackets preserves structure."""
-        round_trip('[lemma="search" & pos="noun"]')
+        round_trip_test('[lemma="search" & pos="noun"]')
 
     def test_round_trip_chained(self):
         """Round-trip: chained boolean constraint preserves structure."""
-        round_trip('[lemma="be" & pos="V" | word="is"]')
+        round_trip_test('[lemma="be" & pos="V" | word="is"]')
 
     def test_implication(self):
         """``[word="not" -> pos="ADV"]`` encodes a realistic token-level implication."""
@@ -275,11 +276,11 @@ class TestBoolConstraint:
 
     def test_round_trip_implication(self):
         """Round-trip: implication inside brackets preserves structure."""
-        round_trip('[word="not" -> pos="ADV"]')
+        round_trip_test('[word="not" -> pos="ADV"]')
 
     def test_round_trip_mixed_implication(self):
         """Round-trip: implication plus conjunction preserves left-associative structure."""
-        round_trip('[word="not" -> pos="ADV" & lemma="not"]')
+        round_trip_test('[word="not" -> pos="ADV" & lemma="not"]')
 
 
 class TestNotConstraint:
@@ -304,7 +305,7 @@ class TestNotConstraint:
 
     def test_round_trip_negation(self):
         """Round-trip: negated bracket constraint preserves structure."""
-        round_trip('[!pos="noun"]')
+        round_trip_test('[!pos="noun"]')
 
 
 class TestIntegerRangeConstraint:
@@ -322,7 +323,7 @@ class TestIntegerRangeConstraint:
 
     def test_round_trip(self):
         """Round-trip: integer-range constraint preserves structure."""
-        round_trip("[pos_confidence=in[50,100]]")
+        round_trip_test("[pos_confidence=in[50,100]]")
 
 
 class TestFunctionConstraint:
@@ -360,11 +361,11 @@ class TestFunctionConstraint:
 
     def test_round_trip(self):
         """Round-trip: pseudo-annotation function constraint preserves structure."""
-        round_trip('[punctAfter(",")]')
+        round_trip_test('[punctAfter(",")]')
 
     def test_round_trip_multiple_args(self):
         """Round-trip: multi-argument function constraint preserves structure."""
-        round_trip('[word("however", "therefore")]')
+        round_trip_test('[word("however", "therefore")]')
 
 
 class TestParenthesisedConstraint:

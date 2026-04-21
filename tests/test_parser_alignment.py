@@ -1,7 +1,7 @@
 """Tests for alignment parsing (Step 11): alignment arrows, optional flag, capture names, semicolon chains."""
 
 import pytest
-from conftest import parse, round_trip_test
+from conftest import round_trip_test
 
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.alignment import AlignmentNode
@@ -9,6 +9,7 @@ from bcql_py.models.capture import CaptureNode
 from bcql_py.models.sequence import SequenceNode, UnderscoreNode
 from bcql_py.models.span import PositionFilterNode
 from bcql_py.models.token import StringValue, TokenQuery
+from bcql_py.parser import parse
 
 
 class TestBasicAlignment:

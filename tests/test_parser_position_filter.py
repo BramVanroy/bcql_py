@@ -4,11 +4,12 @@ These operators are right-recursive in the grammar, so chained filters parse fro
 They also bind looser than sequence-level boolean operators.
 """
 
-from conftest import parse, round_trip
+from conftest import round_trip_test
 
 from bcql_py.models.sequence import GroupNode, SequenceBoolNode, SequenceNode
 from bcql_py.models.span import PositionFilterNode, SpanQuery
 from bcql_py.models.token import TokenQuery
+from bcql_py.parser import parse
 
 
 class TestWithin:
@@ -43,11 +44,11 @@ class TestWithin:
 
     def test_within_round_trip(self):
         """Round-trip: within filter preserves structure."""
-        round_trip('"baker" within <person/>')
+        round_trip_test('"baker" within <person/>')
 
     def test_within_sequence_round_trip(self):
         """Round-trip: sequence within span preserves structure."""
-        round_trip('"the" "committee" within <np/>')
+        round_trip_test('"the" "committee" within <np/>')
 
 
 class TestContaining:
@@ -63,7 +64,7 @@ class TestContaining:
 
     def test_containing_round_trip(self):
         """Round-trip: containing filter preserves structure."""
-        round_trip('<s/> containing "however"')
+        round_trip_test('<s/> containing "however"')
 
 
 class TestOverlap:
@@ -79,7 +80,7 @@ class TestOverlap:
 
     def test_overlap_round_trip(self):
         """Round-trip: overlap filter preserves structure."""
-        round_trip("<np/> overlap <vp/>")
+        round_trip_test("<np/> overlap <vp/>")
 
 
 class TestCaseInsensitive:
@@ -99,8 +100,8 @@ class TestCaseInsensitive:
 
     def test_case_insensitive_round_trips(self):
         """Round-trip normalises to lowercase."""
-        round_trip('"however" WITHIN <s/>', expected='"however" within <s/>')
-        round_trip('<s/> Containing "however"', expected='<s/> containing "however"')
+        round_trip_test('"however" WITHIN <s/>', expected='"however" within <s/>')
+        round_trip_test('<s/> Containing "however"', expected='<s/> containing "however"')
 
 
 class TestRightAssociativity:
@@ -138,8 +139,8 @@ class TestRightAssociativity:
 
     def test_chained_round_trip(self):
         """Round-trip: chained position filters preserve right-recursive structure."""
-        round_trip('"however" within <quote/> within <s/>')
-        round_trip('"however" within <quote/> containing "said"')
+        round_trip_test('"however" within <quote/> within <s/>')
+        round_trip_test('"however" within <quote/> containing "said"')
 
 
 class TestWithGroups:
@@ -175,5 +176,5 @@ class TestWithGroups:
 
     def test_grouped_round_trips(self):
         """Round-trip: grouped position filters preserve structure."""
-        round_trip('("the" "committee") within <np/>')
-        round_trip('("however" within <quote/>) "occurred"')
+        round_trip_test('("the" "committee") within <np/>')
+        round_trip_test('("however" within <quote/>) "occurred"')
