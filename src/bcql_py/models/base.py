@@ -13,6 +13,9 @@ from functools import cached_property
 from pydantic import BaseModel, ConfigDict
 
 
+__all__ = ["BCQLNode"]
+
+
 class BCQLNode(BaseModel, abc.ABC):
     """Abstract base for every node in the BCQL abstract syntax tree.
 

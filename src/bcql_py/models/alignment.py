@@ -13,6 +13,9 @@ from pydantic import Field
 from bcql_py.models.base import BCQLNode
 
 
+__all__ = ["AlignmentOperator", "AlignmentConstraint", "AlignmentNode"]
+
+
 class AlignmentOperator(BCQLNode):
     """The operator in an alignment query: ``=type=>field`` or ``==>field?``.
 

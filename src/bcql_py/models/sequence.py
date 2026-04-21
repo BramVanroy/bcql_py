@@ -14,6 +14,16 @@ from pydantic import Field
 from bcql_py.models.base import BCQLNode
 
 
+__all__ = [
+    "SequenceNode",
+    "RepetitionNode",
+    "GroupNode",
+    "SequenceBoolNode",
+    "NegationNode",
+    "UnderscoreNode",
+]
+
+
 class SequenceNode(BCQLNode):
     """An ordered sequence of adjacent tokens / sub-queries.
     A very high-level node type that can represent an entire query or a sub-sequence

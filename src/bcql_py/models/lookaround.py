@@ -11,6 +11,9 @@ from pydantic import Field
 from bcql_py.models.base import BCQLNode
 
 
+__all__ = ["LookaheadNode", "LookbehindNode"]
+
+
 class LookaheadNode(BCQLNode):
     """A lookahead assertion: ``(?=...)`` (positive) or ``(?!...)`` (negative).
 

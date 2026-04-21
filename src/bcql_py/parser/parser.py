@@ -11,6 +11,9 @@ from __future__ import annotations
 
 from typing import Sequence
 
+
+__all__ = ["BCQLParser"]
+
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.alignment import AlignmentConstraint, AlignmentNode, AlignmentOperator
 from bcql_py.models.base import BCQLNode

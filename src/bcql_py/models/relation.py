@@ -17,6 +17,9 @@ from pydantic import Field
 from bcql_py.models.base import BCQLNode
 
 
+__all__ = ["RelationOperator", "ChildConstraint", "RelationNode", "RootRelationNode"]
+
+
 class RelationOperator(BCQLNode):
     """The operator in a relation query: ``-type->`` or ``!-type->``.
     See https://github.com/instituutnederlandsetaal/BlackLab/blob/dev/site/docs/guide/040_query-language/020_relations.md#negative-child-constraints

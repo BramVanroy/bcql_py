@@ -9,6 +9,9 @@ from pydantic import Field
 from bcql_py.models.base import BCQLNode
 
 
+__all__ = ["FunctionCallNode"]
+
+
 class FunctionCallNode(BCQLNode):
     """A built-in function call at the sequence level.
 

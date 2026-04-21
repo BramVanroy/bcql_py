@@ -1,3 +1,6 @@
+__all__ = ["BCQLSyntaxError"]
+
+
 class BCQLSyntaxError(Exception):
     def __init__(self, error_message: str, *, bcql_query: str = "", error_position: int | None = None) -> None:
         self.query = bcql_query

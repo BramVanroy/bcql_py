@@ -10,6 +10,9 @@ from bcql_py.models.base import BCQLNode
 from bcql_py.models.token import StringValue
 
 
+__all__ = ["SpanQuery", "PositionFilterNode"]
+
+
 class SpanQuery(BCQLNode):
     """A span (XML tag) query.
 
