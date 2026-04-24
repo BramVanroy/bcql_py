@@ -66,4 +66,5 @@ If we don't do this, we'll get a Pydantic error about the forward reference not 
 
 ## TODO
 
+- [ ] Update documentation and examples regarding the semantic `validate` option
 - [ ] Output AST as eBNF grammar?
