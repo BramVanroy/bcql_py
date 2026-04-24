@@ -18,6 +18,14 @@ dev = [
     "pytest-cov>=7.1.0",
     "ruff>=0.15.10,<1",
 ]
+docs = [
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.29",
+]
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"
+testpaths = ["tests", "src"]
 
 [project.urls]
 homepage = "https://github.com/BramVanroy/bcql_py"
@@ -26,17 +34,12 @@ issues = "https://github.com/BramVanroy/bcql_py/issues"
 repository = "https://github.com/BramVanroy/bcql_py.git"
 
 [build-system]
-requires = ["hatchling", "uv-dynamic-versioning"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
-source = "uv-dynamic-versioning"
-
-[tool.hatch.build.hooks.version]
-path = "src/bcql_py/_version.py"
-template = '''
-version = "{version}"
-'''
+source = "vcs"
+fallback-version = "0.0.0"
 
 [tool.mypy]
 python_version = "3.10"
@@ -53,9 +56,6 @@ plugins = ["pydantic.mypy"]
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
 
 # Ruff style
 [tool.ruff]

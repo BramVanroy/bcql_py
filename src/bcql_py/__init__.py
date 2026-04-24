@@ -1,9 +1,13 @@
-from bcql_py._version import version
+from importlib import metadata
+
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.parser import parse, parse_from_tokens, tokenize
 
 
-__version__ = version
+try:
+    __version__ = metadata.version(__name__)
+except metadata.PackageNotFoundError:
+    __version__ = "0.0.0"
 
 __all__ = [
     "__version__",
