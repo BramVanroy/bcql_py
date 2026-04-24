@@ -1,7 +1,8 @@
 from importlib import metadata
 
-from bcql_py.exceptions import BCQLSyntaxError
+from bcql_py.exceptions import BCQLSyntaxError, BCQLValidationError, ValidationIssue
 from bcql_py.parser import parse, parse_from_tokens, tokenize
+from bcql_py.validation import CorpusSpec, validate
 
 
 try:
@@ -12,7 +13,11 @@ except metadata.PackageNotFoundError:
 __all__ = [
     "__version__",
     "BCQLSyntaxError",
+    "BCQLValidationError",
+    "ValidationIssue",
+    "CorpusSpec",
     "parse",
     "parse_from_tokens",
     "tokenize",
+    "validate",
 ]
