@@ -11,7 +11,8 @@ values are skipped for now.
 
 from __future__ import annotations
 
-from typing import Any, Iterator
+from difflib import get_close_matches
+from typing import Any, Iterable, Iterator
 
 from bcql_py.exceptions import BCQLValidationError, ValidationIssue
 from bcql_py.models.alignment import AlignmentNode, AlignmentOperator
@@ -136,12 +137,19 @@ class _Validator:
         # TODO: we are only checking literal values and not yet try to validate regex patterns
         # Regex patterns are skipped (and thus allowed)
         if _is_literal_value(value) and value.value not in allowed:
+            suggestion = _suggest(value.value, allowed)
+            base = f"Value {value.value!r} is not valid for closed attribute {name!r}."
             self._record(
                 ValidationIssue(
                     kind="invalid_annotation_value",
-                    message=(f"Value {value.value!r} is not valid for closed attribute {name!r}."),
+                    message=base + _format_hint(suggestion, allowed),
                     node_type=node.node_type,
-                    context={"annotation": name, "value": value.value},
+                    context={
+                        "annotation": name,
+                        "value": value.value,
+                        "suggestion": suggestion,
+                        "allowed": sorted(allowed),
+                    },
                 )
             )
 
@@ -238,13 +246,20 @@ class _Validator:
             return
         if _looks_like_regex(relation_type):
             return
-        if relation_type not in self.spec.allowed_relations:
+        allowed = self.spec.allowed_relations
+        if relation_type not in allowed:
+            suggestion = _suggest(relation_type, allowed)
+            base = f"Unknown relation type {relation_type!r}."
             self._record(
                 ValidationIssue(
                     kind="unknown_relation_type",
-                    message=f"Unknown relation type {relation_type!r}.",
+                    message=base + _format_hint(suggestion, allowed),
                     node_type=node_type,
-                    context={"relation": relation_type},
+                    context={
+                        "relation": relation_type,
+                        "suggestion": suggestion,
+                        "allowed": sorted(allowed),
+                    },
                 )
             )
 
@@ -268,12 +283,19 @@ class _Validator:
             self.spec.allowed_alignment_fields is not None
             and node.target_field not in self.spec.allowed_alignment_fields
         ):
+            allowed = self.spec.allowed_alignment_fields
+            suggestion = _suggest(node.target_field, allowed)
+            base = f"Unknown alignment target field {node.target_field!r}."
             self._record(
                 ValidationIssue(
                     kind="unknown_alignment_field",
-                    message=f"Unknown alignment target field {node.target_field!r}.",
+                    message=base + _format_hint(suggestion, allowed),
                     node_type=node.node_type,
-                    context={"field": node.target_field},
+                    context={
+                        "field": node.target_field,
+                        "suggestion": suggestion,
+                        "allowed": sorted(allowed),
+                    },
                 )
             )
 
@@ -336,6 +358,42 @@ def _is_literal_value(value: StringValue) -> bool:
 
 
 _REGEX_METACHARS = frozenset(".^$*+?()[]{}|\\")
+
+
+def _suggest(value: str, allowed: Iterable[str]) -> str | None:
+    """Return the single closest match for *value* in *allowed*, or ``None``.
+
+    Uses :func:`difflib.get_close_matches` (Ratcliff-Obershelp similarity) with a
+    fixed cutoff so only a plausibly-meant-this-one entry is returned. Closed
+    sets in typical corpus specs are small (tens of tags), so stdlib is fast
+    enough; no external edit-distance dependency is required.
+    """
+    matches = get_close_matches(value, list(allowed), n=1, cutoff=0.6)
+    return matches[0] if matches else None
+
+
+def _format_hint(suggestion: str | None, allowed: Iterable[str]) -> str:
+    """Format the trailing portion of a validation message with suggestion and allowed values.
+
+    Produces a leading-space prefixed string so callers can concatenate it to a
+    base message.
+
+    Args:
+        suggestion: Closest match already computed by :func:`_suggest`, or ``None``.
+        allowed: The full set of allowed values for the constraint.
+
+    Returns:
+        A string beginning with a single space, e.g. ``" Did you mean 'NOUN'?
+        Allowed values: ADJ, ADP, ..."``, or ``""`` if *allowed* is empty.
+    """
+    allowed_sorted = sorted(allowed)
+    if not allowed_sorted:
+        return ""
+    parts: list[str] = []
+    if suggestion is not None:
+        parts.append(f"Did you mean {suggestion!r}?")
+    parts.append(f"Allowed values: {', '.join(allowed_sorted)}.")
+    return " " + " ".join(parts)
 
 
 def _looks_like_regex(text: str) -> bool:

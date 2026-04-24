@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Any, Literal
 
 
 __all__ = ["BCQLSyntaxError", "BCQLValidationError", "ValidationIssue"]
@@ -53,7 +53,7 @@ class ValidationIssue:
     kind: IssueKind
     message: str
     node_type: str
-    context: dict[str, str] = field(default_factory=dict)
+    context: dict[str, Any] = field(default_factory=dict)
 
     def __str__(self) -> str:
         if self.context:

@@ -43,7 +43,21 @@ def test_closed_attribute_rejects_invalid_literal():
         parse('[pos="BOGUS"]', spec=spec)
     issue = excinfo.value.issues[0]
     assert issue.kind == "invalid_annotation_value"
-    assert issue.context == {"annotation": "pos", "value": "BOGUS"}
+    assert issue.context["annotation"] == "pos"
+    assert issue.context["value"] == "BOGUS"
+    assert issue.context["allowed"] == ["NOUN", "VERB"]
+    assert issue.context["suggestion"] is None
+    assert "Allowed values: NOUN, VERB" in issue.message
+
+
+def test_closed_attribute_suggests_close_match():
+    spec = _pos_spec({"NOUN", "VERB", "ADJ", "ADV"})
+    with pytest.raises(BCQLValidationError) as excinfo:
+        parse('[pos="NOU"]', spec=spec)
+    issue = excinfo.value.issues[0]
+    assert issue.kind == "invalid_annotation_value"
+    assert issue.context["suggestion"] == "NOUN"
+    assert "Did you mean 'NOUN'" in issue.message
 
 
 def test_closed_attribute_accepts_valid_literal():
@@ -174,7 +188,9 @@ def test_lassy_preset_feature_values():
     parse('[graad="comp"]', spec=LASSY)
     with pytest.raises(BCQLValidationError) as excinfo:
         parse('[graad="bogus"]', spec=LASSY)
-    assert excinfo.value.issues[0].context == {"annotation": "graad", "value": "bogus"}
+    ctx = excinfo.value.issues[0].context
+    assert ctx["annotation"] == "graad"
+    assert ctx["value"] == "bogus"
 
 
 def test_lassy_preset_relations():
@@ -208,7 +224,9 @@ def test_ud_preset_features():
     parse('[PronType="Prs"]', spec=UD)
     with pytest.raises(BCQLValidationError) as excinfo:
         parse('[Case="Bogus"]', spec=UD)
-    assert excinfo.value.issues[0].context == {"annotation": "Case", "value": "Bogus"}
+    ctx = excinfo.value.issues[0].context
+    assert ctx["annotation"] == "Case"
+    assert ctx["value"] == "Bogus"
 
 
 def test_ud_preset_relations():
