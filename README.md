@@ -1,5 +1,9 @@
 # A Python parser for Blacklab Corpus Query Language
 
+[![codecov](https://codecov.io/gh/BramVanroy/bcql_py/branch/main/graph/badge.svg)](https://codecov.io/gh/BramVanroy/bcql_py)
+[![License](https://img.shields.io/github/license/BramVanroy/bcql_py)](LICENSE)
+
+
 ## Installation
 
 Not on PyPi yet so clone from Github first:
