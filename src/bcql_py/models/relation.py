@@ -91,6 +91,11 @@ class RelationNode(BCQLNode):
 class RootRelationNode(BCQLNode):
     """A root relation query: ``^-type-> target`` or ``label:^-type-> target``.
 
+    Usually this relation does not have a "type" (since ROOT is the dependency relation from the root),
+    but some corpora may differ.
+
+    TODO: see if the Validator and CorpusSpec should account for "allowed root relations"
+
     Root relations have no source, only a target. They match the root of a dependency tree.
 
     Attributes:
