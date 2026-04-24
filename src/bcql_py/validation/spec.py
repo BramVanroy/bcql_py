@@ -64,39 +64,39 @@ class CorpusSpec(BaseModel):
 
     open_attributes: frozenset[str] = Field(
         default_factory=frozenset,
-        description="Annotation names whose value space is unconstrained.",
+        description="Annotation names that can have any value",
     )
     closed_attributes: dict[str, frozenset[str]] = Field(
         default_factory=dict,
-        description="Annotation names restricted to a fixed set of allowed values.",
+        description="Per-attribute allowed values for closed-class annotations",
     )
     strict_attributes: bool = Field(
         default=False,
-        description="If True, annotations not listed in open/closed are errors.",
+        description="Is the spec 'strict', that means, are annotations not listed in either open_attributes or closed_attributes disallowed?",
     )
     allowed_span_tags: frozenset[str] | None = Field(
         default=None,
-        description="Allowed XML span tag names, or None to allow any.",
+        description="Allowed XML span tag names, or None to allow any",
     )
     allowed_span_attributes: dict[str, frozenset[str]] | None = Field(
         default=None,
-        description="Per-tag allowed XML attribute names, or None to allow any.",
+        description="Per-tag allowed XML attribute names, or None to allow any",
     )
     allow_alignment: bool = Field(
         default=True,
-        description="If False, the alignment (==>) operator is disallowed.",
+        description="Is alignment (==>) allowed?",
     )
     allowed_alignment_fields: frozenset[str] | None = Field(
         default=None,
-        description="Allowed target field names for alignment, or None to allow any.",
+        description="Allowed target field names for alignment, or None to allow any",
     )
     allow_relations: bool = Field(
         default=True,
-        description="If False, dependency relation operators are disallowed.",
+        description="Are dependency relations (--> or ^-->) allowed?",
     )
     allowed_relations: frozenset[str] | None = Field(
         default=None,
-        description="Allowed relation type names, or None to allow any.",
+        description="Allowed relation type names, or None to allow any",
     )
 
     @field_validator("closed_attributes", mode="before")
@@ -307,3 +307,37 @@ class CorpusSpec(BaseModel):
             False
         """
         return name in self.open_attributes or name in self.closed_attributes
+
+    @property
+    def description(self) -> str:
+        """A human-readable description of this spec. Can be overridden in subclasses.
+        Potentially useful for error messages, debugging, or as information to LLM agents.
+        """
+        parts = [f"# Corpus Specification for {self.__class__.__name__}"]
+
+        def format_value(val, level: int = 0) -> str:
+            spaces = "  " * level
+            if val is None:
+                return "None"
+            if isinstance(val, frozenset):
+                if not val:
+                    return "(empty)"
+                return f"{spaces}- " + f"\n{spaces}- ".join(sorted(val))
+            if isinstance(val, dict):
+                if not val:
+                    return "(empty)"
+                lines = []
+                for k, v in sorted(val.items()):
+                    v_str = format_value(v, level + 1)
+                    nl = "\n" if v_str.strip().startswith("-") else " "
+                    lines.append(f"{spaces}- {k}:{nl}{v_str}")
+                return "\n".join(lines)
+            if isinstance(val, bool):
+                return str(val)
+            return str(val)
+
+        for field_name, field in self.model_fields.items():
+            value = getattr(self, field_name)
+            formatted = format_value(value)
+            parts.append(f"\n## {field.description}\n{formatted}")
+        return "\n".join(parts)
