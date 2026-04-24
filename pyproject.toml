@@ -12,15 +12,16 @@ dependencies = [
 ]
 
 [dependency-groups]
+docs = [
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.29",
+]
 dev = [
+    {include-group = "docs"},
     "mypy>=1.20.1,<2",
     "pytest>=9.0.3,<10",
     "pytest-cov>=7.1.0",
     "ruff>=0.15.10,<1",
-]
-docs = [
-    "mkdocs-material>=9.5",
-    "mkdocstrings[python]>=0.29",
 ]
 
 [tool.pytest.ini_options]
