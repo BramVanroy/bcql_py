@@ -35,9 +35,13 @@ class _Validator:
     Not part of the public API: callers should go through :func:`validate`. The
     class only holds per-run state (the spec, the fail-fast flag, and the list
     of issues found so far) so the traversal can stay method-based.
+
+    Encountered issues are saved to :attr:`issues` as they are found. In
+    fail-fast mode, the first issue also triggers a :class:`_StopValidation` exception
+    to immediately stop the run, so that :func:`validate` can report the first issue found.
     """
 
-    def __init__(self, spec: CorpusSpec, *, fail_fast: bool) -> None:
+    def __init__(self, spec: CorpusSpec, *, fail_fast: bool):
         """Initialize a fresh validator run.
 
         Args:
@@ -49,7 +53,7 @@ class _Validator:
         self.fail_fast = fail_fast
         self.issues: list[ValidationIssue] = []
 
-    def run(self, root: BCQLNode) -> None:
+    def run(self, root: BCQLNode):
         """Walk *root* and populate :attr:`issues`.
 
         In fail-fast mode, :meth:`_record` raises :class:`_StopValidation` on the
@@ -65,7 +69,7 @@ class _Validator:
         except _StopValidation:
             return
 
-    def _record(self, issue: ValidationIssue) -> None:
+    def _record(self, issue: ValidationIssue):
         """Append *issue* to :attr:`issues` and abort the walk if fail-fast is on.
 
         Raises:
@@ -76,14 +80,14 @@ class _Validator:
         if self.fail_fast:
             raise _StopValidation
 
-    def _visit(self, node: BCQLNode) -> None:
-        """Validate *node* and recurse into every child node it owns."""
+    def _visit(self, node: BCQLNode):
+        """Validate ``node`` and recurse into every child node it owns."""
         self._check(node)
         for child in _iter_child_nodes(node):
             self._visit(child)
 
-    def _check(self, node: BCQLNode) -> None:
-        """Dispatch *node* to the type-specific checker, if any.
+    def _check(self, node: BCQLNode):
+        """Dispatch ``node`` to the type-specific checker, if any.
 
         Nodes with no semantic constraints on this spec are silently skipped.
         """
@@ -93,10 +97,8 @@ class _Validator:
             self._check_integer_range(node)
         elif isinstance(node, SpanQuery):
             self._check_span(node)
-        elif isinstance(node, RelationOperator):
+        elif isinstance(node, RelationOperator) or isinstance(node, RootRelationNode):
             self._check_relation_operator(node)
-        elif isinstance(node, RootRelationNode):
-            self._check_root_relation(node)
         elif isinstance(node, ChildConstraint):
             pass
         elif isinstance(node, AlignmentOperator):
@@ -104,7 +106,7 @@ class _Validator:
         elif isinstance(node, AlignmentNode):
             self._check_alignment(node)
 
-    def _check_annotation(self, node: AnnotationConstraint) -> None:
+    def _check_annotation(self, node: AnnotationConstraint):
         """Validate an ``[annotation="value"]`` constraint.
 
         Records ``unknown_annotation`` when ``strict_attributes`` is set and the
@@ -113,6 +115,7 @@ class _Validator:
         its allowed set. Regex values are skipped: see :func:`_is_literal_value`.
         """
         name = node.annotation
+        # Attribute given but not present in the spec: always an error in strict mode
         if self.spec.strict_attributes and not self.spec.has_annotation(name):
             self._record(
                 ValidationIssue(
@@ -123,10 +126,15 @@ class _Validator:
                 )
             )
             return
+        # Consider valid (return) if the attribute name is not part of any closed-class set
         allowed = self.spec.closed_attributes.get(name)
         if allowed is None:
             return
+
+        # If this is a closed-class attribute, check the value
         value = node.value
+        # TODO: we are only checking literal values and not yet try to validate regex patterns
+        # Regex patterns are skipped (and thus allowed)
         if _is_literal_value(value) and value.value not in allowed:
             self._record(
                 ValidationIssue(
@@ -137,14 +145,13 @@ class _Validator:
                 )
             )
 
-    def _check_integer_range(self, node: IntegerRangeConstraint) -> None:
-        """Validate an integer-range constraint (e.g. ``[year=1900-1950]``).
+    def _check_integer_range(self, node: IntegerRangeConstraint):
+        """Validate an integer-range constraint (e.g. ``pos_confidence=in[50,100]``).
 
-        Only the annotation name is checked here (against ``strict_attributes``);
-        numeric annotations are not expected to be closed-class, so no value-set
-        membership check is performed.
+        Only the annotation name is checked here (against ``strict_attributes``).
         """
         name = node.annotation
+        # Attribute given but not present in the spec: always an error in strict mode
         if self.spec.strict_attributes and not self.spec.has_annotation(name):
             self._record(
                 ValidationIssue(
@@ -155,7 +162,7 @@ class _Validator:
                 )
             )
 
-    def _check_span(self, node: SpanQuery) -> None:
+    def _check_span(self, node: SpanQuery):
         """Validate an XML span query (e.g. ``<s/>``, ``<ne type="PER"/>``).
 
         Records ``unknown_span_tag`` when ``allowed_span_tags`` is set and the
@@ -163,6 +170,8 @@ class _Validator:
         not allowed for this tag under ``allowed_span_attributes``. A tag with
         no per-tag entry in ``allowed_span_attributes`` is unconstrained.
         """
+        # Tag name can be a string or StringValue. If it is a StringValue,
+        # we skip validation since it may be a regex pattern rather than a literal tag name.
         tag_name = node.tag_name if isinstance(node.tag_name, str) else None
         if self.spec.allowed_span_tags is not None and tag_name is not None:
             if tag_name not in self.spec.allowed_span_tags:
@@ -175,8 +184,12 @@ class _Validator:
                     )
                 )
                 return
+        # If no strict checks for span attributes or no tag name, skip attribute checks
         if self.spec.allowed_span_attributes is None or tag_name is None:
             return
+
+        # Allowed_span_attributes specifies for a given tag which attributes are allowed
+        # Consider valid (return) if the tag name is not given (since no attrs specified)
         tag_attrs = self.spec.allowed_span_attributes.get(tag_name)
         if tag_attrs is None:
             return
@@ -191,8 +204,9 @@ class _Validator:
                     )
                 )
 
-    def _check_relation_operator(self, node: RelationOperator) -> None:
-        """Validate a dependency relation operator (``-type->`` between tokens).
+    def _check_relation_operator(self, node: RelationOperator | RootRelationNode):
+        """Validate a dependency relation operator (``-type->`` between tokens)
+        or a root relation (``^-->`` from the root).
 
         Records ``relations_not_allowed`` when the spec forbids relations, and
         otherwise delegates name checking to :meth:`_check_relation_type`.
@@ -208,25 +222,7 @@ class _Validator:
             return
         self._check_relation_type(node.relation_type, node.node_type)
 
-    def _check_root_relation(self, node: RootRelationNode) -> None:
-        """Validate a root relation node (``^-type-> [...]``).
-
-        Mirrors :meth:`_check_relation_operator`: records
-        ``relations_not_allowed`` when relations are forbidden, otherwise checks
-        the relation type name.
-        """
-        if not self.spec.allow_relations:
-            self._record(
-                ValidationIssue(
-                    kind="relations_not_allowed",
-                    message="Dependency relations are not allowed by this corpus spec.",
-                    node_type=node.node_type,
-                )
-            )
-            return
-        self._check_relation_type(node.relation_type, node.node_type)
-
-    def _check_relation_type(self, relation_type: str | None, node_type: str) -> None:
+    def _check_relation_type(self, relation_type: str | None, node_type: str):
         """Check a relation type name against ``spec.allowed_relations``.
 
         No-ops when the node has no named relation or the spec places no
@@ -252,7 +248,7 @@ class _Validator:
                 )
             )
 
-    def _check_alignment_operator(self, node: AlignmentOperator) -> None:
+    def _check_alignment_operator(self, node: AlignmentOperator):
         """Validate the ``==>`` operator and its target field.
 
         Records ``alignment_not_allowed`` when the spec forbids alignment, and
@@ -281,7 +277,7 @@ class _Validator:
                 )
             )
 
-    def _check_alignment(self, node: AlignmentNode) -> None:
+    def _check_alignment(self, node: AlignmentNode):
         """Validate a full alignment node; records ``alignment_not_allowed`` if forbidden.
 
         The per-operator field check is handled by
@@ -299,7 +295,7 @@ class _Validator:
 
 
 def _iter_child_nodes(node: BCQLNode) -> Iterator[BCQLNode]:
-    """Yield every :class:`BCQLNode` reachable as a direct child of *node*.
+    """Yield every :class:`BCQLNode` reachable as a direct child of ``node``.
 
     Walks only into typed fields of the Pydantic model, so we don't traverse
     into unrelated containers. Lists and dict values are expanded element-wise.
@@ -351,7 +347,7 @@ def _looks_like_regex(text: str) -> bool:
     return any(ch in _REGEX_METACHARS for ch in text)
 
 
-def validate(ast: BCQLNode, spec: CorpusSpec, *, fail_fast: bool = True) -> None:
+def validate(ast: BCQLNode, spec: CorpusSpec, *, fail_fast: bool = True):
     """Validate a parsed BCQL AST against *spec*, raising on any issue.
 
     Args:
