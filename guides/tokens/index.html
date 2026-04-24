@@ -1,0 +1,2180 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A parser for BlackLab Corpus Query Language (BCQL) with Pydantic v2 AST (Abstract Syntax Tree), JSON serialization, schema validation, and LLM-friendly errors.">
+      
+      
+      
+        <link rel="canonical" href="https://bramvanroy.github.io/bcql-py/guides/tokens/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../relations/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Token queries - bcql-py</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#token-based-querying" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="bcql-py" class="md-header__button md-logo" aria-label="bcql-py" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            bcql-py
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Token queries
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/BramVanroy/bcql-py" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    BramVanroy/bcql-py
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../quickstart/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quickstart
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/top_level/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="bcql-py" class="md-nav__button md-logo" aria-label="bcql-py" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    bcql-py
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/BramVanroy/bcql-py" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    BramVanroy/bcql-py
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Token queries
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Token queries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#matching-a-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Matching a token
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Matching a token">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#multiple-annotations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiple annotations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#negation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regular-expressions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regular expressions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#matching-any-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Matching any token
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#case-and-diacritics-sensitivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Case- and diacritics sensitivity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sequences
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sequences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simple-sequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simple sequences
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#repetitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repetitions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lookahead-and-lookbehind" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lookahead and lookbehind
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#punctuation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Punctuation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spans
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Spans">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#finding-spans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding spans
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#words-at-the-start-or-end-of-a-span" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Words at the start or end of a span
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#words-inside-a-span" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Words inside a span
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#universal-operators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Universal operators
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#captures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Captures
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Captures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#capturing-part-of-the-match" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capturing part of the match
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#capture-constraints-global-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capture constraints (global constraints)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constraint-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constraint functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#local-capture-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local capture constraints
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../relations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Relations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel corpora
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm-workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ast-design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AST & parser design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cheatsheet/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BCQL cheatsheet
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../misc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operators & CQL compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/top_level/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    bcql_py (top-level)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/models/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/models/base/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Base
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/models/token/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Token
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/models/sequence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/models/span/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Span
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/models/capture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Capture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/models/lookaround/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lookaround
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/models/relation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Relation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/models/alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Alignment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/models/function/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parser internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Parser internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/parser/lexer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lexer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/parser/parser/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/parser/tokens/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tokens
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#matching-a-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Matching a token
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Matching a token">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#multiple-annotations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiple annotations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#negation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regular-expressions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regular expressions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#matching-any-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Matching any token
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#case-and-diacritics-sensitivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Case- and diacritics sensitivity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sequences
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sequences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simple-sequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simple sequences
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#repetitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repetitions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lookahead-and-lookbehind" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lookahead and lookbehind
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#punctuation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Punctuation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spans
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Spans">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#finding-spans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding spans
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#words-at-the-start-or-end-of-a-span" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Words at the start or end of a span
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#words-inside-a-span" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Words inside a span
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#universal-operators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Universal operators
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#captures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Captures
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Captures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#capturing-part-of-the-match" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capturing part of the match
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#capture-constraints-global-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capture constraints (global constraints)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constraint-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constraint functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#local-capture-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local capture constraints
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="token-based-querying">Token-based querying<a class="headerlink" href="#token-based-querying" title="Permanent link">&para;</a></h1>
+<p><a href="https://github.com/instituutnederlandsetaal/BlackLab/">BlackLab</a> started out as purely a token-based corpus engine. This section covers BCQL's token-based features: matching individual tokens, combining constraints, sequences, repetitions, lookaround, spans, and captures.</p>
+<h2 id="matching-a-token">Matching a token<a class="headerlink" href="#matching-a-token" title="Permanent link">&para;</a></h2>
+<p>A simple token query looks like this:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>[word=&quot;man&quot;]
+</span></code></pre></div>
+<p>This finds all occurrences of the word <em>man</em>.</p>
+<p>Each corpus has a default annotation: usually <em>word</em>. Using this fact, the query above can be written more concisely as:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>&quot;man&quot;
+</span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Quote style</p>
+<p>In BlackLab's CQL dialect, double and single quotes are interchangeable. We use double quotes throughout this guide.</p>
+</div>
+<h3 id="multiple-annotations">Multiple annotations<a class="headerlink" href="#multiple-annotations" title="Permanent link">&para;</a></h3>
+<p>If your corpus includes per-word annotations such as <em>lemma</em> (the headword) and <em>pos</em> (part-of-speech), you can query those too:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>[lemma=&quot;search&quot; &amp; pos=&quot;noun&quot;]
+</span></code></pre></div>
+<p>This matches <em>search</em> and <em>searches</em> when used as a noun.</p>
+<h3 id="negation">Negation<a class="headerlink" href="#negation" title="Permanent link">&para;</a></h3>
+<p>Use the <code>!=</code> operator to match everything except a particular value:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>[pos != &quot;noun&quot;]
+</span></code></pre></div>
+<h3 id="regular-expressions">Regular expressions<a class="headerlink" href="#regular-expressions" title="Permanent link">&para;</a></h3>
+<p>The strings between quotes are <a href="http://en.wikipedia.org/wiki/Regular_expression">regular expressions</a>. For example, to find <em>man</em> or <em>woman</em>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>&quot;(wo)?man&quot;
+</span></code></pre></div>
+<p>To find lemmas starting with <em>under</em>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>[lemma=&quot;under.*&quot;]
+</span></code></pre></div>
+<p>For a complete overview of the regex flavour used, see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/regexp-syntax.html">Lucene's regular expression syntax</a>.</p>
+<details class="details">
+<summary>Escaping and literal strings</summary>
+<p>To match characters with special meaning in a regex (such as <code>.</code>), escape them with a backslash:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>[lemma=&quot;etc\.&quot;]
+</span></code></pre></div>
+<p>Alternatively, prefix the string with <code>l</code> to treat it as a literal string:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>[lemma=l&#39;etc.&#39;]
+</span></code></pre></div>
+<p>Note that some unexpected characters may be considered special regex characters, such as <code>&lt;</code> and <code>&gt;</code>. See the Lucene regex docs for details.</p>
+</details>
+<h3 id="matching-any-token">Matching any token<a class="headerlink" href="#matching-any-token" title="Permanent link">&para;</a></h3>
+<p>To match any token regardless of its value, use the match-all pattern (an empty pair of square brackets):</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>[]
+</span></code></pre></div>
+<p>This is most useful as part of a larger sequence query.</p>
+<h3 id="case-and-diacritics-sensitivity">Case- and diacritics sensitivity<a class="headerlink" href="#case-and-diacritics-sensitivity" title="Permanent link">&para;</a></h3>
+<p><a href="https://github.com/instituutnederlandsetaal/BlackLab/">BlackLab</a> defaults to case- and diacritics-<em>insensitive</em> search, so <code>"panama"</code> also finds <em>Panama</em>.</p>
+<p>To match case-sensitively, prefix the pattern with <code>(?-i)</code>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>&quot;(?-i)Panama&quot;
+</span></code></pre></div>
+<hr />
+<h2 id="sequences">Sequences<a class="headerlink" href="#sequences" title="Permanent link">&para;</a></h2>
+<h3 id="simple-sequences">Simple sequences<a class="headerlink" href="#simple-sequences" title="Permanent link">&para;</a></h3>
+<p>Separate token patterns with spaces to match a phrase:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>&quot;the&quot; &quot;tall&quot; &quot;man&quot;
+</span></code></pre></div>
+<p>You can mix literal words and constrained tokens:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>&quot;an?|the&quot; [pos=&quot;ADJ&quot;] &quot;man&quot;
+</span></code></pre></div>
+<p>This matches <em>a wise man</em>, <em>an important man</em>, <em>the foolish man</em>, etc.</p>
+<p>Using the match-all pattern for a wildcard position:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>&quot;an?|the&quot; [] &quot;man&quot;
+</span></code></pre></div>
+<h3 id="repetitions">Repetitions<a class="headerlink" href="#repetitions" title="Permanent link">&para;</a></h3>
+<p>Use the regular-expression repetition operators on whole tokens:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>[pos=&quot;ADJ&quot;]+ &quot;man&quot;
+</span></code></pre></div>
+<p>The <code>+</code> means "one or more times". <code>*</code> means zero or more, <code>?</code> means zero or once.</p>
+<p>For an exact range:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>[pos=&quot;ADJ&quot;]{2,3} &quot;man&quot;
+</span></code></pre></div>
+<p>For two or more:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>[pos=&quot;ADJ&quot;]{2,} &quot;man&quot;
+</span></code></pre></div>
+<p>You can group sequences with parentheses and apply operators to the group:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>(&quot;an?|the&quot;? [pos=&quot;NOU&quot;])+
+</span></code></pre></div>
+<h3 id="lookahead-and-lookbehind">Lookahead and lookbehind<a class="headerlink" href="#lookahead-and-lookbehind" title="Permanent link">&para;</a></h3>
+<div class="admonition tip">
+<p class="admonition-title">Supported from <a href="https://github.com/instituutnederlandsetaal/BlackLab/">BlackLab</a> v4.0</p>
+</div>
+<p>Just like most regex engines, BCQL supports lookahead and lookbehind assertions. These check context without consuming tokens.</p>
+<p><strong>Positive lookahead</strong>: find <em>cat</em> only if followed by <em>in the hat</em>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>&quot;cat&quot; (?= &quot;in&quot; &quot;the&quot; &quot;hat&quot;)
+</span></code></pre></div>
+<p><strong>Positive lookbehind</strong>: find <em>dog</em> only if preceded by <em>very good</em>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>(?&lt;= &quot;very&quot; &quot;good&quot;) &quot;dog&quot;
+</span></code></pre></div>
+<p><strong>Negative lookahead</strong>: find <em>cat</em> only if <em>not</em> followed by <em>call</em>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>&quot;cat&quot; (?! &quot;call&quot;)
+</span></code></pre></div>
+<p><strong>Negative lookbehind</strong>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>(?&lt;! &quot;bad&quot;) &quot;dog&quot;
+</span></code></pre></div>
+<hr />
+<h2 id="punctuation">Punctuation<a class="headerlink" href="#punctuation" title="Permanent link">&para;</a></h2>
+<p>When a corpus indexes punctuation as the <code>punct</code> property of the following word, finding punctuation after a given word requires a pattern like:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>&quot;dog&quot; [punct=&quot;, *&quot;]
+</span></code></pre></div>
+<p>Because spaces are also included in <code>punct</code>, the regex must account for them.</p>
+<p>Starting with <a href="https://github.com/instituutnederlandsetaal/BlackLab/">BlackLab</a> 4.0.0, <em>pseudo-annotations</em> simplify this:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>[word=&quot;dog&quot; &amp; punctAfter=&quot;,&quot;]
+</span></code></pre></div>
+<p>In special cases where more than one punctuation mark is indexed with a word you may still need a broader pattern:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>[word=&quot;dog&quot; &amp; punctAfter=&quot;,.*&quot;]
+</span></code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Pseudo-annotations are actually functions</p>
+<p><code>punctAfter</code> is syntactic sugar for a function call:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>[ punctAfter(&quot;,&quot;) ]
+</span></code></pre></div>
+<p>If a non-existent annotation is referenced in a query, <a href="https://github.com/instituutnederlandsetaal/BlackLab/">BlackLab</a> checks whether there is a function with that name that takes a single parameter. You can therefore add your own pseudo-annotations by implementing a <code>QueryFunction</code> plugin.</p>
+</div>
+<hr />
+<h2 id="spans">Spans<a class="headerlink" href="#spans" title="Permanent link">&para;</a></h2>
+<p>Corpora may contain <em>spans</em>: marked regions of text such as sentences, paragraphs, or named entities. BCQL uses an XML-like syntax to query them, regardless of the actual input format.</p>
+<h3 id="finding-spans">Finding spans<a class="headerlink" href="#finding-spans" title="Permanent link">&para;</a></h3>
+<p>To find all sentence spans:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>&lt;s/&gt;
+</span></code></pre></div>
+<p>The forward slash before the closing bracket means "the whole span". Compare with <code>&lt;s&gt;</code> (start of span) and <code>&lt;/s&gt;</code> (end of span).</p>
+<h3 id="words-at-the-start-or-end-of-a-span">Words at the start or end of a span<a class="headerlink" href="#words-at-the-start-or-end-of-a-span" title="Permanent link">&para;</a></h3>
+<p>The first word of each sentence:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>&lt;s&gt; []
+</span></code></pre></div>
+<p>Sentences ending in <em>that</em>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>&quot;that&quot; &lt;/s&gt;
+</span></code></pre></div>
+<h3 id="words-inside-a-span">Words inside a span<a class="headerlink" href="#words-inside-a-span" title="Permanent link">&para;</a></h3>
+<p>Find the word <em>baker</em> inside a <code>&lt;person/&gt;</code> span:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>&quot;baker&quot; within &lt;person/&gt;
+</span></code></pre></div>
+<p>To return the whole <em>person</em> span that contains <em>baker</em>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>&lt;person/&gt; containing &quot;baker&quot;
+</span></code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Using a regular expression for the span name</p>
+<p>Match multiple span types at once with a regex:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>&quot;baker&quot; within &lt;&quot;person|location&quot; /&gt;
+</span></code></pre></div>
+<p>To match all spans in the corpus:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>&lt;&quot;.+&quot; /&gt;
+</span></code></pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Capturing overlapping spans</p>
+<p>To retrieve all spans overlapping each hit (e.g. the sentence, paragraph, and chapter containing the match), use the <code>with-spans</code> function:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>with-spans(&quot;baker&quot;)
+</span></code></pre></div>
+<p>Or with an explicit span type and capture name:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>with-spans(&quot;baker&quot;, &lt;&quot;person|location&quot; /&gt;, &quot;props&quot;)
+</span></code></pre></div>
+</div>
+<h3 id="universal-operators">Universal operators<a class="headerlink" href="#universal-operators" title="Permanent link">&para;</a></h3>
+<p><code>within</code> and <code>containing</code> work with any query:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>([pos=&quot;ADJ&quot;]+ containing &quot;tall&quot;) &quot;man&quot;
+</span></code></pre></div>
+<p>This finds adjective sequences applied to <em>man</em> where at least one adjective is <em>tall</em>.</p>
+<hr />
+<h2 id="captures">Captures<a class="headerlink" href="#captures" title="Permanent link">&para;</a></h2>
+<h3 id="capturing-part-of-the-match">Capturing part of the match<a class="headerlink" href="#capturing-part-of-the-match" title="Permanent link">&para;</a></h3>
+<p>Label part of the match as a named group using a colon:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>&quot;an?|the&quot; A:[pos=&quot;ADJ&quot;] &quot;man&quot;
+</span></code></pre></div>
+<p>The adjective is captured in a group named <em>A</em>.</p>
+<p>Capture a span of multiple tokens:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>&quot;an?|the&quot; adjectives:[pos=&quot;ADJ&quot;]+ &quot;man&quot;
+</span></code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Spans are captured automatically</p>
+<p>If your query involves a span like <code>&lt;s/&gt;</code>, it is automatically captured under the span name (<code>s</code> in this case). Override the name with <code>A:&lt;s/&gt;</code>.</p>
+</div>
+<h3 id="capture-constraints-global-constraints">Capture constraints (global constraints)<a class="headerlink" href="#capture-constraints-global-constraints" title="Permanent link">&para;</a></h3>
+<p>After <code>::</code> you can write constraints relating different captured tokens:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>A:[] &quot;by&quot; B:[] :: A.word = B.word
+</span></code></pre></div>
+<p>This matches <em>day by day</em>, <em>step by step</em>, etc.</p>
+<details class="details">
+<summary>Multiple-value annotations and constraints</summary>
+<p>Capture constraints can only access the first value indexed for an annotation. If you need multi-value constraint logic, consider rewriting the query without constraints where possible:</p>
+<p><code>A:[word="some"] B:[word="queries"] :: A.lemma="some" &amp; B.lemma="query"</code> can also be written as:</p>
+<p><code>A:[word="some" &amp; lemma="some"] B:[word="queries" &amp; lemma="query"]</code></p>
+<p>In other cases, adding extra annotations or using inline tags may help.</p>
+</details>
+<h3 id="constraint-functions">Constraint functions<a class="headerlink" href="#constraint-functions" title="Permanent link">&para;</a></h3>
+<p>Special functions are available in capture constraints. For example, enforce token ordering:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>(&lt;s&gt; containing A:&quot;cat&quot;) containing B:&quot;fluffy&quot; :: start(B) &lt; start(A)
+</span></code></pre></div>
+<p>This finds sentences containing both <em>cat</em> and <em>fluffy</em> and requires that <em>fluffy</em> precedes <em>cat</em>.</p>
+<h3 id="local-capture-constraints">Local capture constraints<a class="headerlink" href="#local-capture-constraints" title="Permanent link">&para;</a></h3>
+<p>Constraints can appear inside a parenthesised expression, but must only refer to labels captured within those parentheses:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>(A:[] &quot;and&quot; B:[] :: A.word = B.word) &quot;again&quot;
+</span></code></pre></div>
+<p>This matches <em>over and over again</em>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.code.annotate", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "search.highlight", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
