@@ -1,5 +1,6 @@
 # A Python parser for Blacklab Corpus Query Language
 
+[![Documentation](https://img.shields.io/badge/documentation-4051b5)](https://bramvanroy.github.io/bcql_py/)
 [![codecov](https://codecov.io/gh/BramVanroy/bcql_py/branch/main/graph/badge.svg)](https://codecov.io/gh/BramVanroy/bcql_py)
 [![License](https://img.shields.io/github/license/BramVanroy/bcql_py)](LICENSE)
 
@@ -65,4 +66,4 @@ If we don't do this, we'll get a Pydantic error about the forward reference not 
 
 ## TODO
 
-[ ] Output AST as eBNF grammar?
+[] Output AST as eBNF grammar?
