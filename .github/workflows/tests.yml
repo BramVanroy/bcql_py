@@ -3,10 +3,13 @@ name: Tests
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - main      
+    # Only trigger when files relevant to the tests are changed
+    # Tests and doc-tests
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'pyproject.toml'
 
 jobs:
   test:

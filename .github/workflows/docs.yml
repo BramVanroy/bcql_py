@@ -4,6 +4,14 @@ on:
   push:
     branches:
       - main
+    # Only trigger when files relevant to the docs are changed
+    paths:
+      - 'docs/**'
+      - 'src/**'
+      - 'examples/**'
+      - 'scripts/**'
+      - 'pyproject.toml'
+      - 'mkdocs.yml'
 
 permissions:
   contents: write
@@ -14,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # full history lets mkdocstrings resolve git blame
+          fetch-depth: 0
 
       - uses: astral-sh/setup-uv@v5
         with:
