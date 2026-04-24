@@ -65,5 +65,4 @@ If we don't do this, we'll get a Pydantic error about the forward reference not 
 
 ## TODO
 
-- Output AST as eBNF grammar?
-- Allow specification of corpus-specific properties for verification: valid XML tags, valid attribute-value pairs (which naturally includes tagset, e.g. `pos=[V,N,ADJ...]`), supported dependency relations, alignment specified or not, etc.
+[ ] Output AST as eBNF grammar?
