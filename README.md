@@ -66,4 +66,4 @@ If we don't do this, we'll get a Pydantic error about the forward reference not 
 
 ## TODO
 
-[] Output AST as eBNF grammar?
+- [ ] Output AST as eBNF grammar?
