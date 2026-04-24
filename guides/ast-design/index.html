@@ -1610,12 +1610,7 @@ and parser method.</p>
 <li>[<code>tokenize()</code>][bcql_py.tokenize] is implemented by <a class="autorefs autorefs-internal" title="            BCQLLexer" href="../../api/parser/lexer/#bcql_py.parser.lexer.BCQLLexer"><code>BCQLLexer</code></a>.</li>
 <li>[<code>parse_from_tokens()</code>][bcql_py.parse_from_tokens] drives
   <a class="autorefs autorefs-internal" title="            BCQLParser" href="../../api/parser/parser/#bcql_py.parser.parser.BCQLParser"><code>BCQLParser</code></a>.</li>
-<li><a class="autorefs autorefs-internal" title="            parse
-
-
-  
-      cached
-  " href="../../api/top_level/#bcql_py.parse"><code>parse()</code></a> is the convenience wrapper that combines both.</li>
+<li><a class="autorefs autorefs-internal" title="            parse" href="../../api/top_level/#bcql_py.parse"><code>parse()</code></a> is the convenience wrapper that combines both.</li>
 </ul>
 <p>All three functions are <code>functools.lru_cache</code>-decorated, so repeat calls on the same source return
 the same (immutable) AST instance.</p>

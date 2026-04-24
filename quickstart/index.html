@@ -1544,12 +1544,7 @@
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>uv<span class="w"> </span>add<span class="w"> </span>bcql_py
 </span></code></pre></div>
 <h2 id="parse-a-query">Parse a query<a class="headerlink" href="#parse-a-query" title="Permanent link">&para;</a></h2>
-<p><a class="autorefs autorefs-internal" title="            parse
-
-
-  
-      cached
-  " href="../api/top_level/#bcql_py.parse"><code>parse()</code></a> runs the lexer and the recursive-descent parser and returns the root
+<p><a class="autorefs autorefs-internal" title="            parse" href="../api/top_level/#bcql_py.parse"><code>parse()</code></a> runs the lexer and the recursive-descent parser and returns the root
 <a class="autorefs autorefs-internal" title="            BCQLNode" href="../api/models/base/#bcql_py.models.base.BCQLNode"><code>BCQLNode</code></a>. The returned tree is a frozen Pydantic v2 model:
 inspect it, pattern-match on <code>node_type</code>, or round-trip it back to BCQL.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bcql_py</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse</span>

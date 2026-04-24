@@ -3509,6 +3509,9 @@ for details on negative relations.</p>
 
 
         <p>A root relation query: <code>^-type-&gt; target</code> or <code>label:^-type-&gt; target</code>.</p>
+<p>Usually this relation does not have a "type" (since ROOT is the dependency relation from the root),
+but some corpora may differ.</p>
+<p>TODO: see if the Validator and CorpusSpec should account for "allowed root relations"</p>
 <p>Root relations have no source, only a target. They match the root of a dependency tree.</p>
 
 
