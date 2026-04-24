@@ -1,0 +1,29 @@
+{% extends "_base/class.html.jinja" %}
+
+{% block source scoped %}
+  {% if config.show_source %}
+    {% if config.merge_init_into_class %}
+      {% if "__init__" in all_members and all_members["__init__"].source %}
+        {% with init = all_members["__init__"] %}
+          {% set filepath = init.relative_package_filepath if init.relative_filepath.is_absolute() else init.relative_filepath %}
+          {% set start = init.lineno or 1 %}
+          {% set end = init.endlineno or start %}
+          <p class="doc-source-link">
+            <a href="https://github.com/BramVanroy/bcql-py/blob/main/{{ filepath }}#L{{ start }}-L{{ end }}" target="_blank" rel="noopener">
+              View source on GitHub: <code>{{ filepath }}</code> lines {{ start }}–{{ end }}
+            </a>
+          </p>
+        {% endwith %}
+      {% endif %}
+    {% elif class.source %}
+      {% set filepath = class.relative_package_filepath if class.relative_filepath.is_absolute() else class.relative_filepath %}
+      {% set start = class.lineno or 1 %}
+      {% set end = class.endlineno or start %}
+      <p class="doc-source-link">
+        <a href="https://github.com/BramVanroy/bcql-py/blob/main/{{ filepath }}#L{{ start }}-L{{ end }}" target="_blank" rel="noopener">
+          View source on GitHub: <code>{{ filepath }}</code> lines {{ start }}–{{ end }}
+        </a>
+      </p>
+    {% endif %}
+  {% endif %}
+{% endblock source %}
