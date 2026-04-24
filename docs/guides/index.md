@@ -1,6 +1,6 @@
 # Guides
 
-These guides cover the BCQL query constructs supported by `bcql-py`, together with patterns
+These guides cover the BCQL query constructs supported by `bcql_py`, together with patterns
 for integrating the library in real projects.
 
 Much of the BCQL reference material is adapted from the official

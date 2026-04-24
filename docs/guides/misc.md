@@ -89,4 +89,4 @@ Use grouping parentheses `( )` at either level to override precedence.
 - `distance` / `distabs` functions and `match` / `matchend` anchor points in capture constraints.
 - Using an XML element name as a token constraint (e.g. `!np` to mean "not inside an `<np/>` tag").
 
-If a missing feature is important to you, please [open an issue](https://github.com/BramVanroy/bcql-py/issues) or refer to [BlackLab's issue tracker](https://github.com/instituutnederlandsetaal/BlackLab/issues).
+If a missing feature is important to you, please [open an issue](https://github.com/BramVanroy/bcql_py/issues) or refer to [BlackLab's issue tracker](https://github.com/instituutnederlandsetaal/BlackLab/issues).

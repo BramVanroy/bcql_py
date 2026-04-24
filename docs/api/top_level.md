@@ -1,6 +1,6 @@
 # bcql_py: Top-level API
 
-The public interface of **bcql-py** is exposed directly from `bcql_py`.
+The public interface of **bcql_py** is exposed directly from `bcql_py`.
 
 ::: bcql_py
     options:

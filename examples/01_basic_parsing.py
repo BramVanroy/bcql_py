@@ -1,6 +1,6 @@
 """Basic BCQL parsing, serialization, and round-tripping.
 
-Demonstrates the core workflow of ``bcql-py``: parse a BCQL query string into a Pydantic
+Demonstrates the core workflow of ``bcql_py``: parse a BCQL query string into a Pydantic
 Abstract Syntax Tree (AST), serialize to JSON via Pydantic, deserialize back, and reconstruct
 the query.
 """

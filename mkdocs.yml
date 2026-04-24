@@ -1,12 +1,12 @@
 # For more options and details see https://www.mkdocs.org/user-guide/configuration/
 # Basic site metadata used in the generated HTML, metadata tags, and canonical URLs
-site_name: bcql-py
+site_name: bcql_py
 site_description: A parser for BlackLab Corpus Query Language (BCQL) with Pydantic v2 AST (Abstract Syntax Tree), JSON serialization, schema validation, and LLM-friendly errors.
-site_url: https://bramvanroy.github.io/bcql-py/
+site_url: https://bramvanroy.github.io/bcql_py/
 
 # Repository links shown in the header and used for "edit this page" links
-repo_url: https://github.com/BramVanroy/bcql-py
-repo_name: BramVanroy/bcql-py
+repo_url: https://github.com/BramVanroy/bcql_py
+repo_name: BramVanroy/bcql_py
 # Resolved relative to repo_url; points docs pages at the source docs/ directory
 edit_uri: edit/main/docs/
 

@@ -25,13 +25,13 @@ reconstruction and structured error reporting.
 ## Installation
 
 ```bash
-pip install bcql-py
+pip install bcql_py
 ```
 
 Or with [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv add bcql-py
+uv add bcql_py
 ```
 
 ## Quick start
@@ -106,8 +106,8 @@ See the [cheatsheet](guides/cheatsheet.md) for a quick-reference table of every 
 ## Development
 
 ```bash
-git clone https://github.com/BramVanroy/bcql-py.git
-cd bcql-py
+git clone https://github.com/BramVanroy/bcql_py.git
+cd bcql_py
 uv sync
 
 # Run tests and doctests

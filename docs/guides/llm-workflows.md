@@ -110,6 +110,6 @@ def classify_queries(queries: list[str]) -> tuple[list[str], list[tuple[str, str
     return good, bad
 ```
 
-See [`examples/03_llm_agentic_workflow.py`](https://github.com/BramVanroy/bcql-py/blob/main/examples/03_llm_agentic_workflow.py)
+See [`examples/03_llm_agentic_workflow.py`](https://github.com/BramVanroy/bcql_py/blob/main/examples/03_llm_agentic_workflow.py)
 for a runnable, LLM-free simulation that shows multiple error scenarios and how the loop
 converges on a valid query.

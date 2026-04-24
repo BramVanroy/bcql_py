@@ -3,9 +3,9 @@
 ## Install
 
 ```bash
-pip install bcql-py
+pip install bcql_py
 # or:
-uv add bcql-py
+uv add bcql_py
 ```
 
 ## Parse a query
@@ -72,4 +72,4 @@ for tok in tokens:
 - [Relations](guides/relations.md): dependency queries and root relations.
 - [Parallel corpora](guides/parallel.md): cross-language alignment queries.
 - [LLM workflows](guides/llm-workflows.md): agentic retry loops.
-- [Example scripts](https://github.com/BramVanroy/bcql-py/tree/main/examples).
+- [Example scripts](https://github.com/BramVanroy/bcql_py/tree/main/examples).

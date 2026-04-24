@@ -35,7 +35,7 @@ wheels = [
 ]
 
 [[package]]
-name = "bcql-py"
+name = "bcql_py"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
