@@ -1218,6 +1218,8 @@ class BCQLParser:
         tok = self._current_token
         if tok.type not in (TokenType.STRING, TokenType.LITERAL_STRING):
             ctx = f" {context}" if context else ""
-            raise self._raise_error(f"Expected a string {ctx}, got {tok.type.name} ({tok.value!r})")
+            raise self._raise_error(
+                f"Expected a string delimited by single or double quotes {ctx}, got {tok.type.name} ({tok.value!r})"
+            )
         self._advance()
         return StringValue(value=tok.value, is_literal=(tok.type == TokenType.LITERAL_STRING))
