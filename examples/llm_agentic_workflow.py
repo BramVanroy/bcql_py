@@ -7,24 +7,39 @@ The recommended pattern for LLM-driven BCQL generation is:
   3. If validation fails, send ``str(error)`` back to the LLM as feedback.
   4. Retry until the query is valid (or a max-attempt limit is reached).
 
-``BCQLSyntaxError`` reports the exact character position of the problem and includes a
-visual caret so the LLM can see precisely where it went wrong and hopefully fix the issue.
+``BCQLSyntaxError`` reports the exact character position of the problem and
+includes a visual caret so the LLM can see precisely where it went wrong and
+hopefully fix the issue.
 
-This example is not an actual LLM integration (do not want to clutter the project
-dependencies) but it should give you an idea of how the code can be used with LLMs.
-
-At the bottom, pseudocode is given to show potential "real-world" usage.
+This example is not an actual LLM integration (we do not want to clutter the
+project dependencies) but it should give you an idea of how the code can be
+used with LLMs. At the bottom, pseudocode is given to show potential
+"real-world" usage.
 """
 
+from __future__ import annotations
+
 from bcql_py import BCQLSyntaxError, parse
+
+
+SECTION_SEPARATOR = "=" * 70
+
+
+def print_section(title: str) -> None:
+    """Print a clearly delimited section header.
+
+    Args:
+        title: The title to display.
+    """
+    print(f"\n{SECTION_SEPARATOR}\n{title}\n{SECTION_SEPARATOR}")
 
 
 def validate_with_feedback(attempts: list[str]) -> None:
     """Simulate asking an LLM, catching errors, and reprompting.
 
-    In a real system ``attempts`` would be produced by successive LLM calls, each informed
-    by the previous error message. Here we supply them up front to keep the example
-    self-contained.
+    In a real system ``attempts`` would be produced by successive LLM calls,
+    each informed by the previous error message. Here we supply them up front
+    to keep the example self-contained.
 
     Args:
         attempts: The sequence of candidate BCQL queries to try in order.
@@ -38,16 +53,17 @@ def validate_with_feedback(attempts: list[str]) -> None:
             return
         except BCQLSyntaxError as err:
             print("Validation failed. Feedback for LLM:")
-            # str(err) is what you append to the next LLM prompt. It contains the error
-            # description, the original query, and a caret pointing to the failure position.
+            # str(err) is what you append to the next LLM prompt. It contains
+            # the error description, the original query, and a caret pointing
+            # to the failure position. Note that you have to use str(err) to
+            # get the formatted message; just printing the exception object
+            # won't include the query or caret!
             print(str(err))
 
     print("\nAll attempts exhausted without a valid query.")
 
 
-print("=" * 60)
-print("Example A: recovering from bracket / paren mismatches")
-print("=" * 60)
+print_section("1. Recovering from bracket / paren mismatches")
 
 syntax_attempts = [
     # Attempt 1: unclosed bracket
@@ -64,7 +80,7 @@ validate_with_feedback(syntax_attempts)
 # Pseudocode for integrating with any OpenAI-compatible LLM API:
 
     from openai import OpenAI
-    MAX_ATTEMPTS =5
+    MAX_ATTEMPTS = 5
 
     client = OpenAI(...)
     messages = [
