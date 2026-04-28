@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import Field
 
 from bcql_py.models.base import BCQLNode
+
+
+if TYPE_CHECKING:
+    from bcql_py.models.union import BCQLNodeUnion
 
 
 __all__ = ["FunctionCallNode"]
@@ -24,7 +28,7 @@ class FunctionCallNode(BCQLNode):
 
     node_type: Literal["function_call"] = "function_call"
     name: str = Field(description="Function name")
-    args: list[BCQLNode | int] = Field(description="Positional arguments")
+    args: list[BCQLNodeUnion | int] = Field(description="Positional arguments")
 
     def to_bcql(self) -> str:
         parts: list[str] = []

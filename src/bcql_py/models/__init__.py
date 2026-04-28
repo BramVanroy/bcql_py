@@ -42,10 +42,17 @@ from bcql_py.models.token import (
     TokenQuery,
 )
 
+# Importing ``union`` here is load-bearing: it builds the discriminated
+# ``BCQLNodeUnion`` type and rebuilds every model that references it as a
+# forward annotation. Without this import, fields typed as ``BCQLNodeUnion``
+# would fail to resolve at validation time. See [union.py](union.py).
+from bcql_py.models.union import BCQLNodeUnion
+
 
 __all__ = [
     # base
     "BCQLNode",
+    "BCQLNodeUnion",
     # token
     "StringValue",
     "AnnotationConstraint",

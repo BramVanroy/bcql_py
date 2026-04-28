@@ -10,11 +10,15 @@ where there must be a subj relationship but where dog must not be an obj. (It do
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import Field
 
 from bcql_py.models.base import BCQLNode
+
+
+if TYPE_CHECKING:
+    from bcql_py.models.union import BCQLNodeUnion
 
 
 __all__ = [
@@ -70,7 +74,7 @@ class ChildConstraint(BCQLNode):
 
     node_type: Literal["child_constraint"] = "child_constraint"
     operator: RelationOperator = Field(description="The relation operator.")
-    target: BCQLNode = Field(description="Target sub-query.")
+    target: BCQLNodeUnion = Field(description="Target sub-query.")
     label: str | None = Field(
         default=None,
         description="Optional capture label on this child relation.",
@@ -92,7 +96,7 @@ class RelationNode(BCQLNode):
     """
 
     node_type: Literal["relation"] = "relation"
-    source: BCQLNode = Field(description="Source of the relation.")
+    source: BCQLNodeUnion = Field(description="Source of the relation.")
     children: list[ChildConstraint] = Field(
         min_length=1, description="One or more target constraints."
     )
@@ -125,7 +129,7 @@ class RootRelationNode(BCQLNode):
     relation_type: str | None = Field(
         default=None, description="Optional relation type filter."
     )
-    target: BCQLNode = Field(description="Target sub-query.")
+    target: BCQLNodeUnion = Field(description="Target sub-query.")
     label: str | None = Field(
         default=None, description="Optional capture label."
     )

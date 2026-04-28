@@ -6,11 +6,15 @@ Similar to models/relation but with different operators and semantics.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import Field
 
 from bcql_py.models.base import BCQLNode
+
+
+if TYPE_CHECKING:
+    from bcql_py.models.union import BCQLNodeUnion
 
 
 __all__ = ["AlignmentOperator", "AlignmentConstraint", "AlignmentNode"]
@@ -59,7 +63,7 @@ class AlignmentConstraint(BCQLNode):
 
     node_type: Literal["alignment_constraint"] = "alignment_constraint"
     operator: AlignmentOperator = Field(description="Alignment operator.")
-    target: BCQLNode = Field(description="Target sub-query.")
+    target: BCQLNodeUnion = Field(description="Target sub-query.")
 
     def to_bcql(self) -> str:
         return f"{self.operator.to_bcql()} {self.target.to_bcql()}"
@@ -73,7 +77,7 @@ class AlignmentNode(BCQLNode):
     """
 
     node_type: Literal["alignment"] = "alignment"
-    source: BCQLNode = Field(description="Source query in primary field.")
+    source: BCQLNodeUnion = Field(description="Source query in primary field.")
     alignments: list[AlignmentConstraint] = Field(
         min_length=1, description="Alignment constraint(s)"
     )

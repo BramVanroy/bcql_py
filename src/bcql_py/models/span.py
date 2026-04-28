@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import Field
 
 from bcql_py.models.base import BCQLNode
 from bcql_py.models.token import StringValue
+
+
+if TYPE_CHECKING:
+    from bcql_py.models.union import BCQLNodeUnion
 
 
 __all__ = ["SpanQuery", "PositionFilterNode"]
@@ -83,8 +87,8 @@ class PositionFilterNode(BCQLNode):
     operator: Literal["within", "containing", "overlap"] = Field(
         description="Position filter operator.",
     )
-    left: BCQLNode = Field(description="The query to filter.")
-    right: BCQLNode = Field(description="The positional constraint.")
+    left: BCQLNodeUnion = Field(description="The query to filter.")
+    right: BCQLNodeUnion = Field(description="The positional constraint.")
 
     def to_bcql(self) -> str:
         return f"{self.left.to_bcql()} {self.operator} {self.right.to_bcql()}"

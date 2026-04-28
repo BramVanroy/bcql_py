@@ -4,11 +4,15 @@ Note that these occur outside of string literals but are lookarounds on Node val
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import Field
 
 from bcql_py.models.base import BCQLNode
+
+
+if TYPE_CHECKING:
+    from bcql_py.models.union import BCQLNodeUnion
 
 
 __all__ = ["LookaheadNode", "LookbehindNode"]
@@ -28,7 +32,7 @@ class LookaheadNode(BCQLNode):
     positive: bool = Field(
         description="True for positive (?=), False for negative (?!)."
     )
-    body: BCQLNode = Field(description="The sub-query to match ahead.")
+    body: BCQLNodeUnion = Field(description="The sub-query to match ahead.")
 
     def to_bcql(self) -> str:
         op = "?=" if self.positive else "?!"
@@ -49,7 +53,7 @@ class LookbehindNode(BCQLNode):
     positive: bool = Field(
         description="True for positive (?<=), False for negative (?<!)."
     )
-    body: BCQLNode = Field(description="The sub-query to match behind.")
+    body: BCQLNodeUnion = Field(description="The sub-query to match behind.")
 
     def to_bcql(self) -> str:
         op = "?<=" if self.positive else "?<!"

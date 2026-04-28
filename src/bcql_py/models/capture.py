@@ -4,11 +4,15 @@ This includes the ``label:body`` capture operator, annotation references like ``
 
 from __future__ import annotations
 
-from typing import Annotated, Literal, Union
+from typing import TYPE_CHECKING, Annotated, Literal, Union
 
 from pydantic import Field
 
 from bcql_py.models.base import BCQLNode
+
+
+if TYPE_CHECKING:
+    from bcql_py.models.union import BCQLNodeUnion
 
 
 __all__ = [
@@ -37,7 +41,7 @@ class CaptureNode(BCQLNode):
 
     node_type: Literal["capture"] = "capture"
     label: str = Field(description="Capture group name")
-    body: BCQLNode = Field(description="Sub-query to capture.")
+    body: BCQLNodeUnion = Field(description="Sub-query to capture.")
 
     def to_bcql(self) -> str:
         return f"{self.label}:{self.body.to_bcql()}"
@@ -218,7 +222,7 @@ class GlobalConstraintNode(BCQLNode):
     """
 
     node_type: Literal["global_constraint"] = "global_constraint"
-    body: BCQLNode = Field(description="Main query containing captures.")
+    body: BCQLNodeUnion = Field(description="Main query containing captures.")
     constraint: CaptureConstraintExpr = Field(
         description="Constraint expression."
     )

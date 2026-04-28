@@ -1,5 +1,5 @@
 import pytest
-from conftest import round_trip_test
+from conftest import json_round_trip_test, round_trip_test
 
 
 ROUND_TRIP_TESTS = {
@@ -37,3 +37,15 @@ ROUND_TRIP_TESTS = {
 @pytest.mark.parametrize("source", ROUND_TRIP_TESTS)
 def test_round_trip(source):
     round_trip_test(source)
+
+
+@pytest.mark.parametrize("source", ROUND_TRIP_TESTS)
+def test_json_round_trip(source):
+    """JSON serialization must be lossless across the full discriminated union.
+
+    This is the regression net for the ``BCQLNodeUnion`` discriminated union:
+    every field annotated with the union must serialize its concrete subclass
+    fully (no collapsed ``{}`` from abstract-base annotations) and reconstruct
+    to a structurally equal AST when validated back through ``TypeAdapter``.
+    """
+    json_round_trip_test(source)

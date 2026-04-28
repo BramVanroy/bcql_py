@@ -7,11 +7,18 @@ sequence level, and the ``_`` underscore used in relation queries where applicab
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import Field
 
 from bcql_py.models.base import BCQLNode
+
+
+if TYPE_CHECKING:
+    # Imported only for static type-checking. At runtime the annotations are
+    # strings (``from __future__ import annotations``); the real union is
+    # resolved by ``model_rebuild`` from inside [models/union.py](union.py).
+    from bcql_py.models.union import BCQLNodeUnion
 
 
 __all__ = [
@@ -33,7 +40,7 @@ class SequenceNode(BCQLNode):
     """
 
     node_type: Literal["sequence"] = "sequence"
-    children: list[BCQLNode] = Field(
+    children: list[BCQLNodeUnion] = Field(
         min_length=2, description="Ordered child nodes."
     )
 
@@ -56,7 +63,7 @@ class RepetitionNode(BCQLNode):
     """
 
     node_type: Literal["repetition"] = "repetition"
-    child: BCQLNode = Field(description="The sub-query to repeat")
+    child: BCQLNodeUnion = Field(description="The sub-query to repeat")
     min_count: int = Field(ge=0, description="Minimum repetitions (inclusive)")
     max_count: int | None = Field(
         default=None,
@@ -96,7 +103,7 @@ class GroupNode(BCQLNode):
     """
 
     node_type: Literal["group"] = "group"
-    child: BCQLNode = Field(description="The inner sub-query")
+    child: BCQLNodeUnion = Field(description="The inner sub-query")
 
     def to_bcql(self) -> str:
         return f"({self.child.to_bcql()})"
@@ -117,8 +124,8 @@ class SequenceBoolNode(BCQLNode):
 
     node_type: Literal["sequence_bool"] = "sequence_bool"
     operator: Literal["&", "|", "->"] = Field(description="Boolean operator.")
-    left: BCQLNode = Field(description="Left operand.")
-    right: BCQLNode = Field(description="Right operand.")
+    left: BCQLNodeUnion = Field(description="Left operand.")
+    right: BCQLNodeUnion = Field(description="Right operand.")
 
     def to_bcql(self) -> str:
         return f"{self.left.to_bcql()} {self.operator} {self.right.to_bcql()}"
@@ -137,7 +144,7 @@ class NegationNode(BCQLNode):
     """
 
     node_type: Literal["negation"] = "negation"
-    child: BCQLNode = Field(description="The sub-query to negate.")
+    child: BCQLNodeUnion = Field(description="The sub-query to negate.")
 
     def to_bcql(self) -> str:
         return f"!{self.child.to_bcql()}"
