@@ -2,102 +2,102 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/quickstart/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/exceptions/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/top_level/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/models/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/models/alignment/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/models/base/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/models/capture/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/models/function/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/models/lookaround/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/models/relation/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/models/sequence/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/models/span/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/models/token/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/parser/lexer/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/parser/parser/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/api/parser/tokens/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/guides/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/guides/ast-design/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/guides/cheatsheet/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/guides/llm-workflows/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/guides/misc/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/guides/parallel/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/guides/relations/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://bramvanroy.github.io/bcql_py/guides/tokens/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
 </urlset>

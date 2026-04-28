@@ -1369,6 +1369,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#bcql_py.parser.tokens.display_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;display_type
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bcql_py.parser.tokens.display_token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;display_token
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1441,6 +1463,28 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Token
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bcql_py.parser.tokens.display_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;display_type
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bcql_py.parser.tokens.display_token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;display_token
       
     </span>
   </a>
@@ -1604,6 +1648,170 @@
 
 </div>
 
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="bcql_py.parser.tokens.display_type" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">display_type</span>
+
+
+<a href="#bcql_py.parser.tokens.display_type" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">display_type</span><span class="p">(</span><span class="n">ttype</span><span class="p">:</span> <span class="n">TokenType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return a user-friendly representation of a <code>TokenType</code> for error messages.</p>
+<p>Concrete punctuation and keywords are shown quoted (e.g. <code>"']'"</code>, <code>"'within'"</code>); literal
+categories are shown as a bare word (e.g. <code>"string"</code>, <code>"identifier"</code>). Falls back to the
+internal name if a future <code>TokenType</code> is added without a display entry.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>ttype</code>
+            </td>
+            <td>
+                  <code><span title="bcql_py.parser.tokens.TokenType">TokenType</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The token type to format.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A short, human-readable label suitable for inclusion in a syntax error message.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p class="doc-source-link">
+      <a href="https://github.com/BramVanroy/bcql_py/blob/main/src/bcql_py/parser/tokens.py#L164-L177" target="_blank" rel="noopener">
+        View source on GitHub: <code>src/bcql_py/parser/tokens.py</code> lines 164–177
+      </a>
+    </p>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="bcql_py.parser.tokens.display_token" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">display_token</span>
+
+
+<a href="#bcql_py.parser.tokens.display_token" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">display_token</span><span class="p">(</span><span class="n">tok</span><span class="p">:</span> <span class="s1">&#39;Token&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return a user-friendly representation of a concrete <code>Token</code> for error messages.</p>
+<p>For category tokens (string, identifier, integer) the actual value is appended so the user can
+see what they typed (<code>"identifier 'word'"</code>). For symbols and keywords the raw value is shown
+quoted (<code>"'['"</code>). <code>EOF</code> becomes <code>"end of input"</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>tok</code>
+            </td>
+            <td>
+                  <code>&#39;Token&#39;</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The token to format.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A short, human-readable description of the token, suitable for <code>"got X"</code> clauses</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p class="doc-source-link">
+      <a href="https://github.com/BramVanroy/bcql_py/blob/main/src/bcql_py/parser/tokens.py#L180-L202" target="_blank" rel="noopener">
+        View source on GitHub: <code>src/bcql_py/parser/tokens.py</code> lines 180–202
+      </a>
+    </p>
+    </div>
+
+</div>
 
 
 
