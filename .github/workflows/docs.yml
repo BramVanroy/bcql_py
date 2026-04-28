@@ -12,7 +12,11 @@ on:
       - 'scripts/**'
       - 'pyproject.toml'
       - 'mkdocs.yml'
-
+# Cancel any in-progress docs deploy for the same branch when a new push arrives.
+concurrency:
+  group: {% raw %}${{ github.workflow }}-${{ github.ref }}{% endraw %}
+  cancel-in-progress: true
+  
 permissions:
   contents: write
 
