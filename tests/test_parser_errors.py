@@ -178,6 +178,62 @@ class TestTokenRepr:
         assert "pos=5" in repr(tok)
 
 
+class TestFriendlyErrorMessages:
+    """Error messages should reference user-visible characters rather than internal TokenType names.
+
+    The user types ``]``, not ``RBRACKET``; ``EOF`` is shown as ``end of input``; concrete-value
+    tokens (``IDENTIFIER``, ``INTEGER``, ``STRING``) are shown with their actual value.
+    """
+
+    def test_missing_rbracket_shows_character(self):
+        """Missing ``]`` should be surfaced as ``']'``, not ``RBRACKET``."""
+        with pytest.raises(BCQLSyntaxError) as exc_info:
+            parse('[word="a"')
+        msg = str(exc_info.value)
+        assert "RBRACKET" not in msg
+        assert "']'" in msg
+
+    def test_missing_rparen_shows_character(self):
+        """Missing ``)`` should be surfaced as ``')'``, not ``RPAREN``."""
+        with pytest.raises(BCQLSyntaxError) as exc_info:
+            parse('meet("a", "b"')
+        msg = str(exc_info.value)
+        assert "RPAREN" not in msg
+        assert "')'" in msg
+
+    def test_eof_shown_as_end_of_input(self):
+        """``EOF`` should be surfaced as ``end of input``."""
+        with pytest.raises(BCQLSyntaxError) as exc_info:
+            parse('[word="a"')
+        msg = str(exc_info.value)
+        assert "EOF" not in msg
+        assert "end of input" in msg
+
+    def test_integer_value_in_message(self):
+        """An unexpected integer should mention its value, not just ``INTEGER``."""
+        with pytest.raises(BCQLSyntaxError) as exc_info:
+            parse("[42]")
+        msg = str(exc_info.value)
+        assert "INTEGER" not in msg
+        assert "integer '42'" in msg
+
+    def test_identifier_value_in_message(self):
+        """An unexpected identifier should mention its value, not just ``IDENTIFIER``."""
+        with pytest.raises(BCQLSyntaxError) as exc_info:
+            parse("foo bar)")
+        msg = str(exc_info.value)
+        assert "IDENTIFIER" not in msg
+        assert "identifier 'foo'" in msg
+
+    def test_symbol_token_shows_character(self):
+        """Symbol tokens like ``<`` should be shown as ``'<'``, not ``LT``."""
+        with pytest.raises(BCQLSyntaxError) as exc_info:
+            parse('[word="a"] :: <')
+        msg = str(exc_info.value)
+        assert " LT " not in msg
+        assert "'<'" in msg
+
+
 class TestParseFromTokens:
     """The parse_from_tokens convenience function."""
 

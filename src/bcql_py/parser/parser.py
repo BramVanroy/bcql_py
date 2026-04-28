@@ -55,7 +55,7 @@ from bcql_py.models.token import (
     StringValue,
     TokenQuery,
 )
-from bcql_py.parser.tokens import BOOL_OPS, CMP_OPS, Token, TokenType
+from bcql_py.parser.tokens import BOOL_OPS, CMP_OPS, Token, TokenType, display_token, display_type
 
 
 class BCQLParser:
@@ -135,7 +135,7 @@ class BCQLParser:
         if tok.type != ttype:
             ctx = f" {context}" if context else ""
             raise BCQLSyntaxError(
-                f"Expected {ttype.name}{ctx}, got {tok.type.name} ({tok.value!r})",
+                f"Expected {display_type(ttype)}{ctx}, got {display_token(tok)}",
                 bcql_query=self._source,
                 error_position=tok.position,
             )
@@ -563,7 +563,7 @@ class BCQLParser:
         if tok.type in (TokenType.STRING, TokenType.LITERAL_STRING):
             self._advance()
             return StringValue(value=tok.value, is_literal=(tok.type == TokenType.LITERAL_STRING))
-        raise self._raise_error(f"Expected tag name, got {tok.type.name} ({tok.value!r})")
+        raise self._raise_error(f"Expected tag name, got {display_token(tok)}")
 
     def _parse_tag_attributes(self) -> dict[str, StringValue]:
         """Parse zero or more tag attributes: ``name="value"``.
@@ -726,7 +726,7 @@ class BCQLParser:
         if tok.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.LPAREN:
             return self._parse_function_call()
 
-        raise self._raise_error(f"Expected a token query, string, '(', or '_', got {tok.type.name} ({tok.value!r})")
+        raise self._raise_error(f"Expected a token query, string, '(', or '_', got {display_token(tok)}")
 
     def _parse_root_relation(self) -> RootRelationNode:
         """``root_rel := '^' '-' IDENT? '->' rel_align``
@@ -942,7 +942,7 @@ class BCQLParser:
         # Identifier-led alternatives
         if tok.type != TokenType.IDENTIFIER:
             raise self._raise_error(
-                f"Expected annotation name or '(' inside token constraint, got {tok.type.name} ({tok.value!r})"
+                f"Expected annotation name or '(' inside token constraint, got {display_token(tok)}"
             )
 
         ident_tok = self._advance()
@@ -966,7 +966,7 @@ class BCQLParser:
 
         raise self._raise_error(
             f"Expected a comparison operator or '(' after annotation name {annotation!r}, "
-            f"got {self._current_token.type.name} ({self._current_token.value!r})"
+            f"got {display_token(self._current_token)}"
         )
 
     def _parse_annotation_value(self, annotation: str, operator: str) -> AnnotationConstraint:
@@ -989,7 +989,7 @@ class BCQLParser:
         if tok.type not in (TokenType.STRING, TokenType.LITERAL_STRING):
             raise self._raise_error(
                 f"Expected a string delimited by single or double quotes after {annotation!r}{operator},"
-                f" got {tok.type.name} ({tok.value!r})"
+                f" got {display_token(tok)}"
             )
         self._advance()
         sv = StringValue(
@@ -1178,7 +1178,7 @@ class BCQLParser:
             return AnnotationRef(label=ident_tok.value, annotation="")
 
         raise self._raise_error(
-            f"Expected a string, identifier, integer, or '(' in capture constraint, got {tok.type.name} ({tok.value!r})"
+            f"Expected a string, identifier, integer, or '(' in capture constraint, got {display_token(tok)}"
         )
 
     def _parse_cc_function_call(self, name: str) -> ConstraintFunctionCall:
@@ -1220,7 +1220,7 @@ class BCQLParser:
         if tok.type not in (TokenType.STRING, TokenType.LITERAL_STRING):
             ctx = f" {context}" if context else ""
             raise self._raise_error(
-                f"Expected a string delimited by single or double quotes {ctx}, got {tok.type.name} ({tok.value!r})"
+                f"Expected a string delimited by single or double quotes {ctx}, got {display_token(tok)}"
             )
         self._advance()
         return StringValue(value=tok.value, is_literal=(tok.type == TokenType.LITERAL_STRING))
