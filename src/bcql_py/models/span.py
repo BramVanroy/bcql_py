@@ -31,10 +31,15 @@ class SpanQuery(BCQLNode):
     """
 
     node_type: Literal["span_query"] = "span_query"
-    tag_name: str | StringValue = Field(description="Tag name (plain string or StringValue for regex).")
-    position: Literal["whole", "start", "end"] = Field(description="Which part of the span to match.")
+    tag_name: str | StringValue = Field(
+        description="Tag name (plain string or StringValue for regex)."
+    )
+    position: Literal["whole", "start", "end"] = Field(
+        description="Which part of the span to match."
+    )
     attributes: dict[str, StringValue] = Field(
-        default_factory=dict, description="XML attributes as name: StringValue pairs."
+        default_factory=dict,
+        description="XML attributes as name: StringValue pairs.",
     )
 
     @property
@@ -47,7 +52,9 @@ class SpanQuery(BCQLNode):
     def attrs_str(self) -> str:
         if not self.attributes:
             return ""
-        return "".join(f" {k}={v.to_bcql()}" for k, v in self.attributes.items())
+        return "".join(
+            f" {k}={v.to_bcql()}" for k, v in self.attributes.items()
+        )
 
     def to_bcql(self) -> str:
         tag = self.tag_str

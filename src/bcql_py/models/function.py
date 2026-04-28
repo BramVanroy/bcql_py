@@ -34,5 +34,7 @@ class FunctionCallNode(BCQLNode):
             elif isinstance(arg, BCQLNode):
                 parts.append(arg.to_bcql())
             else:
-                raise ValueError(f"Invalid argument type: {type(arg)}. Expected (subclass of) BCQLNode or int.")
+                raise ValueError(
+                    f"Invalid argument type: {type(arg)}. Expected (subclass of) BCQLNode or int."
+                )
         return f"{self.name}({', '.join(parts)})"

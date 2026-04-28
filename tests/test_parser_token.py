@@ -62,12 +62,14 @@ class TestBareStringShorthand:
         """``"(run|walk)(s|ing)?"`` demonstrates regex alternation and optional suffixes."""
         node = parse('"(run|walk)(s|ing)?"')
         assert isinstance(node, TokenQuery)
+        assert node.shorthand is not None
         assert node.shorthand.value == "(run|walk)(s|ing)?"
 
     def test_case_sensitive_flag(self):
         """``"(?-i)Panama"`` keeps the case-sensitivity flag inside the stored string value."""
         node = parse('"(?-i)Panama"')
         assert isinstance(node, TokenQuery)
+        assert node.shorthand is not None
         assert node.shorthand.value == "(?-i)Panama"
 
     def test_round_trip_double_quoted(self):

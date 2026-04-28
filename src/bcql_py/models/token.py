@@ -40,8 +40,13 @@ class StringValue(BCQLNode):
     """
 
     node_type: Literal["string_value"] = "string_value"
-    value: str = Field(description="Raw string content (without surrounding quotes).")
-    is_literal: bool = Field(default=False, description="True if prefixed with 'l' (literal string).")
+    value: str = Field(
+        description="Raw string content (without surrounding quotes)."
+    )
+    is_literal: bool = Field(
+        default=False,
+        description="True if prefixed with 'l' (literal string).",
+    )
     sensitivity: Literal["default", "sensitive", "insensitive"] = Field(
         default="default",
         description="Matching sensitivity: 'default', 'sensitive' ((?-i)), or 'insensitive' ((?i)).",
@@ -73,8 +78,12 @@ class AnnotationConstraint(BCQLNode):
     """
 
     node_type: Literal["annotation_constraint"] = "annotation_constraint"
-    annotation: str = Field(description="Annotation name (e.g. 'word', 'lemma', 'pos').")
-    operator: Literal["=", "!=", "<", "<=", ">", ">="] = Field(description="Comparison operator.")
+    annotation: str = Field(
+        description="Annotation name (e.g. 'word', 'lemma', 'pos')."
+    )
+    operator: Literal["=", "!=", "<", "<=", ">", ">="] = Field(
+        description="Comparison operator."
+    )
     value: StringValue = Field(description="The value being compared against.")
 
     def to_bcql(self) -> str:
@@ -159,7 +168,9 @@ class BoolConstraint(BCQLNode):
     """
 
     node_type: Literal["bool_constraint"] = "bool_constraint"
-    operator: Literal["&", "|", "->"] = Field(description="Boolean operator: '&', '|', or '->'.")
+    operator: Literal["&", "|", "->"] = Field(
+        description="Boolean operator: '&', '|', or '->'."
+    )
     left: ConstraintExpr = Field(description="Left operand.")
     right: ConstraintExpr = Field(description="Right operand.")
 

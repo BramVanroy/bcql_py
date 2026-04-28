@@ -100,8 +100,12 @@ class TestCaseInsensitive:
 
     def test_case_insensitive_round_trips(self):
         """Round-trip normalises to lowercase."""
-        round_trip_test('"however" WITHIN <s/>', expected='"however" within <s/>')
-        round_trip_test('<s/> Containing "however"', expected='<s/> containing "however"')
+        round_trip_test(
+            '"however" WITHIN <s/>', expected='"however" within <s/>'
+        )
+        round_trip_test(
+            '<s/> Containing "however"', expected='<s/> containing "however"'
+        )
 
 
 class TestRightAssociativity:

@@ -2,7 +2,9 @@
 # BlackLab/query-parser/src/main/antlr4/nl/inl/blacklab/queryParser/corpusql/Bcql.g4
 # Allow for specifying a branch and optionally tag (otherwise latest commit)
 
-_DEFINITION_PATH = "query-parser/src/main/antlr4/nl/inl/blacklab/queryParser/corpusql/Bcql.g4"
+_DEFINITION_PATH = (
+    "query-parser/src/main/antlr4/nl/inl/blacklab/queryParser/corpusql/Bcql.g4"
+)
 from pathlib import Path
 
 
@@ -32,8 +34,18 @@ def entry_point():
     parser = argparse.ArgumentParser(
         description="Download the latest BCQL parser definition from Github and build with ANTLR."
     )
-    parser.add_argument("--branch", type=str, default="dev", help="The branch to download from (default: dev)")
-    parser.add_argument("--tag", type=str, default=None, help="The tag to download (default: latest commit)")
+    parser.add_argument(
+        "--branch",
+        type=str,
+        default="dev",
+        help="The branch to download from (default: dev)",
+    )
+    parser.add_argument(
+        "--tag",
+        type=str,
+        default=None,
+        help="The tag to download (default: latest commit)",
+    )
     args = parser.parse_args()
 
     main(branch=args.branch, tag=args.tag)

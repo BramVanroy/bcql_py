@@ -33,7 +33,9 @@ class SequenceNode(BCQLNode):
     """
 
     node_type: Literal["sequence"] = "sequence"
-    children: list[BCQLNode] = Field(min_length=2, description="Ordered child nodes.")
+    children: list[BCQLNode] = Field(
+        min_length=2, description="Ordered child nodes."
+    )
 
     def to_bcql(self) -> str:
         return " ".join(child.to_bcql() for child in self.children)

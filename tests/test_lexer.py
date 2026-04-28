@@ -7,8 +7,7 @@ from bcql_py.parser import BCQLLexer, Token, TokenType, tokenize
 def lex(source: str) -> tuple[Token, ...]:
     """Tokenize *source* and return tokens but excludes EOF for easier testing."""
     tokens = BCQLLexer(source).tokenize()
-    tokens = [token for token in tokens if token.type != TokenType.EOF]
-    return tuple(tokens)
+    return tuple(token for token in tokens if token.type != TokenType.EOF)
 
 
 class TestLexerReadOnlyState:
@@ -16,13 +15,13 @@ class TestLexerReadOnlyState:
         lexer = BCQLLexer("lemma")
 
         with pytest.raises(AttributeError):
-            lexer.source = "word"
+            setattr(lexer, "source", "word")
 
         with pytest.raises(AttributeError):
-            lexer.pos = 10
+            setattr(lexer, "pos", 10)
 
         with pytest.raises(AttributeError):
-            lexer.tokens = []
+            setattr(lexer, "tokens", ())
 
     def test_tokens_property_is_immutable(self):
         lexer = BCQLLexer("lemma")
@@ -409,7 +408,9 @@ class TestLexerErrors:
             BCQLLexer("-").tokenize()
 
     def test_unexpected_caret_alone(self):
-        with pytest.raises(BCQLSyntaxError, match="Unexpected character '\\^'"):
+        with pytest.raises(
+            BCQLSyntaxError, match="Unexpected character '\\^'"
+        ):
             BCQLLexer("^").tokenize()
 
     def test_unexpected_character(self):
@@ -421,7 +422,9 @@ class TestLexerErrors:
         NOTE: this is allowed by the g4 grammar but seems semantically questionable.
         Alignment relations do not have a "root"
         """
-        with pytest.raises(BCQLSyntaxError, match="Unexpected character '\\^'"):
+        with pytest.raises(
+            BCQLSyntaxError, match="Unexpected character '\\^'"
+        ):
             BCQLLexer("^==>").tokenize()
 
     def test_unterminated_arrow(self):

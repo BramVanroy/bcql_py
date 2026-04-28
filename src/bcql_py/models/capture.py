@@ -20,6 +20,7 @@ __all__ = [
     "ConstraintNot",
     "ConstraintInteger",
     "ConstraintFunctionCall",
+    "CaptureConstraintExpr",
     "GlobalConstraintNode",
 ]
 
@@ -56,7 +57,9 @@ class AnnotationRef(BCQLNode):
 
     node_type: Literal["annotation_ref"] = "annotation_ref"
     label: str = Field(description="Capture group name")
-    annotation: str = Field(default="", description="Annotation name, or empty for a bare label.")
+    annotation: str = Field(
+        default="", description="Annotation name, or empty for a bare label."
+    )
 
     def to_bcql(self) -> str:
         if self.annotation:
@@ -76,7 +79,9 @@ class ConstraintLiteral(BCQLNode):
 
     node_type: Literal["constraint_literal"] = "constraint_literal"
     value: str = Field(description="Literal string value.")
-    quote_char: Literal['"', "'"] = Field(default='"', description="Quote character.")
+    quote_char: Literal['"', "'"] = Field(
+        default='"', description="Quote character."
+    )
 
     def to_bcql(self) -> str:
         return f"{self.quote_char}{self.value}{self.quote_char}"
@@ -95,7 +100,9 @@ class ConstraintComparison(BCQLNode):
     """
 
     node_type: Literal["constraint_comparison"] = "constraint_comparison"
-    operator: Literal["=", "!=", "<", "<=", ">", ">="] = Field(description="Comparison operator.")
+    operator: Literal["=", "!=", "<", "<=", ">", ">="] = Field(
+        description="Comparison operator."
+    )
     left: CaptureConstraintExpr = Field(description="Left operand.")
     right: CaptureConstraintExpr = Field(description="Right operand.")
 
@@ -169,7 +176,9 @@ class ConstraintFunctionCall(BCQLNode):
 
     node_type: Literal["constraint_function_call"] = "constraint_function_call"
     name: str = Field(description="Function name.")
-    args: list[CaptureConstraintExpr] = Field(description="Function arguments.")
+    args: list[CaptureConstraintExpr] = Field(
+        description="Function arguments."
+    )
 
     def to_bcql(self) -> str:
         args_str = ", ".join(a.to_bcql() for a in self.args)
@@ -210,7 +219,9 @@ class GlobalConstraintNode(BCQLNode):
 
     node_type: Literal["global_constraint"] = "global_constraint"
     body: BCQLNode = Field(description="Main query containing captures.")
-    constraint: CaptureConstraintExpr = Field(description="Constraint expression.")
+    constraint: CaptureConstraintExpr = Field(
+        description="Constraint expression."
+    )
 
     def to_bcql(self) -> str:
         return f"{self.body.to_bcql()} :: {self.constraint.to_bcql()}"

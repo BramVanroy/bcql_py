@@ -181,7 +181,9 @@ class CorpusSpec(BaseModel):
         """
         updates: dict[str, Any] = {}
         if open_attributes is not None:
-            updates["open_attributes"] = self.open_attributes | frozenset(open_attributes)
+            updates["open_attributes"] = self.open_attributes | frozenset(
+                open_attributes
+            )
         if closed_attributes is not None:
             merged = dict(self.closed_attributes)
             for key, values in closed_attributes.items():
@@ -189,18 +191,26 @@ class CorpusSpec(BaseModel):
             updates["closed_attributes"] = merged
         if allowed_span_tags is not None:
             base_tags = self.allowed_span_tags or frozenset()
-            updates["allowed_span_tags"] = base_tags | frozenset(allowed_span_tags)
+            updates["allowed_span_tags"] = base_tags | frozenset(
+                allowed_span_tags
+            )
         if allowed_span_attributes is not None:
             merged_attrs = dict(self.allowed_span_attributes or {})
             for key, values in allowed_span_attributes.items():
-                merged_attrs[key] = merged_attrs.get(key, frozenset()) | frozenset(values)
+                merged_attrs[key] = merged_attrs.get(
+                    key, frozenset()
+                ) | frozenset(values)
             updates["allowed_span_attributes"] = merged_attrs
         if allowed_alignment_fields is not None:
             base_fields = self.allowed_alignment_fields or frozenset()
-            updates["allowed_alignment_fields"] = base_fields | frozenset(allowed_alignment_fields)
+            updates["allowed_alignment_fields"] = base_fields | frozenset(
+                allowed_alignment_fields
+            )
         if allowed_relations is not None:
             base_rels = self.allowed_relations or frozenset()
-            updates["allowed_relations"] = base_rels | frozenset(allowed_relations)
+            updates["allowed_relations"] = base_rels | frozenset(
+                allowed_relations
+            )
         if strict_attributes is not None:
             updates["strict_attributes"] = strict_attributes
         if allow_alignment is not None:
@@ -245,7 +255,9 @@ class CorpusSpec(BaseModel):
             False
         """
 
-        def _union_optional(a: frozenset[str] | None, b: frozenset[str] | None) -> frozenset[str] | None:
+        def _union_optional(
+            a: frozenset[str] | None, b: frozenset[str] | None
+        ) -> frozenset[str] | None:
             """Union two ``frozenset[str] | None`` fields under "restriction beats None".
 
             Used for the nullable frozenset fields only (``allowed_span_tags``,
@@ -259,23 +271,35 @@ class CorpusSpec(BaseModel):
         for key, values in other.closed_attributes.items():
             merged_closed[key] = merged_closed.get(key, frozenset()) | values
 
-        if self.allowed_span_attributes is None and other.allowed_span_attributes is None:
+        if (
+            self.allowed_span_attributes is None
+            and other.allowed_span_attributes is None
+        ):
             merged_span_attrs: dict[str, frozenset[str]] | None = None
         else:
             merged_span_attrs = dict(self.allowed_span_attributes or {})
             for key, values in (other.allowed_span_attributes or {}).items():
-                merged_span_attrs[key] = merged_span_attrs.get(key, frozenset()) | values
+                merged_span_attrs[key] = (
+                    merged_span_attrs.get(key, frozenset()) | values
+                )
 
         return CorpusSpec(
             open_attributes=self.open_attributes | other.open_attributes,
             closed_attributes=merged_closed,
-            strict_attributes=self.strict_attributes or other.strict_attributes,
-            allowed_span_tags=_union_optional(self.allowed_span_tags, other.allowed_span_tags),
+            strict_attributes=self.strict_attributes
+            or other.strict_attributes,
+            allowed_span_tags=_union_optional(
+                self.allowed_span_tags, other.allowed_span_tags
+            ),
             allowed_span_attributes=merged_span_attrs,
             allow_alignment=self.allow_alignment and other.allow_alignment,
-            allowed_alignment_fields=_union_optional(self.allowed_alignment_fields, other.allowed_alignment_fields),
+            allowed_alignment_fields=_union_optional(
+                self.allowed_alignment_fields, other.allowed_alignment_fields
+            ),
             allow_relations=self.allow_relations and other.allow_relations,
-            allowed_relations=_union_optional(self.allowed_relations, other.allowed_relations),
+            allowed_relations=_union_optional(
+                self.allowed_relations, other.allowed_relations
+            ),
         )
 
     def has_annotation(self, name: str) -> bool:

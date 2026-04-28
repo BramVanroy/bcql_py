@@ -18,6 +18,7 @@ from pygments import highlight as pyg_highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import PythonLexer
 
+
 _lexer = PythonLexer()
 _formatter = HtmlFormatter(nowrap=True)
 
@@ -66,9 +67,7 @@ def on_page_content(html: str, **kwargs) -> str:
         inner = pyg_highlight(clean, _lexer, _formatter)
         return (
             '<div class="language-python highlight">'
-            "<pre><span></span><code>"
-            + inner
-            + "</code></pre></div>"
+            "<pre><span></span><code>" + inner + "</code></pre></div>"
         )
 
     return re.sub(

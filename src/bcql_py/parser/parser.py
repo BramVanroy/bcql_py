@@ -15,10 +15,15 @@ from typing import Sequence
 __all__ = ["BCQLParser"]
 
 from bcql_py.exceptions import BCQLSyntaxError
-from bcql_py.models.alignment import AlignmentConstraint, AlignmentNode, AlignmentOperator
+from bcql_py.models.alignment import (
+    AlignmentConstraint,
+    AlignmentNode,
+    AlignmentOperator,
+)
 from bcql_py.models.base import BCQLNode
 from bcql_py.models.capture import (
     AnnotationRef,
+    CaptureConstraintExpr,
     CaptureNode,
     ConstraintBoolean,
     ConstraintComparison,
@@ -55,7 +60,14 @@ from bcql_py.models.token import (
     StringValue,
     TokenQuery,
 )
-from bcql_py.parser.tokens import BOOL_OPS, CMP_OPS, Token, TokenType, display_token, display_type
+from bcql_py.parser.tokens import (
+    BOOL_OPS,
+    CMP_OPS,
+    Token,
+    TokenType,
+    display_token,
+    display_type,
+)
 
 
 class BCQLParser:
@@ -77,9 +89,13 @@ class BCQLParser:
         if not self._tokens:
             raise BCQLSyntaxError("No tokens to parse", bcql_query=source)
         if self._tokens[-1].type != TokenType.EOF:
-            raise BCQLSyntaxError("Token list must end with EOF", bcql_query=source)
+            raise BCQLSyntaxError(
+                "Token list must end with EOF", bcql_query=source
+            )
         if sum(1 for t in self._tokens if t.type == TokenType.EOF) > 1:
-            raise BCQLSyntaxError("Token list must contain exactly one EOF", bcql_query=source)
+            raise BCQLSyntaxError(
+                "Token list must contain exactly one EOF", bcql_query=source
+            )
 
     @property
     def source(self) -> str:
@@ -97,7 +113,7 @@ class BCQLParser:
     def ast(self) -> BCQLNode:
         """Parse the token stream and return the root AST node."""
         if self._ast is None:
-            self.parse()
+            return self.parse()
         return self._ast
 
     @property
@@ -143,7 +159,11 @@ class BCQLParser:
 
     def _raise_error(self, msg: str) -> BCQLSyntaxError:
         """Build a ``BCQLSyntaxError`` pointing at the current token."""
-        return BCQLSyntaxError(msg, bcql_query=self._source, error_position=self._current_token.position)
+        return BCQLSyntaxError(
+            msg,
+            bcql_query=self._source,
+            error_position=self._current_token.position,
+        )
 
     def parse(self, force_reparse: bool = False) -> BCQLNode:
         """Parse the token stream and return the root AST node. Sets ``self._ast`` to the result for caching.
@@ -166,7 +186,9 @@ class BCQLParser:
         node = self._parse_global_constraint()
         if not self._current_token_is_oneof(TokenType.EOF):
             tok = self._current_token
-            raise self._raise_error(f"Unexpected token {tok.value!r} after end of query")
+            raise self._raise_error(
+                f"Unexpected token {tok.value!r} after end of query"
+            )
         self._ast = node
         return node
 
@@ -209,7 +231,9 @@ class BCQLParser:
         if self._current_token.type in self._FILTER_OPS:
             op_tok = self._advance()
             right = self._parse_pos_filter()  # right-recursive
-            return PositionFilterNode(operator=op_tok.value.lower(), left=left, right=right)
+            return PositionFilterNode(
+                operator=op_tok.value.lower(), left=left, right=right
+            )
 
         return left
 
@@ -262,14 +286,23 @@ class BCQLParser:
         if tok.type == TokenType.REL_LINE:
             return True
         # Negated arrow: !-type->
-        if tok.type == TokenType.BANG and self._peek(1).type == TokenType.REL_LINE:
+        if (
+            tok.type == TokenType.BANG
+            and self._peek(1).type == TokenType.REL_LINE
+        ):
             return True
         # Capture label prefix: label:-type-> or label:!-type->
-        if tok.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.COLON:
+        if (
+            tok.type == TokenType.IDENTIFIER
+            and self._peek(1).type == TokenType.COLON
+        ):
             after_colon = self._peek(2).type
             if after_colon == TokenType.REL_LINE:
                 return True
-            if after_colon == TokenType.BANG and self._peek(3).type == TokenType.REL_LINE:
+            if (
+                after_colon == TokenType.BANG
+                and self._peek(3).type == TokenType.REL_LINE
+            ):
                 return True
         return False
 
@@ -284,7 +317,10 @@ class BCQLParser:
             A ``ChildConstraint``.
         """
         label = None
-        if self._current_token.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.COLON:
+        if (
+            self._current_token.type == TokenType.IDENTIFIER
+            and self._peek(1).type == TokenType.COLON
+        ):
             label = self._advance().value
             self._advance()  # consume ':'
 
@@ -316,7 +352,10 @@ class BCQLParser:
         self._expect(TokenType.REL_ARROW, "in relation arrow")
 
         target_field = None
-        if self._current_token.type == TokenType.IDENTIFIER and not self._starts_child_relation():
+        if (
+            self._current_token.type == TokenType.IDENTIFIER
+            and not self._starts_child_relation()
+        ):
             # Only consume IDENT as target field if it's not the start of IDENT ':' (a capture label
             # for the next child relation). We need this check because in ``_ -obj->field A:-amod-> _``
             # the IDENT after ``->`` is a target field only if it's NOT followed by ``:``.
@@ -324,7 +363,11 @@ class BCQLParser:
             if self._peek(1).type != TokenType.COLON:
                 target_field = self._advance().value
 
-        return RelationOperator(relation_type=relation_type, negated=negated, target_field=target_field)
+        return RelationOperator(
+            relation_type=relation_type,
+            negated=negated,
+            target_field=target_field,
+        )
 
     def _starts_alignment(self) -> bool:
         """Check if the current position begins an alignment arrow.
@@ -338,7 +381,10 @@ class BCQLParser:
         tok = self._current_token
         if tok.type == TokenType.ALIGN_LINE:
             return True
-        if tok.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.COLON:
+        if (
+            tok.type == TokenType.IDENTIFIER
+            and self._peek(1).type == TokenType.COLON
+        ):
             return self._peek(2).type == TokenType.ALIGN_LINE
         return False
 
@@ -352,7 +398,10 @@ class BCQLParser:
             An ``AlignmentConstraint``.
         """
         capture_name = None
-        if self._current_token.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.COLON:
+        if (
+            self._current_token.type == TokenType.IDENTIFIER
+            and self._peek(1).type == TokenType.COLON
+        ):
             capture_name = self._advance().value
             self._advance()  # consume ':'
 
@@ -360,7 +409,9 @@ class BCQLParser:
         target = self._parse_rel_align()
         return AlignmentConstraint(operator=operator, target=target)
 
-    def _parse_alignment_operator(self, capture_name: str | None = None) -> AlignmentOperator:
+    def _parse_alignment_operator(
+        self, capture_name: str | None = None
+    ) -> AlignmentOperator:
         """``align_op := '=' IDENT? '=>' IDENT '?'?``
 
         Parses the alignment operator tokens from the lexer decomposition:
@@ -380,7 +431,9 @@ class BCQLParser:
 
         self._expect(TokenType.ALIGN_ARROW, "in alignment arrow")
 
-        target_field_tok = self._expect(TokenType.IDENTIFIER, "as target field after '=>'")
+        target_field_tok = self._expect(
+            TokenType.IDENTIFIER, "as target field after '=>'"
+        )
         target_field = target_field_tok.value
 
         optional = False
@@ -438,11 +491,17 @@ class BCQLParser:
             return self._peek(1).type != TokenType.REL_LINE
 
         # IDENT ':' followed by a relation/alignment arrow component is a child relation/alignment label
-        if tok.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.COLON:
+        if (
+            tok.type == TokenType.IDENTIFIER
+            and self._peek(1).type == TokenType.COLON
+        ):
             after_colon = self._peek(2).type
             if after_colon in (TokenType.REL_LINE, TokenType.ALIGN_LINE):
                 return False
-            if after_colon == TokenType.BANG and self._peek(3).type == TokenType.REL_LINE:
+            if (
+                after_colon == TokenType.BANG
+                and self._peek(3).type == TokenType.REL_LINE
+            ):
                 return False
 
         return self._current_token_is_oneof(
@@ -497,7 +556,10 @@ class BCQLParser:
         Returns:
             A ``CaptureNode`` when a label is present, otherwise delegates to ``_parse_span``.
         """
-        if self._current_token.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.COLON:
+        if (
+            self._current_token.type == TokenType.IDENTIFIER
+            and self._peek(1).type == TokenType.COLON
+        ):
             label_tok = self._advance()
             self._advance()  # consume ':'
             body = self._parse_capture()
@@ -533,7 +595,9 @@ class BCQLParser:
             self._advance()
             tag_name = self._parse_tag_name()
             self._expect(TokenType.GT, "at end of closing tag")
-            return self._apply_node_repetition(SpanQuery(tag_name=tag_name, position="end"))
+            return self._apply_node_repetition(
+                SpanQuery(tag_name=tag_name, position="end")
+            )
 
         # Start or whole tag: <tag_name attr* > or <tag_name attr* />
         if self._current_token.type == TokenType.LT:
@@ -542,10 +606,14 @@ class BCQLParser:
             attributes = self._parse_tag_attributes()
             if self._current_token.type == TokenType.SLASH_GT:
                 self._advance()
-                node = SpanQuery(tag_name=tag_name, position="whole", attributes=attributes)
+                node = SpanQuery(
+                    tag_name=tag_name, position="whole", attributes=attributes
+                )
                 return self._apply_node_repetition(node)
             self._expect(TokenType.GT, "at end of opening tag")
-            node = SpanQuery(tag_name=tag_name, position="start", attributes=attributes)
+            node = SpanQuery(
+                tag_name=tag_name, position="start", attributes=attributes
+            )
             return self._apply_node_repetition(node)
 
         return self._parse_repetition()
@@ -562,7 +630,10 @@ class BCQLParser:
             return tok.value
         if tok.type in (TokenType.STRING, TokenType.LITERAL_STRING):
             self._advance()
-            return StringValue(value=tok.value, is_literal=(tok.type == TokenType.LITERAL_STRING))
+            return StringValue(
+                value=tok.value,
+                is_literal=(tok.type == TokenType.LITERAL_STRING),
+            )
         raise self._raise_error(f"Expected tag name, got {display_token(tok)}")
 
     def _parse_tag_attributes(self) -> dict[str, StringValue]:
@@ -576,8 +647,12 @@ class BCQLParser:
         attrs: dict[str, StringValue] = {}
         while self._current_token.type == TokenType.IDENTIFIER:
             name_tok = self._advance()
-            self._expect(TokenType.EQ, f"after attribute name {name_tok.value!r}")
-            value = self._parse_string_value(f"as value for attribute {name_tok.value!r}")
+            self._expect(
+                TokenType.EQ, f"after attribute name {name_tok.value!r}"
+            )
+            value = self._parse_string_value(
+                f"as value for attribute {name_tok.value!r}"
+            )
             attrs[name_tok.value] = value
         return attrs
 
@@ -609,7 +684,12 @@ class BCQLParser:
         Returns:
             The node unchanged when no quantifier follows, or wrapped in ``RepetitionNode``(s).
         """
-        while self._current_token_is_oneof(TokenType.PLUS, TokenType.STAR, TokenType.QUESTION, TokenType.LBRACE):
+        while self._current_token_is_oneof(
+            TokenType.PLUS,
+            TokenType.STAR,
+            TokenType.QUESTION,
+            TokenType.LBRACE,
+        ):
             tok = self._current_token
 
             if tok.type == TokenType.PLUS:
@@ -649,17 +729,25 @@ class BCQLParser:
         # {,m} - "up to m"
         if self._current_token.type == TokenType.COMMA:
             self._advance()
-            max_tok = self._expect(TokenType.INTEGER, "as upper bound in {,m} quantifier")
+            max_tok = self._expect(
+                TokenType.INTEGER, "as upper bound in {,m} quantifier"
+            )
             self._expect(TokenType.RBRACE, "at end of brace quantifier")
-            return RepetitionNode(child=child, min_count=0, max_count=int(max_tok.value))
+            return RepetitionNode(
+                child=child, min_count=0, max_count=int(max_tok.value)
+            )
 
-        min_tok = self._expect(TokenType.INTEGER, "as count in brace quantifier")
+        min_tok = self._expect(
+            TokenType.INTEGER, "as count in brace quantifier"
+        )
         min_val = int(min_tok.value)
 
         # {n} - exact count
         if self._current_token.type == TokenType.RBRACE:
             self._advance()
-            return RepetitionNode(child=child, min_count=min_val, max_count=min_val)
+            return RepetitionNode(
+                child=child, min_count=min_val, max_count=min_val
+            )
 
         # {n, ...
         self._expect(TokenType.COMMA, "in brace quantifier")
@@ -667,12 +755,18 @@ class BCQLParser:
         # {n,} - "n or more"
         if self._current_token.type == TokenType.RBRACE:
             self._advance()
-            return RepetitionNode(child=child, min_count=min_val, max_count=None)
+            return RepetitionNode(
+                child=child, min_count=min_val, max_count=None
+            )
 
         # {n,m} - range
-        max_tok = self._expect(TokenType.INTEGER, "as upper bound in {n,m} quantifier")
+        max_tok = self._expect(
+            TokenType.INTEGER, "as upper bound in {n,m} quantifier"
+        )
         self._expect(TokenType.RBRACE, "at end of brace quantifier")
-        return RepetitionNode(child=child, min_count=min_val, max_count=int(max_tok.value))
+        return RepetitionNode(
+            child=child, min_count=min_val, max_count=int(max_tok.value)
+        )
 
     def _parse_atom(self) -> BCQLNode:
         """``atom := '[' token_expr? ']' | STRING | '_' | '(' global_cst ')' | ...``
@@ -723,10 +817,15 @@ class BCQLParser:
             return self._parse_lookbehind()
 
         # Function call: IDENT '(' arg_list ')'
-        if tok.type == TokenType.IDENTIFIER and self._peek(1).type == TokenType.LPAREN:
+        if (
+            tok.type == TokenType.IDENTIFIER
+            and self._peek(1).type == TokenType.LPAREN
+        ):
             return self._parse_function_call()
 
-        raise self._raise_error(f"Expected a token query, string, '(', or '_', got {display_token(tok)}")
+        raise self._raise_error(
+            f"Expected a token query, string, '(', or '_', got {display_token(tok)}"
+        )
 
     def _parse_root_relation(self) -> RootRelationNode:
         """``root_rel := '^' '-' IDENT? '->' rel_align``
@@ -818,7 +917,9 @@ class BCQLParser:
         Returns:
             An ``int`` for bare integer arguments, or a ``BCQLNode`` for query arguments.
         """
-        if self._current_token.type == TokenType.INTEGER and self._peek(1).type in (
+        if self._current_token.type == TokenType.INTEGER and self._peek(
+            1
+        ).type in (
             TokenType.COMMA,
             TokenType.RPAREN,
         ):
@@ -959,7 +1060,10 @@ class BCQLParser:
             self._advance()
 
             # Integer range: ident '=' 'in' '[' INT ',' INT ']'
-            if op_type == TokenType.EQ and self._current_token.type == TokenType.IN:
+            if (
+                op_type == TokenType.EQ
+                and self._current_token.type == TokenType.IN
+            ):
                 return self._parse_integer_range_constraint(annotation)
 
             return self._parse_annotation_value(annotation, op_str)
@@ -969,7 +1073,9 @@ class BCQLParser:
             f"got {display_token(self._current_token)}"
         )
 
-    def _parse_annotation_value(self, annotation: str, operator: str) -> AnnotationConstraint:
+    def _parse_annotation_value(
+        self, annotation: str, operator: str
+    ) -> AnnotationConstraint:
         """Parse the string value after ``annotation <op>`` where op is any comparison operator.
 
         Handles both regular strings (``"man"``) and literal strings (``l"e.g."``). See ``token-based.md``
@@ -996,9 +1102,13 @@ class BCQLParser:
             value=tok.value,
             is_literal=(tok.type == TokenType.LITERAL_STRING),
         )
-        return AnnotationConstraint(annotation=annotation, operator=operator, value=sv)
+        return AnnotationConstraint(
+            annotation=annotation, operator=operator, value=sv
+        )
 
-    def _parse_integer_range_constraint(self, annotation: str) -> IntegerRangeConstraint:
+    def _parse_integer_range_constraint(
+        self, annotation: str
+    ) -> IntegerRangeConstraint:
         """Parse ``'in' '[' INT ',' INT ']'`` after ``annotation =``.
 
         Example: ``pos_confidence=in[50,100]``.
@@ -1011,9 +1121,13 @@ class BCQLParser:
         """
         self._expect(TokenType.IN, "in integer range constraint")
         self._expect(TokenType.LBRACKET, "in integer range constraint")
-        min_tok = self._expect(TokenType.INTEGER, "as lower bound of integer range")
+        min_tok = self._expect(
+            TokenType.INTEGER, "as lower bound of integer range"
+        )
         self._expect(TokenType.COMMA, "in integer range constraint")
-        max_tok = self._expect(TokenType.INTEGER, "as upper bound of integer range")
+        max_tok = self._expect(
+            TokenType.INTEGER, "as upper bound of integer range"
+        )
         self._expect(TokenType.RBRACKET, "in integer range constraint")
         return IntegerRangeConstraint(
             annotation=annotation,
@@ -1048,16 +1162,7 @@ class BCQLParser:
 
     # Capture-constraint grammar (after ::)
 
-    def _parse_cc_bool(
-        self,
-    ) -> (
-        ConstraintComparison
-        | ConstraintBoolean
-        | ConstraintNot
-        | ConstraintLiteral
-        | AnnotationRef
-        | ConstraintFunctionCall
-    ):
+    def _parse_cc_bool(self) -> CaptureConstraintExpr:
         """``cc_bool := cc_not | cc_bool ('&' | '|' | '->') cc_not``
 
         Left-associative boolean combination of capture constraints. Same precedence rules as
@@ -1076,16 +1181,7 @@ class BCQLParser:
 
         return left
 
-    def _parse_cc_not(
-        self,
-    ) -> (
-        ConstraintComparison
-        | ConstraintNot
-        | ConstraintLiteral
-        | ConstraintInteger
-        | AnnotationRef
-        | ConstraintFunctionCall
-    ):
+    def _parse_cc_not(self) -> CaptureConstraintExpr:
         """``cc_not := cc_cmp | '!' cc_not``
 
         Prefix negation in capture constraints.
@@ -1100,9 +1196,7 @@ class BCQLParser:
 
         return self._parse_cc_cmp()
 
-    def _parse_cc_cmp(
-        self,
-    ) -> ConstraintComparison | ConstraintLiteral | ConstraintInteger | AnnotationRef | ConstraintFunctionCall:
+    def _parse_cc_cmp(self) -> CaptureConstraintExpr:
         """``cc_cmp := cc_atom | cc_atom CMP cc_atom``
 
         Comparison level in capture constraints. Handles ``A.word = "over"`` and similar.
@@ -1118,11 +1212,13 @@ class BCQLParser:
             op_tok = self._advance()
             operator = CMP_OPS[op_tok.type]
             right = self._parse_cc_atom()
-            left = ConstraintComparison(operator=operator, left=left, right=right)
+            left = ConstraintComparison(
+                operator=operator, left=left, right=right
+            )
 
         return left
 
-    def _parse_cc_atom(self) -> ConstraintLiteral | ConstraintInteger | AnnotationRef | ConstraintFunctionCall:
+    def _parse_cc_atom(self) -> CaptureConstraintExpr:
         """``cc_atom := STRING | INTEGER | IDENT '.' IDENT | IDENT '(' cc_arg_list ')' | '(' cc_bool ')'``
 
         Highest precedence in the capture constraint grammar. Dispatches based on the current token:
@@ -1167,8 +1263,12 @@ class BCQLParser:
             # Annotation reference: IDENT '.' IDENT
             if self._current_token.type == TokenType.DOT:
                 self._advance()
-                prop_tok = self._expect(TokenType.IDENTIFIER, "after '.' in annotation reference")
-                return AnnotationRef(label=ident_tok.value, annotation=prop_tok.value)
+                prop_tok = self._expect(
+                    TokenType.IDENTIFIER, "after '.' in annotation reference"
+                )
+                return AnnotationRef(
+                    label=ident_tok.value, annotation=prop_tok.value
+                )
 
             # Function call: IDENT '(' cc_arg_list ')'
             if self._current_token.type == TokenType.LPAREN:
@@ -1223,4 +1323,6 @@ class BCQLParser:
                 f"Expected a string delimited by single or double quotes {ctx}, got {display_token(tok)}"
             )
         self._advance()
-        return StringValue(value=tok.value, is_literal=(tok.type == TokenType.LITERAL_STRING))
+        return StringValue(
+            value=tok.value, is_literal=(tok.type == TokenType.LITERAL_STRING)
+        )

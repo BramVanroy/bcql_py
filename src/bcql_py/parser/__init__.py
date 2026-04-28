@@ -29,7 +29,9 @@ def _parse_cached(source: str) -> BCQLNode:
     return BCQLParser(tokens, source=source).parse()
 
 
-def parse(source: str, *, spec: CorpusSpec | None = None, fail_fast: bool = True) -> BCQLNode:
+def parse(
+    source: str, *, spec: CorpusSpec | None = None, fail_fast: bool = True
+) -> BCQLNode:
     """Tokenize then parse a BCQL query string and return the root AST node.
 
     When *spec* is given, the parsed AST is additionally run through
@@ -84,4 +86,12 @@ def parse_from_tokens(
     return ast
 
 
-__all__ = ["BCQLLexer", "BCQLParser", "Token", "TokenType", "tokenize", "parse", "parse_from_tokens"]
+__all__ = [
+    "BCQLLexer",
+    "BCQLParser",
+    "Token",
+    "TokenType",
+    "tokenize",
+    "parse",
+    "parse_from_tokens",
+]

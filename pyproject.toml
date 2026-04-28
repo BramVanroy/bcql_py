@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "Bram Vanroy", email = "2779410+BramVanroy@users.noreply.github.com" }
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.13.0,<3",
 ]
@@ -19,20 +19,27 @@ docs = [
 dev = [
     {include-group = "docs"},
     "mypy>=1.20.1,<2",
+    "pre-commit>=4.6.0,<5",
     "pytest>=9.0.3,<10",
     "pytest-cov>=7.1.0",
     "ruff>=0.15.10,<1",
+    "types-requests>=2.32",
 ]
 
 [tool.pytest.ini_options]
-addopts = "--doctest-modules"
 testpaths = ["tests", "src"]
+addopts = [
+    "--doctest-modules",
+    "--cov=bcql_py",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+]
 
 [project.urls]
-homepage = "https://github.com/BramVanroy/bcql_py"
-documentation = "https://bramvanroy.github.io/bcql_py/"
-issues = "https://github.com/BramVanroy/bcql_py/issues"
-repository = "https://github.com/BramVanroy/bcql_py.git"
+Homepage = "https://github.com/BramVanroy/bcql_py"
+Documentation = "https://bramvanroy.github.io/bcql_py/"
+Issues = "https://github.com/BramVanroy/bcql_py/issues"
+Repository = "https://github.com/BramVanroy/bcql_py.git"
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
@@ -43,8 +50,8 @@ source = "vcs"
 fallback-version = "0.0.0"
 
 [tool.mypy]
-python_version = "3.10"
-files = ["src", "tests"]
+python_version = "3.11"
+files = ["src", "tests", "scripts"]
 pretty = true
 show_error_codes = true
 warn_unused_ignores = true
@@ -60,7 +67,7 @@ disallow_untyped_defs = false
 
 # Ruff style
 [tool.ruff]
-line-length = 119
+line-length = 79
 
 [tool.ruff.lint]
 ignore = ["C901", "E501", "E741", "F402", "F823", "E402"]

@@ -94,15 +94,44 @@ UD_RELATION_LABELS: frozenset[str] = frozenset(
 
 UD_FEATURE_VALUES: dict[str, frozenset[str]] = {
     # Lexical
-    "PronType": frozenset({"Art", "Dem", "Emp", "Exc", "Ind", "Int", "Neg", "Prs", "Rcp", "Rel", "Tot"}),
-    "NumType": frozenset({"Card", "Dist", "Frac", "Mult", "Ord", "Range", "Sets"}),
+    "PronType": frozenset(
+        {
+            "Art",
+            "Dem",
+            "Emp",
+            "Exc",
+            "Ind",
+            "Int",
+            "Neg",
+            "Prs",
+            "Rcp",
+            "Rel",
+            "Tot",
+        }
+    ),
+    "NumType": frozenset(
+        {"Card", "Dist", "Frac", "Mult", "Ord", "Range", "Sets"}
+    ),
     "Poss": frozenset({"Yes"}),
     "Reflex": frozenset({"Yes"}),
     # Other
     "Foreign": frozenset({"Yes"}),
     "Abbr": frozenset({"Yes"}),
     "Typo": frozenset({"Yes"}),
-    "ExtPos": frozenset({"ADJ", "ADP", "ADV", "AUX", "CCONJ", "DET", "INTJ", "PRON", "PROPN", "SCONJ"}),
+    "ExtPos": frozenset(
+        {
+            "ADJ",
+            "ADP",
+            "ADV",
+            "AUX",
+            "CCONJ",
+            "DET",
+            "INTJ",
+            "PRON",
+            "PROPN",
+            "SCONJ",
+        }
+    ),
     # Inflection
     "Gender": frozenset({"Com", "Fem", "Masc", "Neut"}),
     "Animacy": frozenset({"Anim", "Hum", "Inan", "Nhum"}),
@@ -145,7 +174,21 @@ UD_FEATURE_VALUES: dict[str, frozenset[str]] = {
             "Wol12",
         }
     ),
-    "Number": frozenset({"Coll", "Count", "Dual", "Grpa", "Grpl", "Inv", "Pauc", "Plur", "Ptan", "Sing", "Tri"}),
+    "Number": frozenset(
+        {
+            "Coll",
+            "Count",
+            "Dual",
+            "Grpa",
+            "Grpl",
+            "Inv",
+            "Pauc",
+            "Plur",
+            "Ptan",
+            "Sing",
+            "Tri",
+        }
+    ),
     # Only the "core" values are included here, see: https://universaldependencies.org/u/feat/all.html#case-case
     "Case": frozenset({"Abs", "Acc", "Erg", "Nom"}),
     "Definite": frozenset({"Com", "Cons", "Def", "Ind", "Spec"}),
@@ -153,13 +196,43 @@ UD_FEATURE_VALUES: dict[str, frozenset[str]] = {
     "Deixis": frozenset({"Abv", "Bel", "Even", "Med", "Nvis", "Prx", "Remt"}),
     "DeixisRef": frozenset({"1", "2"}),
     "Degree": frozenset({"Abs", "Aug", "Cmp", "Dim", "Equ", "Pos", "Sup"}),
-    "VerbForm": frozenset({"Conv", "Fin", "Gdv", "Ger", "Inf", "Part", "Sup", "Vnoun"}),
+    "VerbForm": frozenset(
+        {"Conv", "Fin", "Gdv", "Ger", "Inf", "Part", "Sup", "Vnoun"}
+    ),
     "Mood": frozenset(
-        {"Adm", "Cnd", "Des", "Imp", "Ind", "Int", "Irr", "Jus", "Nec", "Opt", "Pot", "Prp", "Qot", "Sub"}
+        {
+            "Adm",
+            "Cnd",
+            "Des",
+            "Imp",
+            "Ind",
+            "Int",
+            "Irr",
+            "Jus",
+            "Nec",
+            "Opt",
+            "Pot",
+            "Prp",
+            "Qot",
+            "Sub",
+        }
     ),
     "Tense": frozenset({"Fut", "Imp", "Past", "Pqp", "Pres"}),
     "Aspect": frozenset({"Hab", "Imp", "Iter", "Perf", "Prog", "Prosp"}),
-    "Voice": frozenset({"Act", "Antip", "Bfoc", "Cau", "Dir", "Inv", "Lfoc", "Mid", "Pass", "Rcp"}),
+    "Voice": frozenset(
+        {
+            "Act",
+            "Antip",
+            "Bfoc",
+            "Cau",
+            "Dir",
+            "Inv",
+            "Lfoc",
+            "Mid",
+            "Pass",
+            "Rcp",
+        }
+    ),
     "Evident": frozenset({"Fh", "Nfh"}),
     "Polarity": frozenset({"Neg", "Pos"}),
     "Person": frozenset({"0", "1", "2", "3", "4"}),
@@ -167,7 +240,9 @@ UD_FEATURE_VALUES: dict[str, frozenset[str]] = {
     "Clusivity": frozenset({"Ex", "In"}),
 }
 
-UD_OPEN_ATTRIBUTES: frozenset[str] = frozenset({"word", "lemma", "xpos", "feats", "misc", "id", "head"})
+UD_OPEN_ATTRIBUTES: frozenset[str] = frozenset(
+    {"word", "lemma", "xpos", "feats", "misc", "id", "head"}
+)
 
 _UD_CLOSED_ATTRIBUTES: dict[str, frozenset[str]] = {
     "upos": UD_POS_TAGS,

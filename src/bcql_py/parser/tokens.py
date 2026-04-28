@@ -38,7 +38,9 @@ class TokenType(StrEnum):
     ROOT_REL_CARET = auto()
     ALIGN_LINE = auto()  # =type= (alignment line, no field)
     ALIGN_ARROW = auto()  # =>
-    QUESTION = auto()  # ? (eg optional alignment, after field, e.g. ==>nl?; regex quantifier)
+    QUESTION = (
+        auto()
+    )  # ? (eg optional alignment, after field, e.g. ==>nl?; regex quantifier)
 
     # Operators: comparison
     LTE = auto()  # <=
@@ -193,7 +195,11 @@ def display_token(tok: "Token") -> str:
     if tok.type == TokenType.EOF:
         return "end of input"
     if tok.type in (TokenType.STRING, TokenType.LITERAL_STRING):
-        prefix = "literal string" if tok.type == TokenType.LITERAL_STRING else "string"
+        prefix = (
+            "literal string"
+            if tok.type == TokenType.LITERAL_STRING
+            else "string"
+        )
         return f"{prefix} {tok.value!r}"
     if tok.type == TokenType.IDENTIFIER:
         return f"identifier {tok.value!r}"
@@ -220,4 +226,12 @@ class Token:
         return f"Token({self.type.name}, {self.value!r}, pos={self.position})"
 
 
-__all__ = ["TokenType", "Token", "KEYWORDS", "BOOL_OPS", "CMP_OPS", "display_type", "display_token"]
+__all__ = [
+    "TokenType",
+    "Token",
+    "KEYWORDS",
+    "BOOL_OPS",
+    "CMP_OPS",
+    "display_type",
+    "display_token",
+]

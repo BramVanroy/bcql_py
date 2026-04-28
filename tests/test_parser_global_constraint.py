@@ -62,7 +62,9 @@ class TestGlobalConstraint:
         (left:[] right:[] :: left.word = "however") :: right.word = "therefore"
 
         """
-        node = parse('left:[] right:[] :: left.word = "however" :: right.word = "therefore"')
+        node = parse(
+            'left:[] right:[] :: left.word = "however" :: right.word = "therefore"'
+        )
         assert isinstance(node, GlobalConstraintNode)
 
         outer = node.constraint  # right.word = "therefore"
@@ -92,7 +94,9 @@ class TestGlobalConstraint:
 
     def test_chained_round_trip(self):
         """Round-trip: chained global constraints preserve left-associative structure."""
-        round_trip_test('left:[] right:[] :: left.word = "however" :: right.word = "therefore"')
+        round_trip_test(
+            'left:[] right:[] :: left.word = "however" :: right.word = "therefore"'
+        )
 
 
 class TestAnnotationRef:
@@ -146,7 +150,9 @@ class TestConstraintBoolean:
         This is the typical use of ``&`` in capture constraints: combine requirements on multiple
         captures from one matched pattern.
         """
-        node = parse('left:[] right:[] :: left.word = "however" & right.word = "therefore"')
+        node = parse(
+            'left:[] right:[] :: left.word = "however" & right.word = "therefore"'
+        )
         assert isinstance(node, GlobalConstraintNode)
         assert isinstance(node.constraint, ConstraintBoolean)
         assert node.constraint.operator == "&"
@@ -156,7 +162,9 @@ class TestConstraintBoolean:
 
         This is a common pattern when a capture may realise one of several discourse markers.
         """
-        node = parse('focus:[] :: focus.word = "however" | focus.word = "therefore"')
+        node = parse(
+            'focus:[] :: focus.word = "however" | focus.word = "therefore"'
+        )
         assert isinstance(node, GlobalConstraintNode)
         assert isinstance(node.constraint, ConstraintBoolean)
         assert node.constraint.operator == "|"
@@ -177,7 +185,9 @@ class TestConstraintBoolean:
 
         This mirrors the same-precedence behaviour used by sequence and token constraints.
         """
-        node = parse('focus:[] :: focus.word = "however" & focus.lemma = "however" | focus.pos = "ADV"')
+        node = parse(
+            'focus:[] :: focus.word = "however" & focus.lemma = "however" | focus.pos = "ADV"'
+        )
         assert isinstance(node, GlobalConstraintNode)
         outer = node.constraint
         assert isinstance(outer, ConstraintBoolean)
@@ -187,8 +197,12 @@ class TestConstraintBoolean:
 
     def test_boolean_round_trips(self):
         """Round-trip: boolean capture constraints preserve structure."""
-        round_trip_test('left:[] right:[] :: left.word = "however" & right.word = "therefore"')
-        round_trip_test('focus:[] :: focus.word = "however" | focus.word = "therefore"')
+        round_trip_test(
+            'left:[] right:[] :: left.word = "however" & right.word = "therefore"'
+        )
+        round_trip_test(
+            'focus:[] :: focus.word = "however" | focus.word = "therefore"'
+        )
         round_trip_test('cue:[] verb:[] :: cue.word = "if" -> verb.pos = "V"')
 
 
@@ -248,6 +262,7 @@ class TestConstraintFunctionCall:
         node = parse("A:[] :: end(A) = end(A)")
         assert isinstance(node, GlobalConstraintNode)
         cmp = node.constraint
+        assert isinstance(cmp, ConstraintComparison)
         assert isinstance(cmp.left, ConstraintFunctionCall)
         assert cmp.left.name == "end"
 
@@ -278,7 +293,9 @@ class TestConstraintParentheses:
         effectively equivalent after round-trip. The parser still needs to build the grouped AST
         correctly when the parentheses are present in the source.
         """
-        node = parse('focus:[] :: (focus.word = "however" | focus.word = "therefore") & focus.pos = "ADV"')
+        node = parse(
+            'focus:[] :: (focus.word = "however" | focus.word = "therefore") & focus.pos = "ADV"'
+        )
         assert isinstance(node, GlobalConstraintNode)
         outer = node.constraint
         assert isinstance(outer, ConstraintBoolean)
@@ -335,6 +352,7 @@ class TestBareLabel:
     def test_bare_label_in_function(self):
         """``start(A)`` - A is a bare capture label."""
         node = parse("A:[] :: start(A)")
+        assert isinstance(node, GlobalConstraintNode)
         fn = node.constraint
         assert isinstance(fn, ConstraintFunctionCall)
         assert isinstance(fn.args[0], AnnotationRef)

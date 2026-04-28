@@ -25,7 +25,9 @@ class LookaheadNode(BCQLNode):
     """
 
     node_type: Literal["lookahead"] = "lookahead"
-    positive: bool = Field(description="True for positive (?=), False for negative (?!).")
+    positive: bool = Field(
+        description="True for positive (?=), False for negative (?!)."
+    )
     body: BCQLNode = Field(description="The sub-query to match ahead.")
 
     def to_bcql(self) -> str:
@@ -44,7 +46,9 @@ class LookbehindNode(BCQLNode):
     """
 
     node_type: Literal["lookbehind"] = "lookbehind"
-    positive: bool = Field(description="True for positive (?<=), False for negative (?<!).")
+    positive: bool = Field(
+        description="True for positive (?<=), False for negative (?<!)."
+    )
     body: BCQLNode = Field(description="The sub-query to match behind.")
 
     def to_bcql(self) -> str:

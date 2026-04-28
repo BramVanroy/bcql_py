@@ -17,9 +17,17 @@ from typing import Any, Iterable, Iterator
 from bcql_py.exceptions import BCQLValidationError, ValidationIssue
 from bcql_py.models.alignment import AlignmentNode, AlignmentOperator
 from bcql_py.models.base import BCQLNode
-from bcql_py.models.relation import ChildConstraint, RelationOperator, RootRelationNode
+from bcql_py.models.relation import (
+    ChildConstraint,
+    RelationOperator,
+    RootRelationNode,
+)
 from bcql_py.models.span import SpanQuery
-from bcql_py.models.token import AnnotationConstraint, IntegerRangeConstraint, StringValue
+from bcql_py.models.token import (
+    AnnotationConstraint,
+    IntegerRangeConstraint,
+    StringValue,
+)
 from bcql_py.validation.spec import CorpusSpec
 
 
@@ -98,7 +106,9 @@ class _Validator:
             self._check_integer_range(node)
         elif isinstance(node, SpanQuery):
             self._check_span(node)
-        elif isinstance(node, RelationOperator) or isinstance(node, RootRelationNode):
+        elif isinstance(node, RelationOperator) or isinstance(
+            node, RootRelationNode
+        ):
             self._check_relation_operator(node)
         elif isinstance(node, ChildConstraint):
             pass
@@ -212,7 +222,9 @@ class _Validator:
                     )
                 )
 
-    def _check_relation_operator(self, node: RelationOperator | RootRelationNode):
+    def _check_relation_operator(
+        self, node: RelationOperator | RootRelationNode
+    ):
         """Validate a dependency relation operator (``-type->`` between tokens)
         or a root relation (``^-->`` from the root).
 

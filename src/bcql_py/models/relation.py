@@ -17,7 +17,12 @@ from pydantic import Field
 from bcql_py.models.base import BCQLNode
 
 
-__all__ = ["RelationOperator", "ChildConstraint", "RelationNode", "RootRelationNode"]
+__all__ = [
+    "RelationOperator",
+    "ChildConstraint",
+    "RelationNode",
+    "RootRelationNode",
+]
 
 
 class RelationOperator(BCQLNode):
@@ -32,9 +37,16 @@ class RelationOperator(BCQLNode):
     """
 
     node_type: Literal["relation_operator"] = "relation_operator"
-    relation_type: str | None = Field(default=None, description="Relation type (string/regex) or None for any.")
-    negated: bool = Field(default=False, description="True for negated relation (!-type->).")
-    target_field: str | None = Field(default=None, description="Target field for cross-field relations.")
+    relation_type: str | None = Field(
+        default=None,
+        description="Relation type (string/regex) or None for any.",
+    )
+    negated: bool = Field(
+        default=False, description="True for negated relation (!-type->)."
+    )
+    target_field: str | None = Field(
+        default=None, description="Target field for cross-field relations."
+    )
 
     def to_bcql(self) -> str:
         neg = "!" if self.negated else ""
@@ -59,7 +71,10 @@ class ChildConstraint(BCQLNode):
     node_type: Literal["child_constraint"] = "child_constraint"
     operator: RelationOperator = Field(description="The relation operator.")
     target: BCQLNode = Field(description="Target sub-query.")
-    label: str | None = Field(default=None, description="Optional capture label on this child relation.")
+    label: str | None = Field(
+        default=None,
+        description="Optional capture label on this child relation.",
+    )
 
     def to_bcql(self) -> str:
         prefix = f"{self.label}:" if self.label else ""
@@ -78,7 +93,9 @@ class RelationNode(BCQLNode):
 
     node_type: Literal["relation"] = "relation"
     source: BCQLNode = Field(description="Source of the relation.")
-    children: list[ChildConstraint] = Field(min_length=1, description="One or more target constraints.")
+    children: list[ChildConstraint] = Field(
+        min_length=1, description="One or more target constraints."
+    )
 
     def to_bcql(self) -> str:
         first = f"{self.source.to_bcql()} {self.children[0].to_bcql()}"
@@ -105,9 +122,13 @@ class RootRelationNode(BCQLNode):
     """
 
     node_type: Literal["root_relation"] = "root_relation"
-    relation_type: str | None = Field(default=None, description="Optional relation type filter.")
+    relation_type: str | None = Field(
+        default=None, description="Optional relation type filter."
+    )
     target: BCQLNode = Field(description="Target sub-query.")
-    label: str | None = Field(default=None, description="Optional capture label.")
+    label: str | None = Field(
+        default=None, description="Optional capture label."
+    )
 
     def to_bcql(self) -> str:
         prefix = f"{self.label}:" if self.label else ""

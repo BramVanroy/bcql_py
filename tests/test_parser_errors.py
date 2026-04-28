@@ -6,7 +6,14 @@ from conftest import round_trip_test
 from bcql_py.exceptions import BCQLSyntaxError
 from bcql_py.models.capture import AnnotationRef, GlobalConstraintNode
 from bcql_py.models.token import NotConstraint, TokenQuery
-from bcql_py.parser import BCQLLexer, BCQLParser, Token, TokenType, parse, parse_from_tokens
+from bcql_py.parser import (
+    BCQLLexer,
+    BCQLParser,
+    Token,
+    TokenType,
+    parse,
+    parse_from_tokens,
+)
 
 
 class TestParserErrors:
@@ -162,8 +169,9 @@ class TestErrorPosition:
         for query in queries:
             with pytest.raises(BCQLSyntaxError) as exc_info:
                 parse(query)
-            assert exc_info.value.position < len(query), (
-                f"position {exc_info.value.position} is past end of {query!r} (len={len(query)})"
+            position = exc_info.value.position
+            assert position is not None and position < len(query), (
+                f"position {position} is past end of {query!r} (len={len(query)})"
             )
 
 

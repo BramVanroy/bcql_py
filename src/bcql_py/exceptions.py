@@ -8,7 +8,13 @@ __all__ = ["BCQLSyntaxError", "BCQLValidationError", "ValidationIssue"]
 
 
 class BCQLSyntaxError(Exception):
-    def __init__(self, error_message: str, *, bcql_query: str = "", error_position: int | None = None) -> None:
+    def __init__(
+        self,
+        error_message: str,
+        *,
+        bcql_query: str = "",
+        error_position: int | None = None,
+    ) -> None:
         self.query = bcql_query
         self.position = error_position
         self.message = error_message
@@ -74,7 +80,9 @@ class BCQLValidationError(Exception):
 
     def __init__(self, issues: list[ValidationIssue]) -> None:
         if not issues:
-            raise ValueError("BCQLValidationError requires at least one issue.")
+            raise ValueError(
+                "BCQLValidationError requires at least one issue."
+            )
         self.issues = issues
         super().__init__(str(self))
 

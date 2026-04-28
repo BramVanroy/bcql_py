@@ -93,7 +93,20 @@ LASSY_CAT_LABELS: frozenset[str] = frozenset(
 )
 
 LASSY_PT_LABELS: frozenset[str] = frozenset(
-    {"adj", "bw", "let", "lid", "n", "spec", "tsw", "tw", "vg", "vnw", "vz", "ww"}
+    {
+        "adj",
+        "bw",
+        "let",
+        "lid",
+        "n",
+        "spec",
+        "tsw",
+        "tw",
+        "vg",
+        "vnw",
+        "vz",
+        "ww",
+    }
 )
 
 LASSY_FEATURE_VALUES: dict[str, frozenset[str]] = {
@@ -110,11 +123,29 @@ LASSY_FEATURE_VALUES: dict[str, frozenset[str]] = {
     "pvtijd": frozenset({"tgw", "verl", "conj"}),
     "pvagr": frozenset({"ev", "mv", "met-t"}),
     "numtype": frozenset({"hoofd", "rang"}),
-    "vwtype": frozenset({"pr", "pers", "refl", "recip", "bez", "vb", "vrag", "betr", "excl", "aanw", "onbep"}),
+    "vwtype": frozenset(
+        {
+            "pr",
+            "pers",
+            "refl",
+            "recip",
+            "bez",
+            "vb",
+            "vrag",
+            "betr",
+            "excl",
+            "aanw",
+            "onbep",
+        }
+    ),
     "pdtype": frozenset({"pron", "adv-pron", "det", "grad"}),
-    "persoon": frozenset({"persoon", "1", "2", "2v", "2b", "3", "3p", "3m", "3v", "3o"}),
+    "persoon": frozenset(
+        {"persoon", "1", "2", "2v", "2b", "3", "3p", "3m", "3v", "3o"}
+    ),
     "status": frozenset({"vol", "red", "nadr"}),
-    "npagr": frozenset({"agr", "evon", "rest", "evz", "mv", "agr3", "evmo", "rest3", "evf"}),
+    "npagr": frozenset(
+        {"agr", "evon", "rest", "evz", "mv", "agr3", "evmo", "rest3", "evf"}
+    ),
     "lwtype": frozenset({"bep", "onbep"}),
     "vztype": frozenset({"init", "versm", "fin"}),
     "conjtype": frozenset({"neven", "onder"}),
@@ -149,9 +180,13 @@ positie="nom"
 buiging="met-e"
 getal-n="mv-n"
 """
-LASSY_OPEN_ATTRIBUTES: frozenset[str] = frozenset({"word", "lemma", "postag", "id", "index", "begin", "end"})
+LASSY_OPEN_ATTRIBUTES: frozenset[str] = frozenset(
+    {"word", "lemma", "postag", "id", "index", "begin", "end"}
+)
 
-LASSY_SPAN_TAGS: frozenset[str] = frozenset({"alpino_ds", "node", "sentence", "comments", "comment"})
+LASSY_SPAN_TAGS: frozenset[str] = frozenset(
+    {"alpino_ds", "node", "sentence", "comments", "comment"}
+)
 
 LASSY = CorpusSpec(
     open_attributes=LASSY_OPEN_ATTRIBUTES,

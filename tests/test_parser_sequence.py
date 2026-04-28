@@ -24,9 +24,10 @@ class TestSimpleSequence:
         node = parse('"the" "United" "States"')
         assert isinstance(node, SequenceNode)
         assert len(node.children) == 3
-        assert node.children[0].shorthand.value == "the"
-        assert node.children[1].shorthand.value == "United"
-        assert node.children[2].shorthand.value == "States"
+        for child, expected in zip(node.children, ("the", "United", "States")):
+            assert isinstance(child, TokenQuery)
+            assert child.shorthand is not None
+            assert child.shorthand.value == expected
 
     def test_single_token_no_sequence_node(self):
         """``"corpus"`` - a single token stays a ``TokenQuery`` rather than becoming a sequence."""
@@ -49,10 +50,15 @@ class TestMixedSequence:
         node = parse('"the" [pos="ADJ"] "analysis"')
         assert isinstance(node, SequenceNode)
         assert len(node.children) == 3
-        assert isinstance(node.children[0], TokenQuery)
-        assert node.children[0].shorthand.value == "the"
-        assert isinstance(node.children[1].constraint, AnnotationConstraint)
-        assert node.children[2].shorthand.value == "analysis"
+        first, middle, last = node.children
+        assert isinstance(first, TokenQuery)
+        assert first.shorthand is not None
+        assert first.shorthand.value == "the"
+        assert isinstance(middle, TokenQuery)
+        assert isinstance(middle.constraint, AnnotationConstraint)
+        assert isinstance(last, TokenQuery)
+        assert last.shorthand is not None
+        assert last.shorthand.value == "analysis"
 
     def test_string_matchall_string(self):
         """``"the" [] "analysis"`` - determiner, any token, then a noun.
@@ -62,7 +68,9 @@ class TestMixedSequence:
         node = parse('"the" [] "analysis"')
         assert isinstance(node, SequenceNode)
         assert len(node.children) == 3
-        assert node.children[1].constraint is None
+        middle = node.children[1]
+        assert isinstance(middle, TokenQuery)
+        assert middle.constraint is None
 
     def test_round_trip_mixed(self):
         """Round-trip: mixed bare string, bracket query, and string preserves structure."""
@@ -137,8 +145,11 @@ class TestSequenceWithConstraints:
         node = parse('[word="mij"&lemma="ik"] [word="gegeven"&lemma="geven"]')
         assert isinstance(node, SequenceNode)
         assert len(node.children) == 2
-        assert isinstance(node.children[0].constraint, BoolConstraint)
-        assert isinstance(node.children[1].constraint, BoolConstraint)
+        first, second = node.children
+        assert isinstance(first, TokenQuery)
+        assert isinstance(second, TokenQuery)
+        assert isinstance(first.constraint, BoolConstraint)
+        assert isinstance(second.constraint, BoolConstraint)
 
     def test_round_trip_bigram(self):
         """Round-trip: Dutch compound bigram normalises whitespace around ``&``."""

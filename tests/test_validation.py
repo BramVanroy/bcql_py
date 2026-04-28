@@ -75,7 +75,9 @@ def test_closed_attribute_accepts_literal_prefix():
 
 
 def test_fail_fast_false_collects_multiple_issues():
-    spec = _pos_spec({"NOUN"}).extend(open_attributes={"word"}, strict_attributes=True)
+    spec = _pos_spec({"NOUN"}).extend(
+        open_attributes={"word"}, strict_attributes=True
+    )
     with pytest.raises(BCQLValidationError) as excinfo:
         parse('[pos="BOGUS"] [lemma="x"]', spec=spec, fail_fast=False)
     kinds = sorted(issue.kind for issue in excinfo.value.issues)
@@ -83,7 +85,9 @@ def test_fail_fast_false_collects_multiple_issues():
 
 
 def test_fail_fast_true_raises_on_first_issue():
-    spec = _pos_spec({"NOUN"}).extend(open_attributes={"word"}, strict_attributes=True)
+    spec = _pos_spec({"NOUN"}).extend(
+        open_attributes={"word"}, strict_attributes=True
+    )
     with pytest.raises(BCQLValidationError) as excinfo:
         parse('[pos="BOGUS"] [lemma="x"]', spec=spec, fail_fast=True)
     assert len(excinfo.value.issues) == 1

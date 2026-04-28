@@ -30,9 +30,15 @@ class AlignmentOperator(BCQLNode):
 
     node_type: Literal["alignment_operator"] = "alignment_operator"
     target_field: str = Field(description="Target field name.")
-    optional: bool = Field(default=False, description="True for optional alignment (==>field?).")
-    relation_type: str | None = Field(default=None, description="Relation type filter.")
-    capture_name: str | None = Field(default=None, description="Override capture group name.")
+    optional: bool = Field(
+        default=False, description="True for optional alignment (==>field?)."
+    )
+    relation_type: str | None = Field(
+        default=None, description="Relation type filter."
+    )
+    capture_name: str | None = Field(
+        default=None, description="Override capture group name."
+    )
 
     def to_bcql(self) -> str:
         rtype = self.relation_type or ""
@@ -68,7 +74,9 @@ class AlignmentNode(BCQLNode):
 
     node_type: Literal["alignment"] = "alignment"
     source: BCQLNode = Field(description="Source query in primary field.")
-    alignments: list[AlignmentConstraint] = Field(min_length=1, description="Alignment constraint(s)")
+    alignments: list[AlignmentConstraint] = Field(
+        min_length=1, description="Alignment constraint(s)"
+    )
 
     def to_bcql(self) -> str:
         first = f"{self.source.to_bcql()} {self.alignments[0].to_bcql()}"

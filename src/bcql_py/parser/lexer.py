@@ -50,13 +50,19 @@ class BCQLLexer:
         self._tokens.append(Token(type=ttype, value=value, position=position))
 
     def _raise_error(self, msg: str) -> BCQLSyntaxError:
-        return BCQLSyntaxError(error_message=msg, bcql_query=self._source, error_position=self._pos)
+        return BCQLSyntaxError(
+            error_message=msg,
+            bcql_query=self._source,
+            error_position=self._pos,
+        )
 
     def _skip_whitespace(self) -> None:
         while self._pos < len(self._source) and self._current_char.isspace():
             self._step()
 
-    def _read_string(self, initial_quote_char: str, starting_pos: int, is_literal: bool) -> None:
+    def _read_string(
+        self, initial_quote_char: str, starting_pos: int, is_literal: bool
+    ) -> None:
         """Read a quoted string, handling escape sequences."""
         self._pos += 1  # skip opening quote
         chars: list[str] = []
@@ -70,7 +76,11 @@ class BCQLLexer:
                 self._pos += 2
             elif char == initial_quote_char:
                 self._pos += 1  # skip closing quote
-                ttype = TokenType.LITERAL_STRING if is_literal else TokenType.STRING
+                ttype = (
+                    TokenType.LITERAL_STRING
+                    if is_literal
+                    else TokenType.STRING
+                )
                 self._emit(ttype, "".join(chars), starting_pos)
                 return
             else:
@@ -82,18 +92,27 @@ class BCQLLexer:
             error_position=starting_pos,
         )
 
-    def _is_arrow(self, offset: int = 0, is_parallel_relation: bool = False) -> bool:
+    def _is_arrow(
+        self, offset: int = 0, is_parallel_relation: bool = False
+    ) -> bool:
         """Check if from current pos + offset we have ``-type->`` or ``=type=>`` pattern."""
         line_char = "=" if is_parallel_relation else "-"
         start_char_idx = self._pos + offset
-        if start_char_idx >= len(self._source) or self._source[start_char_idx] != line_char:
+        if (
+            start_char_idx >= len(self._source)
+            or self._source[start_char_idx] != line_char
+        ):
             return False
         start_char_idx += 1  # skip initial '-'
 
         while start_char_idx < len(self._source):
             ch = self._source[start_char_idx]
             # Found '->' pattern, so this is a relation arrow
-            if ch == line_char and start_char_idx + 1 < len(self._source) and self._source[start_char_idx + 1] == ">":
+            if (
+                ch == line_char
+                and start_char_idx + 1 < len(self._source)
+                and self._source[start_char_idx + 1] == ">"
+            ):
                 return True
             # If we encounter whitespace or a closing bracket before finding '->', this cannot be a relation arrow
             if ch in " \t\n\r)]}":
@@ -101,13 +120,20 @@ class BCQLLexer:
             start_char_idx += 1
         return False
 
-    def _read_arrow(self, start: int, is_root: bool = False, is_parallel_relation: bool = False) -> None:
+    def _read_arrow(
+        self,
+        start: int,
+        is_root: bool = False,
+        is_parallel_relation: bool = False,
+    ) -> None:
         """Read ``-type->`` or ``=type=>`` after the leading ``-`` or ``=`` (=True) has been identified."""
         if is_root:
             self._pos += 1  # skip the leading '^'
 
         if is_root and is_parallel_relation:
-            raise self._raise_error("Root relations cannot be parallel (i.e. start with '^')")
+            raise self._raise_error(
+                "Root relations cannot be parallel (i.e. start with '^')"
+            )
 
         line_char = "=" if is_parallel_relation else "-"
         self._pos += 1  # skip the leading '-' or '='
@@ -127,10 +153,14 @@ class BCQLLexer:
         # See https://github.com/instituutnederlandsetaal/BlackLab/blob/dev/site/docs/guide/040_query-language/030_parallel.md
         # TODO: check if this exclusive to parallel relations
         field = ""
-        if self._pos < len(self._source) and (self._current_char.isalpha() or self._current_char == "_"):
+        if self._pos < len(self._source) and (
+            self._current_char.isalpha() or self._current_char == "_"
+        ):
             field_start = self._pos
             while self._pos < len(self._source) and (
-                self._current_char.isalnum() or self._current_char == "_" or self._current_char == "?"
+                self._current_char.isalnum()
+                or self._current_char == "_"
+                or self._current_char == "?"
             ):
                 self._pos += 1
             field = self._source[field_start : self._pos]
@@ -177,7 +207,9 @@ class BCQLLexer:
     def _read_identifier(self, start: int) -> None:
         """Read an identifier, incl. reserved keywords."""
         chars: list[str] = []
-        while self._pos < len(self._source) and (self._current_char.isalnum() or self._current_char in "_-"):
+        while self._pos < len(self._source) and (
+            self._current_char.isalnum() or self._current_char in "_-"
+        ):
             chars.append(self._current_char)
             self._pos += 1
 
@@ -220,7 +252,9 @@ class BCQLLexer:
             if curr_char == "l" and self._peek_char() in ('"', "'"):
                 self._pos += 1  # skip 'l'
                 # re-call self._current_char after pos updated
-                self._read_string(self._current_char, starting_pos, is_literal=True)
+                self._read_string(
+                    self._current_char, starting_pos, is_literal=True
+                )
                 continue
 
             # Square brackets
@@ -442,7 +476,10 @@ class BCQLLexer:
 
             # Comments starting with #, skip until end of line
             if curr_char == "#":
-                while self._pos < len(self._source) and self._source[self._pos] != "\n":
+                while (
+                    self._pos < len(self._source)
+                    and self._source[self._pos] != "\n"
+                ):
                     self._pos += 1
                 continue
 
