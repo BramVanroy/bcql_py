@@ -988,7 +988,8 @@ class BCQLParser:
         tok = self._current_token
         if tok.type not in (TokenType.STRING, TokenType.LITERAL_STRING):
             raise self._raise_error(
-                f"Expected a string value after {annotation!r}{operator}, got {tok.type.name} ({tok.value!r})"
+                f"Expected a string delimited by single or double quotes after {annotation!r}{operator},"
+                f" got {tok.type.name} ({tok.value!r})"
             )
         self._advance()
         sv = StringValue(
