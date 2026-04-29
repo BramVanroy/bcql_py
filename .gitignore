@@ -9,6 +9,7 @@ schema.json
 questions.md
 /legacy
 TODO.md
+/.gradio
 
 src/bcql_py/_version.py
 

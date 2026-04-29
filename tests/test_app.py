@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 import pytest
 
@@ -35,7 +35,7 @@ from app.app import (  # noqa: E402
     _build_custom_spec,
     _parse_closed_attributes,
     _parse_csv,
-    build_demo,
+    demo,
     render_spec_description,
     validate_query,
 )
@@ -59,7 +59,7 @@ def _call(
     use_custom: bool = False,
     fail_fast: bool = False,
     **overrides: object,
-) -> tuple[str, str, dict, str]:
+) -> tuple[str, str, dict[str, Any]]:
     """Tiny convenience wrapper around ``validate_query`` keyword passing."""
     fields: dict[str, object] = {**DEFAULT_CUSTOM, **overrides}
     return validate_query(
@@ -115,24 +115,22 @@ def test_build_custom_spec_round_trip() -> None:
 
 
 def test_validate_query_empty_input() -> None:
-    status, err, ast, canonical = _call("")
+    status, err, ast = _call("")
     assert "Enter a BCQL query" in status
     assert err == ""
     assert ast == EMPTY_AST
-    assert canonical == ""
 
 
 def test_validate_query_valid_no_spec() -> None:
-    status, err, ast, canonical = _call('"man"')
+    status, err, ast = _call('"man"')
     assert "bcql-status-ok" in status
     assert "syntactically valid" in status
     assert err == ""
     assert ast.get("node_type")
-    assert canonical.strip() == '"man"'
 
 
 def test_validate_query_valid_with_ud_preset() -> None:
-    status, err, ast, canonical = _call(
+    status, err, ast = _call(
         '[lemma="search" & pos="NOUN"]',
         preset="Universal Dependencies (UD)",
     )
@@ -140,11 +138,10 @@ def test_validate_query_valid_with_ud_preset() -> None:
     assert "(Universal Dependencies (UD))" in status
     assert err == ""
     assert ast.get("node_type")
-    assert canonical
 
 
 def test_validate_query_syntax_error_has_caret_pointer() -> None:
-    status, err, ast, canonical = _call('[pos="NOUN" &]')
+    status, err, ast = _call('[pos="NOUN" &]')
     assert "bcql-status-err" in status
     assert "Query failed to parse" in status
     assert err.startswith("**Syntax error**")
@@ -152,11 +149,10 @@ def test_validate_query_syntax_error_has_caret_pointer() -> None:
     assert "```text" in err
     assert "^" in err
     assert ast == EMPTY_AST
-    assert canonical == ""
 
 
 def test_validate_query_validation_error_keeps_ast() -> None:
-    status, err, ast, canonical = _call(
+    status, err, ast = _call(
         '[pos="BANANA"]', preset="Universal Dependencies (UD)"
     )
     assert "bcql-status-err" in status
@@ -166,11 +162,10 @@ def test_validate_query_validation_error_keeps_ast() -> None:
     # Even when the spec rejects it, we still parse the AST so the JSON tab
     # shows something useful:
     assert ast.get("node_type")
-    assert canonical
 
 
 def test_validate_query_strict_custom_rejects_unknown_attribute() -> None:
-    status, err, _, _ = _call(
+    status, err, _ = _call(
         '[unknownattr="x"]',
         use_custom=True,
         custom_open="word, lemma",
@@ -181,7 +176,7 @@ def test_validate_query_strict_custom_rejects_unknown_attribute() -> None:
 
 
 def test_validate_query_custom_spec_form_error() -> None:
-    status, err, ast, canonical = _call(
+    status, err, ast = _call(
         '"x"',
         use_custom=True,
         custom_closed="malformed line without colon",
@@ -189,7 +184,6 @@ def test_validate_query_custom_spec_form_error() -> None:
     assert "bcql-status-err" in status
     assert "Custom spec error" in err
     assert ast == EMPTY_AST
-    assert canonical == ""
 
 
 def test_render_spec_description_for_each_preset() -> None:
@@ -214,11 +208,10 @@ def test_examples_all_run_without_crashing() -> None:
     HTML banners.
     """
     for query, preset in EXAMPLES:
-        status, err, ast, canonical = _call(query, preset)
+        status, err, ast = _call(query, preset)
         assert isinstance(status, str)
         assert isinstance(err, str)
         assert isinstance(ast, dict)
-        assert isinstance(canonical, str)
         assert (
             "bcql-status-ok" in status
             or "bcql-status-err" in status
@@ -241,7 +234,6 @@ def test_demo_structure_has_expected_tabs() -> None:
     ``TAB_LABELS`` and that the tab body contains a renderable component
     (so clicking the tab in the browser cannot land on an empty pane).
     """
-    demo = build_demo()
 
     tab_blocks = [
         b for b in _walk(demo) if type(b).__name__ in {"Tab", "TabItem"}
@@ -250,7 +242,6 @@ def test_demo_structure_has_expected_tabs() -> None:
 
     expected_descendant_type = {
         "AST (JSON)": "JSON",
-        "Canonical BCQL": "Textbox",
         "Active spec": "Markdown",
         "About": "Markdown",
     }
@@ -271,7 +262,6 @@ def test_demo_structure_top_level_components() -> None:
     Ensures the page is renderable end-to-end: a query input, the Validate
     button, the status banner, and the error markdown are all present.
     """
-    demo = build_demo()
     block_names = [type(b).__name__ for b in _walk(demo)]
     assert "Textbox" in block_names
     assert "Button" in block_names
