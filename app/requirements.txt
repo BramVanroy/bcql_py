@@ -1,0 +1,2 @@
+bcql_py @ git+https://github.com/BramVanroy/bcql_py.git
+gradio>=6.13,<7

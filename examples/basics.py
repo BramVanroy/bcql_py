@@ -13,9 +13,11 @@ from __future__ import annotations
 import json
 from collections import deque
 from collections.abc import Iterator
+from typing import cast
 
 from bcql_py import parse, tokenize
 from bcql_py.models import BCQLNode, TokenQuery
+from bcql_py.models.sequence import SequenceNode
 
 
 SECTION_SEPARATOR = "=" * 70
@@ -100,7 +102,8 @@ for token in tokens:
 
 print_section("2. Parsing into an AST")
 
-ast = parse(query)
+# Casting to SequenceNode is just for type hinting in this example; not "really" necessary
+ast = cast(SequenceNode, parse(query))
 print(f"Root node type: {ast.node_type} ({type(ast).__name__})")
 print("\nPretty-printed AST (Pydantic model_dump):")
 print(json.dumps(ast.model_dump(), indent=2))
@@ -122,14 +125,14 @@ print_section("4. Depth-first traversal")
 
 print("Visiting every node in pre-order:")
 for node in walk_depth_first(ast):
-    print(f"  {node.node_type:25s} -> {node.bcql}")
+    print(f"  {getattr(node, 'node_type', ''):25s} -> {node.bcql}")
 
 
 print_section("5. Breadth-first traversal")
 
 print("Visiting every node level-by-level:")
 for node in walk_breadth_first(ast):
-    print(f"  {node.node_type:25s} -> {node.bcql}")
+    print(f"  {getattr(node, 'node_type', ''):25s} -> {node.bcql}")
 
 
 print_section("6. Filtering nodes by type")
@@ -164,7 +167,8 @@ complex_ast = parse(complex_query)
 # Just count nodes by type to give a feel for the shape of the AST.
 counts: dict[str, int] = {}
 for node in walk_depth_first(complex_ast):
-    counts[node.node_type] = counts.get(node.node_type, 0) + 1
+    node_type = getattr(node, "node_type", "")
+    counts[node_type] = counts.get(node_type, 0) + 1
 
 print("\nNode type counts:")
 for node_type, count in sorted(counts.items(), key=lambda item: -item[1]):

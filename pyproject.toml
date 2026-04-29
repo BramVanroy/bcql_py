@@ -9,6 +9,23 @@ authors = [
 requires-python = ">=3.11"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
+
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Build Tools",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "License :: OSI Approved :: Apache Software License",
+  "Framework :: Pydantic :: 2",
+  "Framework :: MkDocs",
+  "Framework :: Pytest",
+  "Typing :: Typed",
+]
+
 dependencies = [
     "pydantic>=2.13.0,<3",
 ]
@@ -18,8 +35,12 @@ docs = [
     "mkdocs-material>=9.5",
     "mkdocstrings[python]>=0.29",
 ]
+app = [
+    "gradio>=6.13,<7",
+]
 dev = [
     {include-group = "docs"},
+    {include-group = "app"},
     "mypy>=1.20.1,<2",
     "pre-commit>=4.6.0,<5",
     "pytest>=9.0.3,<10",
