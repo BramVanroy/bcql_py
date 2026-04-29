@@ -8,6 +8,7 @@ schema.json
 /parser
 questions.md
 /legacy
+TODO.md
 
 src/bcql_py/_version.py
 

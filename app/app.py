@@ -475,9 +475,9 @@ def build_demo() -> gr.Blocks:
                 )
 
                 with gr.Tabs():
-                    with gr.Tab(TAB_LABELS[0]):
+                    with gr.Tab(TAB_LABELS[0], render_children=True):
                         ast_output = gr.JSON(value=EMPTY_AST, label="")
-                    with gr.Tab(TAB_LABELS[1]):
+                    with gr.Tab(TAB_LABELS[1], render_children=True):
                         canonical_output = gr.Textbox(
                             label="",
                             value="",
@@ -485,12 +485,12 @@ def build_demo() -> gr.Blocks:
                             max_lines=10,
                             interactive=False,
                         )
-                    with gr.Tab(TAB_LABELS[2]):
+                    with gr.Tab(TAB_LABELS[2], render_children=True):
                         spec_md = gr.Markdown(
                             value=render_spec_description("None (permissive)"),
                             latex_delimiters=None,
                         )
-                    with gr.Tab(TAB_LABELS[3]):
+                    with gr.Tab(TAB_LABELS[3], render_children=True):
                         gr.Markdown(ABOUT_MARKDOWN, latex_delimiters=None)
 
         gr.HTML(
