@@ -1,18 +1,18 @@
 # LLM agentic workflows
 
-[`BCQLSyntaxError`][bcql_py.BCQLSyntaxError] is deliberately shaped for agentic retry loops:
+[`BCQLSyntaxError`][bcql_py.exceptions.BCQLSyntaxError] is deliberately shaped for agentic retry loops:
 its string form carries the offending query, a caret under the failure position, and a
 short human-readable message. That makes it trivially forwardable to any LLM for
 self-correction.
 
 ```
-┌──────────────┐   BCQL string   ┌────────────┐
-│    LLM       │ ──────────────► │   parse()  │
+┌──────────────┐   BCQL string   ┌────────────┐  valid?
+│    LLM       │ ──────────────► │   parse()  │───────► return valid BCQL
 │  (any API)   │                 └─────┬──────┘
 └──────┬───────┘                       │
-       │                        valid? │ error?
-       │ ◄─────── str(error) ──────────┘
-       │   (re-prompt with feedback)
+       │                         │ error?
+       └ ◄─────── str(error) ──────────┘
+           (re-prompt with feedback)
 ```
 
 ---
@@ -41,15 +41,14 @@ or JSON responses:
 |---|---|
 | `str(err)` | Full human-readable message including the caret-annotated source |
 | `err.message` | Just the human-readable part, without the source line |
-| `err.query` | The original query string |
-| `err.position` | 0-based character offset of the problem, or `None` |
+| `err.query` | The original BCQL query string |
+| `err.position` | 0-based character offset of the problem |
 
 ---
 
 ## A minimal retry loop
 
-The skeleton below works with any LLM client. Replace `call_llm()` with your provider of
-choice: `anthropic`, `openai`, `mistralai`, a local model, whatever. The important bits are
+The basic example below shows how a retry loop with an LLM might be implemented. The important bits are
 that each failure adds `str(err)` to the prompt and the loop stops as soon as `parse()`
 returns without raising.
 
@@ -62,11 +61,11 @@ def call_llm(prompt: str) -> str:
     raise NotImplementedError
 
 
-def generate_bcql(task: str, max_attempts: int = 5) -> str:
+def generate_bcql(user_query: str, max_attempts: int = 5) -> str:
     prompt = (
         "Generate a BCQL query for the following request. "
         "Respond with ONLY the query, no explanations.\n\n"
-        f"Request: {task}"
+        f"Request: {user_query}"
     )
 
     for attempt in range(max_attempts):
@@ -77,39 +76,9 @@ def generate_bcql(task: str, max_attempts: int = 5) -> str:
         except BCQLSyntaxError as err:
             prompt += (
                 f"\n\nPrevious attempt ({attempt + 1}): {query}\n"
-                f"That query is invalid:\n{err}\n"
+                f"That query is invalid:\n{str(err)}\n"
                 "Output only the corrected BCQL query."
             )
 
     raise RuntimeError(f"Could not produce a valid BCQL query in {max_attempts} attempts.")
 ```
-
----
-
-## Batch validation without an LLM
-
-The same pattern works for any source of untrusted BCQL (user input, CSV rows, scraped
-data). The example below shows how to partition an input list into valid and invalid
-queries while preserving the error messages for reporting.
-
-```python
-from bcql_py import parse, BCQLSyntaxError
-
-
-def classify_queries(queries: list[str]) -> tuple[list[str], list[tuple[str, str]]]:
-    """Return (valid_queries, [(bad_query, error_message), ...])."""
-    good: list[str] = []
-    bad: list[tuple[str, str]] = []
-    for query in queries:
-        try:
-            parse(query)
-        except BCQLSyntaxError as err:
-            bad.append((query, str(err)))
-        else:
-            good.append(query)
-    return good, bad
-```
-
-See [`examples/03_llm_agentic_workflow.py`](https://github.com/BramVanroy/bcql_py/blob/main/examples/03_llm_agentic_workflow.py)
-for a runnable, LLM-free simulation that shows multiple error scenarios and how the loop
-converges on a valid query.

@@ -1,17 +1,19 @@
 # Guides
 
-These guides cover the BCQL query constructs supported by `bcql_py`, together with patterns
-for integrating the library in real projects.
-
-Much of the BCQL reference material is adapted from the official
-[BlackLab query documentation](https://github.com/instituutnederlandsetaal/BlackLab/tree/dev/site/docs/guide/040_query-language).
+## ``bcql-py`` specific guide
 
 | Guide | What you will learn |
 |---|---|
-| [Token queries](tokens.md) | Matching tokens, sequences, repetitions, lookaround, spans, captures |
-| [Relations](relations.md) | Dependency-relation queries and root relations |
-| [Parallel corpora](parallel.md) | Alignment operators for parallel-corpus search |
 | [LLM workflows](llm-workflows.md) | Agentic retry loops using `BCQLSyntaxError` feedback |
 | [AST & parser design](ast-design.md) | Internal architecture and the Pydantic node hierarchy |
 | [BCQL cheatsheet](cheatsheet.md) | Quick-reference tables for every BCQL construct |
-| [Operators & CQL compatibility](misc.md) | Operator precedence and CQL compatibility notes |
+
+
+## Blacklab official guides
+
+| Guide | What you will learn |
+|---|---|
+| [Token queries](https://blacklab.ivdnt.org/guide/query-language/token-based.html) | Matching tokens, sequences, repetitions, lookaround, spans, captures |
+| [Relations](https://blacklab.ivdnt.org/guide/query-language/relations.html) | Dependency-relation queries and root relations |
+| [Parallel corpora](https://blacklab.ivdnt.org/guide/query-language/parallel.html) | Alignment operators for parallel-corpus search |
+| [Operators & CQL compatibility](https://blacklab.ivdnt.org/guide/query-language/miscellaneous.html) | Operator precedence and CQL compatibility notes |

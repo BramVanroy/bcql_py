@@ -39,7 +39,7 @@ See [AST & parser design](guides/ast-design.md) for the full picture of the AST 
 
 ## Handle errors
 
-[`BCQLSyntaxError`][bcql_py.BCQLSyntaxError] exposes the original query and the error position so
+[`BCQLSyntaxError`][bcql_py.exceptions.BCQLSyntaxError] exposes the original query and the error position so
 you can render them inline or forward them to another system.
 
 ```python
@@ -56,7 +56,7 @@ except BCQLSyntaxError as err:
 ## Tokenize without parsing
 
 Need just the token stream (e.g. for syntax highlighting)?
-Use [`tokenize()`][bcql_py.tokenize]:
+Use [`tokenize()`][bcql_py.parser.tokenize]:
 
 ```python
 from bcql_py import tokenize
@@ -68,8 +68,5 @@ for tok in tokens:
 
 ## Next steps
 
-- [Token queries](guides/tokens.md): the core building block.
-- [Relations](guides/relations.md): dependency queries and root relations.
-- [Parallel corpora](guides/parallel.md): cross-language alignment queries.
-- [LLM workflows](guides/llm-workflows.md): agentic retry loops.
+- [Guides](guides/): a number of guides related to this library specifically and BCQL in general.
 - [Example scripts](https://github.com/BramVanroy/bcql_py/tree/main/examples).

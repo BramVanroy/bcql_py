@@ -10,9 +10,9 @@ The implementation optimises for three goals:
 1. **Full BCQL coverage**: all token queries, sequences, repetitions, spans, lookaround, captures,
    global constraints, relations, and alignments supported by
    [BlackLab](https://github.com/instituutnederlandsetaal/BlackLab/).
-2. **Lossless round-trip**: `parse(query).to_bcql()` reproduces the original query, preserving
-   quote style and shorthand forms.
-3. **Position-aware diagnostics**: [`BCQLSyntaxError`][bcql_py.BCQLSyntaxError] carries the
+2. **Functionally lossless round-trip**: `parse(query).to_bcql()` reproduces the original query,
+   attempting to maximally retain quote style and shorthand forms.
+3. **Position-aware diagnostics**: [`BCQLSyntaxError`][bcql_py.exceptions.BCQLSyntaxError] carries the
    original source and a character offset, so downstream tools (editors, LLMs) can point users
    directly at the problem.
 
