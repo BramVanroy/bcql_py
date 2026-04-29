@@ -151,7 +151,7 @@ docs = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pydantic", specifier = ">=2.13.0,<3" }]
+requires-dist = [{ name = "pydantic", specifier = ">=2.12.0,<3" }]
 
 [package.metadata.requires-dev]
 app = [{ name = "gradio", specifier = "==6.13.0" }]
