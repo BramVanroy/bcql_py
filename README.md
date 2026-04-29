@@ -47,7 +47,7 @@ antlr4 -v 4.13.2 -Dlanguage=Python3 Bcql.g4
 
 Building a lexer is somewhat care-free with the exception of deciding which boundaries to use. As an example, I chose to tokenize the regex positive lookbehind `(?<=` as a single Token but I could have chosen to go deeper and re-use regular parens `(`, followed by a question mark (also used as quantifier) `?`, followed by the single-token `<=`, also used as a mathematical operator. Such changes would make the "vocabulary" smaller but apart from that I did not see much benefit - though I am sure that there are more arguments to make both for and against a minimalist approach.
 
-The parser, however, is a different beast entirely. be separated so we can re-use it and re-use `<=` as a single entity operator), building a parser 
+The parser, however, is a different beast entirely. be separated so we can re-use it and re-use `<=` as a single entity operator), building a parser
 
 ### Pydantic models
 
@@ -66,5 +66,5 @@ If we don't do this, we'll get a Pydantic error about the forward reference not 
 
 ## TODO
 
-- [ ] Update documentation and examples regarding the semantic `validate` option
 - [ ] Output AST as eBNF grammar?
+- [ ] Routinely validate our implementation with official Blacklab [.g4 grammar](https://github.com/instituutnederlandsetaal/BlackLab/blob/e248fc2acf2b8cf44deb2564e8b24138b140d4ca/query-parser/src/main/antlr4/nl/inl/blacklab/queryParser/corpusql/Bcql.g4)?

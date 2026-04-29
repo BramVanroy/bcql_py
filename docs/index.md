@@ -20,6 +20,10 @@ reconstruction and structured error reporting.
   original query (preserving shorthand forms, quote characters, sensitivity flags, etc.).
 - **Position-aware syntax errors**: [`BCQLSyntaxError`][bcql_py.BCQLSyntaxError] carries the original
   query, the 0-based offset, and a caret-annotated message: ready to forward to a user or LLM.
+- **Optional semantic validation**: a [`CorpusSpec`][bcql_py.CorpusSpec] describes which
+  annotations, span tags, alignment fields, and dependency relations your corpus supports.
+  Pass it as ``parse(query, spec=spec)`` to catch typos and unsupported features before they
+  reach the corpus. See the [tagset validation guide](guides/tagset-validation.md).
 - **Zero runtime dependencies** beyond Pydantic.
 
 ## Installation

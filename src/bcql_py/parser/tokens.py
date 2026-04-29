@@ -213,7 +213,7 @@ class Token:
     """A single token produced by the BCQL lexer.
 
     Attributes:
-        type: The [TokenType][bcql_py.parser.tokens.TokenType] of this token.
+        type: The :class:`TokenType` of this token.
         value: The raw string content of the token.
         position: The 0-based character offset in the source string.
     """

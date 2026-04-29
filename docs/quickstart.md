@@ -53,10 +53,29 @@ except BCQLSyntaxError as err:
     str(err)            # Full message with a caret under err.position
 ```
 
+## Validate against a corpus
+
+Pass a [`CorpusSpec`][bcql_py.CorpusSpec] to [`parse()`][bcql_py.parse] to enforce corpus-specific
+rules (which annotations exist, which closed-class values are allowed, whether relations or
+alignment are supported). See the [tagset validation guide](guides/tagset-validation.md) for
+the full picture.
+
+```python
+from bcql_py import CorpusSpec, parse
+
+spec = CorpusSpec(
+    open_attributes={"word", "lemma"},
+    closed_attributes={"pos": {"NOUN", "VERB", "ADJ"}},
+    strict_attributes=True,
+)
+parse('[pos="NOUN"]', spec=spec)   # ok
+parse('[pos="NUMBER"]', spec=spec) # raises BCQLValidationError
+```
+
 ## Tokenize without parsing
 
 Need just the token stream (e.g. for syntax highlighting)?
-Use [`tokenize()`][bcql_py.parser.tokenize]:
+Use [`tokenize()`][bcql_py.tokenize]:
 
 ```python
 from bcql_py import tokenize
@@ -68,5 +87,5 @@ for tok in tokens:
 
 ## Next steps
 
-- [Guides](guides/): a number of guides related to this library specifically and BCQL in general.
+- [Guides](guides/index.md): a number of guides related to this library specifically and BCQL in general.
 - [Example scripts](https://github.com/BramVanroy/bcql_py/tree/main/examples).

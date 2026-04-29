@@ -76,7 +76,7 @@ def generate_bcql(user_query: str, max_attempts: int = 5) -> str:
         except BCQLSyntaxError as err:
             prompt += (
                 f"\n\nPrevious attempt ({attempt + 1}): {query}\n"
-                f"That query is invalid:\n{str(err)}\n"
+                f"That query is invalid:\n{err}\n"
                 "Output only the corrected BCQL query."
             )
 

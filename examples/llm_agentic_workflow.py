@@ -53,12 +53,12 @@ def validate_with_feedback(attempts: list[str]) -> None:
             return
         except BCQLSyntaxError as err:
             print("Validation failed. Feedback for LLM:")
-            # str(err) is what you append to the next LLM prompt. It contains
+            # str(err) is what you append to the next LLM prompt: it contains
             # the error description, the original query, and a caret pointing
-            # to the failure position. Note that you have to use str(err) to
-            # get the formatted message; just printing the exception object
-            # won't include the query or caret!
-            print(str(err))
+            # to the failure position. ``print(err)`` and ``f"{err}"`` produce
+            # the same string (both call __str__); ``str(err)`` is only needed
+            # when you have to concatenate with ``+`` or pass an explicit str.
+            print(err)
 
     print("\nAll attempts exhausted without a valid query.")
 
@@ -76,36 +76,34 @@ syntax_attempts = [
 validate_with_feedback(syntax_attempts)
 
 
-"""
 # Pseudocode for integrating with any OpenAI-compatible LLM API:
-
-    from openai import OpenAI
-    MAX_ATTEMPTS = 5
-
-    client = OpenAI(...)
-    messages = [
-        {"role": "system", "content": "Generate a BCQL query for the following user query."},
-        {"role": "user",   "content": user_request},
-    ]
-
-    for attempt in range(MAX_ATTEMPTS):
-        response = client.chat.completions.create(
-            model="your-model",
-            messages=messages,
-        )
-        query = response.choices[0].message.content.strip()
-        try:
-            ast = parse(query)
-            break  # success
-        except BCQLSyntaxError as err:
-            messages.append({"role": "assistant", "content": query})
-            messages.append({
-                "role": "user",
-                "content": (
-                    f"That query is invalid:\n\n{err}\n\n"
-                    "Please fix it and output only the corrected BCQL query."
-                ),
-            })
-    else:
-        raise RuntimeError(f"LLM could not produce a valid BCQL query after {MAX_ATTEMPTS} attempts.")
-"""
+#
+#     from openai import OpenAI
+#     MAX_ATTEMPTS = 5
+#
+#     client = OpenAI(...)
+#     messages = [
+#         {"role": "system", "content": "Generate a BCQL query for the following user query."},
+#         {"role": "user",   "content": user_request},
+#     ]
+#
+#     for attempt in range(MAX_ATTEMPTS):
+#         response = client.chat.completions.create(
+#             model="your-model",
+#             messages=messages,
+#         )
+#         query = response.choices[0].message.content.strip()
+#         try:
+#             ast = parse(query)
+#             break  # success
+#         except BCQLSyntaxError as err:
+#             messages.append({"role": "assistant", "content": query})
+#             messages.append({
+#                 "role": "user",
+#                 "content": (
+#                     f"That query is invalid:\n\n{err}\n\n"
+#                     "Please fix it and output only the corrected BCQL query."
+#                 ),
+#             })
+#     else:
+#         raise RuntimeError(f"LLM could not produce a valid BCQL query after {MAX_ATTEMPTS} attempts.")

@@ -48,7 +48,11 @@ def iter_children(node: BCQLNode) -> Iterator[BCQLNode]:
 
 
 def _walk_value(value: object) -> Iterator[BCQLNode]:
-    """Recursion, yay!"""
+    """Recursively yield every :class:`BCQLNode` reachable inside ``value``.
+
+    Args:
+        value: Any Python object (typically the value of a Pydantic field).
+    """
     if isinstance(value, BCQLNode):
         yield value
     elif isinstance(value, (list, tuple)):

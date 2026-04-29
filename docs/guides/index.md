@@ -6,6 +6,7 @@
 |---|---|
 | [LLM workflows](llm-workflows.md) | Agentic retry loops using `BCQLSyntaxError` feedback |
 | [AST & parser design](ast-design.md) | Internal architecture and the Pydantic node hierarchy |
+| [Tagset validation](tagset-validation.md) | Semantic validation of queries with `CorpusSpec` |
 | [BCQL cheatsheet](cheatsheet.md) | Quick-reference tables for every BCQL construct |
 
 

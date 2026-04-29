@@ -146,8 +146,8 @@ BCQLNodeUnion = Annotated[
 Use this anywhere a field can hold *any* BCQL node (sub-queries, sequence
 children, relation targets, etc.). For fields restricted to a smaller subset
 of node types, prefer the narrower unions defined alongside their owners
-(e.g. ``ConstraintExpr`` in [token.py](token.py) for token-level constraints,
-``CaptureConstraintExpr`` in [capture.py](capture.py) for capture constraints).
+(e.g. ``ConstraintExpr`` in :mod:`bcql_py.models.token` for token-level constraints,
+``CaptureConstraintExpr`` in :mod:`bcql_py.models.capture` for capture constraints).
 Narrower unions give better validation errors and make the schema honest about
 which nodes are actually legal in that position.
 """

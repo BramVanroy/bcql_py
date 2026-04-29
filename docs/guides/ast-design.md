@@ -21,16 +21,20 @@ The implementation optimises for three goals:
 ```
 BCQL string  -->  tokenize()  -->  tuple[Token, ...]  -->  BCQLParser  -->  BCQLNode (AST)
                                                                                   |
+                                                                       (optional) validate()
+                                                                                  |
                                                                          to_bcql() / model_dump()
 ```
 
 - [`tokenize()`][bcql_py.tokenize] is implemented by [`BCQLLexer`][bcql_py.parser.lexer.BCQLLexer].
 - [`parse_from_tokens()`][bcql_py.parse_from_tokens] drives
   [`BCQLParser`][bcql_py.parser.parser.BCQLParser].
-- [`parse()`][bcql_py.parse] is the convenience wrapper that combines both.
+- [`parse()`][bcql_py.parse] is the convenience wrapper that combines both. It also accepts a
+  ``spec=`` argument that, when provided, runs [`validate()`][bcql_py.validate] against the
+  resulting AST before returning it; see the [tagset validation guide](tagset-validation.md).
 
-All three functions are `functools.lru_cache`-decorated, so repeat calls on the same source return
-the same (immutable) AST instance.
+`tokenize()` and the cached parse step use `functools.lru_cache`, so repeat calls on the same
+source return the same (immutable) token tuple / AST instance.
 
 ## The three grammar layers
 
@@ -79,11 +83,16 @@ from bcql_py.models import BCQLNode
 def walk(node):
     """Depth-first generator yielding every BCQLNode in a tree."""
     yield node
-    for value in node.__dict__.values():
+    for field_name in type(node).model_fields:
+        value = getattr(node, field_name)
         if isinstance(value, BCQLNode):
             yield from walk(value)
-        elif isinstance(value, list):
+        elif isinstance(value, (list, tuple)):
             for item in value:
+                if isinstance(item, BCQLNode):
+                    yield from walk(item)
+        elif isinstance(value, dict):
+            for item in value.values():
                 if isinstance(item, BCQLNode):
                     yield from walk(item)
 

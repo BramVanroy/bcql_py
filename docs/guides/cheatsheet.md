@@ -9,7 +9,7 @@ A comprehensive reference for [BlackLab](https://github.com/instituutnederlandse
 
 ## 1. Basic token matching & attributes
 
-[BlackLab](https://github.com/instituutnederlandsetaal/BlackLab/) defaults to **case- and diacritics-insensitive** search.
+BlackLab defaults to **case- and diacritics-insensitive** search.
 
 | Query | Meaning |
 |-------|---------|
@@ -95,7 +95,7 @@ A comprehensive reference for [BlackLab](https://github.com/instituutnederlandse
 
 ## 8. Relations querying
 
-!!! tip "Supported from [BlackLab](https://github.com/instituutnederlandsetaal/BlackLab/) v4.0"
+!!! tip "Supported from BlackLab v4.0"
 
 | Query | Meaning |
 |-------|---------|
@@ -112,7 +112,7 @@ A comprehensive reference for [BlackLab](https://github.com/instituutnederlandse
 
 ## 9. Parallel corpora querying
 
-!!! tip "Supported from [BlackLab](https://github.com/instituutnederlandsetaal/BlackLab/) v4.0"
+!!! tip "Supported from BlackLab v4.0"
 
 | Query | Meaning |
 |-------|---------|

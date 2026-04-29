@@ -130,16 +130,14 @@ nav:
   - Quickstart: quickstart.md
   - Guides:
       - Overview: guides/index.md
-      - Token queries: guides/tokens.md
-      - Relations: guides/relations.md
-      - Parallel corpora: guides/parallel.md
       - LLM workflows: guides/llm-workflows.md
       - AST & parser design: guides/ast-design.md
+      - Tagset validation: guides/tagset-validation.md
       - BCQL cheatsheet: guides/cheatsheet.md
-      - Operators & CQL compatibility: guides/misc.md
   - API Reference:
       - bcql_py (top-level): api/top_level.md
       - Exceptions: api/exceptions.md
+      - Validation: api/validation.md
       - Models:
           - Overview: api/models/index.md
           - Base: api/models/base.md
