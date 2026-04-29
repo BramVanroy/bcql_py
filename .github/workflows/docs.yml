@@ -1,17 +1,9 @@
 name: Publish docs to GitHub Pages
 
 on:
-  push:
-    branches:
-      - main
-    # Only trigger when files relevant to the docs are changed
-    paths:
-      - 'docs/**'
-      - 'src/**'
-      - 'examples/**'
-      - 'scripts/**'
-      - 'pyproject.toml'
-      - 'mkdocs.yml'
+  release:
+    types: [published]
+
 # Cancel any in-progress docs deploy for the same branch when a new push arrives.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

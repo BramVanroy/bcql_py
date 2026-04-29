@@ -1,7 +1,7 @@
 name: Sync App to Hugging Face Hub
 on:
-  push:
-    branches: [main]
+  release:
+    types: [published]
 
 jobs:
   sync:
