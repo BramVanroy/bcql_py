@@ -75,13 +75,13 @@ THEME = gr.themes.Soft(
     secondary_hue=INDIGO,
     neutral_hue="slate",
     font=(
-        gr.themes.GoogleFont("Inter"),
+        gr.themes.GoogleFont("Roboto"),
         "ui-sans-serif",
         "system-ui",
         "sans-serif",
     ),
     font_mono=(
-        gr.themes.GoogleFont("JetBrains Mono"),
+        gr.themes.GoogleFont("Roboto Mono"),
         "ui-monospace",
         "Consolas",
         "monospace",
@@ -95,6 +95,7 @@ THEME = gr.themes.Soft(
     button_primary_text_color="white",
 )
 
+# Theming: https://www.gradio.app/guides/theming-guide#extending-themes-via-set
 CUSTOM_CSS = """
 .bcql-header {
     text-align: center;
@@ -470,13 +471,13 @@ def build_demo() -> gr.Blocks:
                 error_md = gr.Markdown(
                     value="",
                     label="Error details",
-                    latex_delimiters=[],
+                    latex_delimiters=None,
                 )
 
                 with gr.Tabs():
-                    with gr.TabItem(TAB_LABELS[0]):
+                    with gr.Tab(TAB_LABELS[0]):
                         ast_output = gr.JSON(value=EMPTY_AST, label="")
-                    with gr.TabItem(TAB_LABELS[1]):
+                    with gr.Tab(TAB_LABELS[1]):
                         canonical_output = gr.Textbox(
                             label="",
                             value="",
@@ -484,13 +485,13 @@ def build_demo() -> gr.Blocks:
                             max_lines=10,
                             interactive=False,
                         )
-                    with gr.TabItem(TAB_LABELS[2]):
+                    with gr.Tab(TAB_LABELS[2]):
                         spec_md = gr.Markdown(
                             value=render_spec_description("None (permissive)"),
-                            latex_delimiters=[],
+                            latex_delimiters=None,
                         )
-                    with gr.TabItem(TAB_LABELS[3]):
-                        gr.Markdown(ABOUT_MARKDOWN, latex_delimiters=[])
+                    with gr.Tab(TAB_LABELS[3]):
+                        gr.Markdown(ABOUT_MARKDOWN, latex_delimiters=None)
 
         gr.HTML(
             '<div class="bcql-footer">Built with '

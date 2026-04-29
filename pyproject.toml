@@ -36,7 +36,7 @@ docs = [
     "mkdocstrings[python]>=0.29",
 ]
 app = [
-    "gradio>=6.13,<7",
+    "gradio==6.13.0",
 ]
 dev = [
     {include-group = "docs"},

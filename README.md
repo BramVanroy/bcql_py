@@ -20,7 +20,6 @@ To get started, you can check out:
 - [Python code examples](https://github.com/BramVanroy/bcql_py/tree/main/examples)
 - A [Gradio demo](https://huggingface.co/spaces/BramVanroy/bcql_py_validation)
 
-
 ## Features
 
 - **Complete BCQL coverage**: token queries, sequences, repetitions, spans, lookarounds, captures,

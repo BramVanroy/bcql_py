@@ -154,9 +154,9 @@ docs = [
 requires-dist = [{ name = "pydantic", specifier = ">=2.13.0,<3" }]
 
 [package.metadata.requires-dev]
-app = [{ name = "gradio", specifier = ">=6.13,<7" }]
+app = [{ name = "gradio", specifier = "==6.13.0" }]
 dev = [
-    { name = "gradio", specifier = ">=6.13,<7" },
+    { name = "gradio", specifier = "==6.13.0" },
     { name = "mkdocs-material", specifier = ">=9.5" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.29" },
     { name = "mypy", specifier = ">=1.20.1,<2" },
