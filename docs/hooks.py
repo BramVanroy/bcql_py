@@ -60,6 +60,7 @@ def on_page_content(html: str, **kwargs) -> str:
     """Post-process rendered page HTML to fix doctest blocks."""
 
     def transform_block(m: re.Match) -> str:
+        """Transform a text-highlighted doctest block into Python-highlighted code."""
         raw_code = m.group(1)
         if "&gt;&gt;&gt;" not in raw_code:
             return m.group(0)

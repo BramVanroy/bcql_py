@@ -48,12 +48,14 @@ class SpanQuery(BCQLNode):
 
     @property
     def tag_str(self) -> str:
+        """Return the serialized span tag name."""
         if isinstance(self.tag_name, StringValue):
             return self.tag_name.to_bcql()
         return self.tag_name
 
     @property
     def attrs_str(self) -> str:
+        """Return serialized XML attributes with leading spaces."""
         if not self.attributes:
             return ""
         return "".join(
@@ -61,6 +63,7 @@ class SpanQuery(BCQLNode):
         )
 
     def to_bcql(self) -> str:
+        """Return this span query in BCQL syntax."""
         tag = self.tag_str
         attrs = self.attrs_str
         if self.position == "whole":
@@ -91,4 +94,5 @@ class PositionFilterNode(BCQLNode):
     right: BCQLNodeUnion = Field(description="The positional constraint.")
 
     def to_bcql(self) -> str:
+        """Return this position filter in BCQL syntax."""
         return f"{self.left.to_bcql()} {self.operator} {self.right.to_bcql()}"

@@ -53,6 +53,7 @@ class RelationOperator(BCQLNode):
     )
 
     def to_bcql(self) -> str:
+        """Return this relation operator in BCQL syntax."""
         neg = "!" if self.negated else ""
         rtype = self.relation_type or ""
         field = self.target_field or ""
@@ -81,6 +82,7 @@ class ChildConstraint(BCQLNode):
     )
 
     def to_bcql(self) -> str:
+        """Return this child constraint in BCQL syntax."""
         prefix = f"{self.label}:" if self.label else ""
         return f"{prefix}{self.operator.to_bcql()} {self.target.to_bcql()}"
 
@@ -102,6 +104,7 @@ class RelationNode(BCQLNode):
     )
 
     def to_bcql(self) -> str:
+        """Return this relation query in BCQL syntax."""
         first = f"{self.source.to_bcql()} {self.children[0].to_bcql()}"
         if len(self.children) == 1:
             return first
@@ -135,6 +138,7 @@ class RootRelationNode(BCQLNode):
     )
 
     def to_bcql(self) -> str:
+        """Return this root-relation query in BCQL syntax."""
         prefix = f"{self.label}:" if self.label else ""
         rtype = self.relation_type or ""
         return f"{prefix}^-{rtype}-> {self.target.to_bcql()}"

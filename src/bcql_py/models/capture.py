@@ -44,6 +44,7 @@ class CaptureNode(BCQLNode):
     body: BCQLNodeUnion = Field(description="Sub-query to capture.")
 
     def to_bcql(self) -> str:
+        """Return this capture expression in BCQL syntax."""
         return f"{self.label}:{self.body.to_bcql()}"
 
 
@@ -66,6 +67,7 @@ class AnnotationRef(BCQLNode):
     )
 
     def to_bcql(self) -> str:
+        """Return this annotation reference in BCQL syntax."""
         if self.annotation:
             return f"{self.label}.{self.annotation}"
         return self.label
@@ -88,6 +90,7 @@ class ConstraintLiteral(BCQLNode):
     )
 
     def to_bcql(self) -> str:
+        """Return this literal value in BCQL syntax."""
         return f"{self.quote_char}{self.value}{self.quote_char}"
 
 
@@ -111,6 +114,7 @@ class ConstraintComparison(BCQLNode):
     right: CaptureConstraintExpr = Field(description="Right operand.")
 
     def to_bcql(self) -> str:
+        """Return this comparison expression in BCQL syntax."""
         return f"{self.left.to_bcql()} {self.operator} {self.right.to_bcql()}"
 
 
@@ -134,6 +138,7 @@ class ConstraintBoolean(BCQLNode):
     right: CaptureConstraintExpr = Field(description="Right operand.")
 
     def to_bcql(self) -> str:
+        """Return this boolean expression in BCQL syntax."""
         return f"{self.left.to_bcql()} {self.operator} {self.right.to_bcql()}"
 
 
@@ -148,6 +153,7 @@ class ConstraintNot(BCQLNode):
     operand: CaptureConstraintExpr = Field(description="Constraint to negate.")
 
     def to_bcql(self) -> str:
+        """Return this negated expression in BCQL syntax."""
         return f"!{self.operand.to_bcql()}"
 
 
@@ -164,6 +170,7 @@ class ConstraintInteger(BCQLNode):
     value: int = Field(description="Integer value.")
 
     def to_bcql(self) -> str:
+        """Return this integer literal in BCQL syntax."""
         return str(self.value)
 
 
@@ -185,6 +192,7 @@ class ConstraintFunctionCall(BCQLNode):
     )
 
     def to_bcql(self) -> str:
+        """Return this function call in BCQL syntax."""
         args_str = ", ".join(a.to_bcql() for a in self.args)
         return f"{self.name}({args_str})"
 
@@ -228,4 +236,5 @@ class GlobalConstraintNode(BCQLNode):
     )
 
     def to_bcql(self) -> str:
+        """Return this global-constraint query in BCQL syntax."""
         return f"{self.body.to_bcql()} :: {self.constraint.to_bcql()}"

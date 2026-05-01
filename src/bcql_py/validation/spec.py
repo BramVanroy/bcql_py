@@ -340,6 +340,7 @@ class CorpusSpec(BaseModel):
         parts = [f"# Corpus Specification for {self.__class__.__name__}"]
 
         def format_value(val, level: int = 0) -> str:
+            """Format nested spec values as readable markdown-like text."""
             spaces = "  " * level
             if val is None:
                 return "None"

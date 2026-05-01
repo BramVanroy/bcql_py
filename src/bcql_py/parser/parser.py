@@ -1,10 +1,8 @@
 """Recursive descent parser for BCQL.
 
-Starting from the lowest precedence operators and working down to the highest. The trick is that each level
-immediately delegates down to the tighter-binding level before it looks for its own operator, so while you start
+Starting from the lowest precedence operators and working down to the highest. Each level
+immediately delegates down to the tighter-binding level before it looks for its own operator, so while we start
 at the lowest precedence, it is in fact materialized latest.
-
-See bnf.md for the grammar that we're implementing.
 """
 
 from __future__ import annotations
@@ -99,14 +97,17 @@ class BCQLParser:
 
     @property
     def source(self) -> str:
+        """Return the original BCQL source string."""
         return self._source
 
     @property
     def pos(self) -> int:
+        """Return the current token index in the parser stream."""
         return self._pos
 
     @property
     def tokens(self) -> tuple[Token, ...]:
+        """Return the immutable token stream handled by this parser."""
         return self._tokens
 
     @property

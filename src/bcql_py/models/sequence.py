@@ -45,6 +45,7 @@ class SequenceNode(BCQLNode):
     )
 
     def to_bcql(self) -> str:
+        """Return this sequence in BCQL syntax."""
         return " ".join(child.to_bcql() for child in self.children)
 
 
@@ -72,6 +73,7 @@ class RepetitionNode(BCQLNode):
 
     @property
     def quantifier(self) -> str:
+        """Return the BCQL quantifier string for this repetition."""
         if self.min_count == 0 and self.max_count is None:
             return "*"
         if self.min_count == 1 and self.max_count is None:
@@ -87,6 +89,7 @@ class RepetitionNode(BCQLNode):
         return f"{{{self.min_count},{self.max_count}}}"
 
     def to_bcql(self) -> str:
+        """Return this repetition expression in BCQL syntax."""
         return f"{self.child.to_bcql()}{self.quantifier}"
 
 
@@ -106,6 +109,7 @@ class GroupNode(BCQLNode):
     child: BCQLNodeUnion = Field(description="The inner sub-query")
 
     def to_bcql(self) -> str:
+        """Return this parenthesized group in BCQL syntax."""
         return f"({self.child.to_bcql()})"
 
 
@@ -128,6 +132,7 @@ class SequenceBoolNode(BCQLNode):
     right: BCQLNodeUnion = Field(description="Right operand.")
 
     def to_bcql(self) -> str:
+        """Return this sequence-level boolean expression in BCQL syntax."""
         return f"{self.left.to_bcql()} {self.operator} {self.right.to_bcql()}"
 
 
@@ -147,6 +152,7 @@ class NegationNode(BCQLNode):
     child: BCQLNodeUnion = Field(description="The sub-query to negate.")
 
     def to_bcql(self) -> str:
+        """Return this negated sub-query in BCQL syntax."""
         return f"!{self.child.to_bcql()}"
 
 
@@ -160,4 +166,5 @@ class UnderscoreNode(BCQLNode):
     node_type: Literal["underscore"] = "underscore"
 
     def to_bcql(self) -> str:
+        """Return the underscore wildcard in BCQL syntax."""
         return "_"

@@ -1,3 +1,5 @@
+"""Download BlackLab's ``Bcql.g4`` grammar file into this repository."""
+
 # Download the latest parser definition from Github https://github.com/instituutnederlandsetaal/BlackLab
 # BlackLab/query-parser/src/main/antlr4/nl/inl/blacklab/queryParser/corpusql/Bcql.g4
 # Allow for specifying a branch and optionally tag (otherwise latest commit)
@@ -17,6 +19,12 @@ def main(
     branch: str = "dev",
     tag: str | None = None,
 ):
+    """Download ``Bcql.g4`` from GitHub and save it under ``parser/``.
+
+    Args:
+        branch: Git branch to use when ``tag`` is not provided.
+        tag: Optional git tag to download from instead of ``branch``.
+    """
     if tag is not None:
         url = f"https://raw.githubusercontent.com/instituutnederlandsetaal/BlackLab/{tag}/{_DEFINITION_PATH}"
     else:
@@ -29,6 +37,7 @@ def main(
 
 
 def entry_point():
+    """Parse CLI arguments and invoke :func:`main`."""
     import argparse
 
     parser = argparse.ArgumentParser(

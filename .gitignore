@@ -10,6 +10,7 @@ questions.md
 /legacy
 TODO.md
 /.gradio
+/.github/interrogate_badge.svg
 
 src/bcql_py/_version.py
 

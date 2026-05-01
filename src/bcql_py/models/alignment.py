@@ -45,6 +45,7 @@ class AlignmentOperator(BCQLNode):
     )
 
     def to_bcql(self) -> str:
+        """Return this alignment operator in BCQL syntax."""
         rtype = self.relation_type or ""
         opt = "?" if self.optional else ""
         capture = f"{self.capture_name}:" if self.capture_name else ""
@@ -66,6 +67,7 @@ class AlignmentConstraint(BCQLNode):
     target: BCQLNodeUnion = Field(description="Target sub-query.")
 
     def to_bcql(self) -> str:
+        """Return this alignment constraint in BCQL syntax."""
         return f"{self.operator.to_bcql()} {self.target.to_bcql()}"
 
 
@@ -83,6 +85,7 @@ class AlignmentNode(BCQLNode):
     )
 
     def to_bcql(self) -> str:
+        """Return this alignment query in BCQL syntax."""
         first = f"{self.source.to_bcql()} {self.alignments[0].to_bcql()}"
         if len(self.alignments) == 1:
             return first

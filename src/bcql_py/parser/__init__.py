@@ -1,3 +1,5 @@
+"""Public parser entry points for tokenization, parsing and validation."""
+
 from functools import lru_cache
 from typing import Sequence
 
@@ -6,7 +8,7 @@ from bcql_py.parser.lexer import BCQLLexer
 from bcql_py.parser.parser import BCQLParser
 from bcql_py.parser.tokens import Token, TokenType
 from bcql_py.validation.spec import CorpusSpec
-from bcql_py.validation.validator import validate as _validate
+from bcql_py.validation.validator import validate
 
 
 @lru_cache(maxsize=64)
@@ -25,6 +27,7 @@ def tokenize(source: str) -> tuple[Token, ...]:
 
 @lru_cache(maxsize=64)
 def _parse_cached(source: str) -> BCQLNode:
+    """Parse BCQL query with caching and return the root AST node."""
     tokens = BCQLLexer(source).tokenize()
     return BCQLParser(tokens, source=source).parse()
 
@@ -56,7 +59,7 @@ def parse(
     """
     ast = _parse_cached(source)
     if spec is not None:
-        _validate(ast, spec, fail_fast=fail_fast)
+        validate(ast, spec, fail_fast=fail_fast)
     return ast
 
 
@@ -82,7 +85,7 @@ def parse_from_tokens(
     parser = BCQLParser(tokens, source=source)
     ast = parser.parse()
     if spec is not None:
-        _validate(ast, spec, fail_fast=fail_fast)
+        validate(ast, spec, fail_fast=fail_fast)
     return ast
 
 

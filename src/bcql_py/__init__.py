@@ -1,3 +1,5 @@
+"""Top-level public API for bcql_py."""
+
 from importlib import metadata
 
 from bcql_py.exceptions import (

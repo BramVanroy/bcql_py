@@ -31,6 +31,7 @@ class FunctionCallNode(BCQLNode):
     args: list[BCQLNodeUnion | int] = Field(description="Positional arguments")
 
     def to_bcql(self) -> str:
+        """Return this function call in BCQL syntax."""
         parts: list[str] = []
         for arg in self.args:
             if isinstance(arg, int):

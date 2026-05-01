@@ -1,3 +1,5 @@
+"""Token types and token helpers used by the BCQL lexer and parser."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -5,6 +7,8 @@ from enum import StrEnum, auto
 
 
 class TokenType(StrEnum):
+    """Enumeration of all token kinds recognized in BCQL source."""
+
     # Literals
     STRING = auto()  # "hello", 'world'
     LITERAL_STRING = auto()  # l"e.g.", l'fo.o'
@@ -223,6 +227,7 @@ class Token:
     position: int
 
     def __repr__(self) -> str:
+        """Return a compact debug representation of this token."""
         return f"Token({self.type.name}, {self.value!r}, pos={self.position})"
 
 

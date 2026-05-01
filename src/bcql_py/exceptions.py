@@ -1,3 +1,5 @@
+"""Custom exceptions and validation issue types for bcql_py."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -8,6 +10,8 @@ __all__ = ["BCQLSyntaxError", "BCQLValidationError", "ValidationIssue"]
 
 
 class BCQLSyntaxError(Exception):
+    """Raised when tokenization or parsing of a BCQL query fails."""
+
     def __init__(
         self,
         error_message: str,
@@ -15,12 +19,20 @@ class BCQLSyntaxError(Exception):
         bcql_query: str = "",
         error_position: int | None = None,
     ) -> None:
+        """Initialize a syntax error with optional source and position.
+
+        Args:
+            error_message: Human-readable parse or lexing error message.
+            bcql_query: Original BCQL source query.
+            error_position: 0-based character position in ``bcql_query``.
+        """
         self.query = bcql_query
         self.position = error_position
         self.message = error_message
         super().__init__(str(self))
 
     def __str__(self) -> str:
+        """Return a readable message including a caret position when available."""
         # Potential issue: this assumes there are no newlines in the query
         # TODO: check that bcql cannot/should not contain newlines which might mess with this error formatting
         parts = [self.message]
@@ -62,6 +74,7 @@ class ValidationIssue:
     context: dict[str, Any] = field(default_factory=dict)
 
     def __str__(self) -> str:
+        """Return this issue as a compact single-line message."""
         if self.context:
             ctx = ", ".join(f"{k}={v!r}" for k, v in self.context.items())
             return f"[{self.kind}] {self.message} ({ctx})"
@@ -87,6 +100,7 @@ class BCQLValidationError(Exception):
         super().__init__(str(self))
 
     def __str__(self) -> str:
+        """Return one issue or a multi-line list of all validation issues as a string."""
         if len(self.issues) == 1:
             return str(self.issues[0])
         lines = [f"{len(self.issues)} validation issue(s):"]

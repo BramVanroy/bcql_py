@@ -1,3 +1,5 @@
+"""Tokenize BCQL source text into a typed token stream."""
+
 from __future__ import annotations
 
 from bcql_py.exceptions import BCQLSyntaxError
@@ -5,9 +7,16 @@ from bcql_py.parser.tokens import KEYWORDS, Token, TokenType
 
 
 class BCQLLexer:
+    """A hand-written lexer for BCQL query strings, converting a given string into a sequence of tokens."""
+
     __slots__ = ("_source", "_pos", "_tokens")
 
     def __init__(self, source: str) -> None:
+        """Initialize the empty lexer state for ``source``.
+
+        Args:
+            source: BCQL query text to tokenize.
+        """
         self._source = source
         self._pos = 0
         # Private attr: a list during processing so we can append
@@ -16,14 +25,17 @@ class BCQLLexer:
 
     @property
     def source(self) -> str:
+        """Return the original BCQL source string."""
         return self._source
 
     @property
     def pos(self) -> int:
+        """Return the current character position in ``source``."""
         return self._pos
 
     @property
     def tokens(self) -> tuple[Token, ...]:
+        """Return the tokenized source as an immutable token tuple."""
         # Return a tuple to prevent accidental modification of the token list from outside the lexer
         if not self._tokens:
             self.tokenize()

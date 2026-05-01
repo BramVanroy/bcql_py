@@ -57,6 +57,7 @@ class StringValue(BCQLNode):
     )
 
     def to_bcql(self) -> str:
+        """Return this string value in BCQL syntax."""
         qchar = self.quote_char
         prefix = "l" if self.is_literal else ""
         return f"{prefix}{qchar}{self.value}{qchar}"
@@ -87,6 +88,7 @@ class AnnotationConstraint(BCQLNode):
     value: StringValue = Field(description="The value being compared against.")
 
     def to_bcql(self) -> str:
+        """Return this annotation constraint in BCQL syntax."""
         return f"{self.annotation}{self.operator}{self.value.to_bcql()}"
 
 
@@ -109,6 +111,7 @@ class IntegerRangeConstraint(BCQLNode):
     max_val: int = Field(description="Inclusive upper bound.")
 
     def to_bcql(self) -> str:
+        """Return this integer range constraint in BCQL syntax."""
         return f"{self.annotation}=in[{self.min_val},{self.max_val}]"
 
 
@@ -127,6 +130,7 @@ class FunctionConstraint(BCQLNode):
     args: list[StringValue] = Field(description="String arguments.")
 
     def to_bcql(self) -> str:
+        """Return this function constraint in BCQL syntax."""
         args_str = ", ".join(a.to_bcql() for a in self.args)
         return f"{self.name}({args_str})"
 
@@ -144,6 +148,7 @@ class NotConstraint(BCQLNode):
     operand: ConstraintExpr = Field(description="The constraint to negate.")
 
     def to_bcql(self) -> str:
+        """Return this negated token constraint in BCQL syntax."""
         inner = self.operand.to_bcql()
         # Wrap compound expressions in parens for clarity
         if isinstance(self.operand, BoolConstraint):
@@ -175,6 +180,7 @@ class BoolConstraint(BCQLNode):
     right: ConstraintExpr = Field(description="Right operand.")
 
     def to_bcql(self) -> str:
+        """Return this boolean token constraint in BCQL syntax."""
         return f"{self.left.to_bcql()} {self.operator} {self.right.to_bcql()}"
 
 
@@ -221,6 +227,7 @@ class TokenQuery(BCQLNode):
     )
 
     def to_bcql(self) -> str:
+        """Return this token query in BCQL syntax."""
         if self.shorthand is not None:
             prefix = "!" if self.negated else ""
             return f"{prefix}{self.shorthand.to_bcql()}"

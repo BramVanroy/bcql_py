@@ -35,6 +35,7 @@ class LookaheadNode(BCQLNode):
     body: BCQLNodeUnion = Field(description="The sub-query to match ahead.")
 
     def to_bcql(self) -> str:
+        """Return this lookahead assertion in BCQL syntax."""
         op = "?=" if self.positive else "?!"
         return f"({op} {self.body.to_bcql()})"
 
@@ -56,5 +57,6 @@ class LookbehindNode(BCQLNode):
     body: BCQLNodeUnion = Field(description="The sub-query to match behind.")
 
     def to_bcql(self) -> str:
+        """Return this lookbehind assertion in BCQL syntax."""
         op = "?<=" if self.positive else "?<!"
         return f"({op} {self.body.to_bcql()})"

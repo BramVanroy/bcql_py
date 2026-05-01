@@ -1,4 +1,5 @@
 quality:
+	uv run interrogate -vv
 	uv run ruff check src/bcql_py tests/ scripts/ examples/ generate_llms_file.py
 	uv run ruff format --check src/bcql_py tests/ scripts/ examples/ generate_llms_file.py
 
