@@ -1,9 +1,10 @@
 # A Python parser for BlackLab Corpus Query Language
 
 [![Documentation](https://img.shields.io/badge/documentation-4051b5)](https://bramvanroy.github.io/bcql_py/)
-[![codecov](https://codecov.io/gh/BramVanroy/bcql_py/branch/main/graph/badge.svg)](https://codecov.io/gh/BramVanroy/bcql_py)
-[![License](https://img.shields.io/github/license/BramVanroy/bcql_py)](LICENSE)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bcql_py)
+[![codecov](https://codecov.io/gh/BramVanroy/bcql_py/branch/main/graph/badge.svg)](https://codecov.io/gh/BramVanroy/bcql_py)
+[![Interrogate coverage](https://raw.githubusercontent.com/BramVanroy/bcql_py/main/.github/interrogate_badge.svg)](https://github.com/BramVanroy/bcql_py/actions/workflows/interrogate-badge.yml)
+[![License](https://img.shields.io/github/license/BramVanroy/bcql_py)](LICENSE)
 
 <!-- --8<-- [start:overview] -->
 
