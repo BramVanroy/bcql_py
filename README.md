@@ -63,39 +63,41 @@ uv sync --group app
 uv run python app/app.py
 ```
 
-## Supported BCQL constructs
-
-| Category | Examples |
-| --- | --- |
-| Token queries | `[word="man"]`, `"man"`, `[]`, `[pos != "noun"]` |
-| Regex & literal strings | `"(wo)?man"`, `l"e.g."`, `"(?-i)Panama"` |
-| Boolean constraints | `[lemma="search" & pos="noun"]`, `[a="x" \| b="y"]` |
-| Sequences | `"the" "tall" "man"` |
-| Repetitions | `[pos="ADJ"]+`, `[]{2,5}`, `"word"?` |
-| Spans | `<s/>`, `<s>`, `</s>`, `<ne type="PERS"/>` |
-| Position filters | `"baker" within <person/>`, `<s/> containing "dog"` |
-| Captures | `A:[pos="ADJ"]`, `A:[] "by" B:[] :: A.word = B.word` |
-| Relations | `_ -obj-> _`, `_ -subj-> _ ; -obj-> _`, `^--> "have"` |
-| Alignments | `"cat" ==>nl _`, `"cat" ==>nl? _` |
-| Lookaround | `(?= "next")`, `(?<= "prev")`, `(?! "not")` |
-| Functions | `meet(...)`, `rspan(...)`, `rfield(...)` |
-
-See the [cheatsheet](https://bramvanroy.github.io/bcql_py/guides/cheatsheet/) for a quick-reference
-table of every operator.
-
 ## Development
+
+Clone and set up the project:
 
 ```bash
 git clone https://github.com/BramVanroy/bcql_py.git
 cd bcql_py
-uv sync
+uv sync --dev
+```
 
-# Run tests and doctests
-uv run pytest
+Enable pre-commit hooks:
 
-# Lint and format
-make quality   # check only
-make style     # auto-fix
+```bash
+uv run pre-commit install
+```
+
+After installation, hooks run automatically on every `git commit`.
+We do style chechking with ruff and type-checking with mypy.
+You can also run them manually across the whole repo:
+
+```bash
+uv run pre-commit run --all-files
+```
+
+To work on documentation locally:
+
+```bash
+make docs
+```
+
+You can/should run tests before pushing to the remote, although
+a Github workflow will run those anyway on push. To run them locally:
+
+```bash
+make test
 ```
 
 <!-- --8<-- [end:overview] -->

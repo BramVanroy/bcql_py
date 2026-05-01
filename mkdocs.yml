@@ -63,6 +63,9 @@ hooks:
 plugins:
   # Full-text search index used by the site search UI
   - search
+  - gen-files:
+      scripts:
+        - generate_llms_file.py
   # Generates API reference pages from Python objects and docstrings
   - mkdocstrings:
       # Custom Jinja templates for mkdocstrings rendering
