@@ -6,14 +6,16 @@ changing the grouping, unless they introduce a nested sub-expression that the AS
 """
 
 import pytest
-from conftest import round_trip_test
+from conftest import json_round_trip_test, round_trip_test
 
 from bcql_py.models.capture import (
     AnnotationRef,
     ConstraintBoolean,
+    ConstraintBoolLiteral,
     ConstraintComparison,
     ConstraintFunctionCall,
     ConstraintInteger,
+    ConstraintIntegerRange,
     ConstraintLiteral,
     ConstraintNot,
     GlobalConstraintNode,
@@ -362,3 +364,144 @@ class TestBareLabel:
     def test_bare_label_round_trips(self):
         """Round-trip: bare label in function argument preserves structure."""
         round_trip_test("A:[] :: start(A)")
+
+
+class TestConstraintBoolLiteral:
+    """Boolean literals (``true`` / ``false``) in capture constraints."""
+
+    def test_true_rhs(self):
+        """``:: A.negated = true`` - compare an annotation ref to the boolean literal true."""
+        node = parse("A:[] :: A.negated = true")
+        assert isinstance(node, GlobalConstraintNode)
+        cmp = node.constraint
+        assert isinstance(cmp, ConstraintComparison)
+        assert cmp.operator == "="
+        assert isinstance(cmp.right, ConstraintBoolLiteral)
+        assert cmp.right.value is True
+
+    def test_false_rhs(self):
+        """``:: A.negated = false`` - compare an annotation ref to the boolean literal false."""
+        node = parse("A:[] :: A.negated = false")
+        assert isinstance(node, GlobalConstraintNode)
+        cmp = node.constraint
+        assert isinstance(cmp, ConstraintComparison)
+        assert isinstance(cmp.right, ConstraintBoolLiteral)
+        assert cmp.right.value is False
+
+    def test_true_lhs(self):
+        """``:: true = A.negated`` - boolean literal on the left-hand side."""
+        node = parse("A:[] :: true = A.negated")
+        assert isinstance(node, GlobalConstraintNode)
+        cmp = node.constraint
+        assert isinstance(cmp, ConstraintComparison)
+        assert isinstance(cmp.left, ConstraintBoolLiteral)
+        assert cmp.left.value is True
+
+    def test_round_trip_true(self):
+        """Round-trip: ``true`` literal round-trips to ``true``."""
+        round_trip_test("A:[] :: A.negated = true")
+
+    def test_round_trip_false(self):
+        """Round-trip: ``false`` literal round-trips to ``false``."""
+        round_trip_test("A:[] :: A.negated = false")
+
+    def test_json_round_trip(self):
+        """JSON round-trip: boolean literals are faithfully serialized and deserialized."""
+        json_round_trip_test("A:[] :: A.negated = true")
+        json_round_trip_test("A:[] :: A.negated = false")
+
+
+class TestConstraintIntegerRange:
+    """Standalone integer range values (``in[min,max]``) in capture constraints."""
+
+    def test_basic_range(self):
+        """``:: A.depth = in[2,5]`` - compare an annotation ref to an integer range."""
+        node = parse("A:[] :: A.depth = in[2,5]")
+        assert isinstance(node, GlobalConstraintNode)
+        cmp = node.constraint
+        assert isinstance(cmp, ConstraintComparison)
+        assert cmp.operator == "="
+        assert isinstance(cmp.right, ConstraintIntegerRange)
+        assert cmp.right.min_val == 2
+        assert cmp.right.max_val == 5
+
+    def test_range_lhs(self):
+        """``:: in[2,5] = A.depth`` - integer range on the left-hand side."""
+        node = parse("A:[] :: in[2,5] = A.depth")
+        assert isinstance(node, GlobalConstraintNode)
+        cmp = node.constraint
+        assert isinstance(cmp, ConstraintComparison)
+        assert isinstance(cmp.left, ConstraintIntegerRange)
+        assert cmp.left.min_val == 2
+
+    def test_round_trip(self):
+        """Round-trip: integer range in a capture constraint round-trips correctly."""
+        round_trip_test("A:[] :: A.depth = in[2,5]")
+
+    def test_json_round_trip(self):
+        """JSON round-trip: integer range is faithfully serialized and deserialized."""
+        json_round_trip_test("A:[] :: A.depth = in[2,5]")
+
+
+class TestConstraintValueNegation:
+    """Value-level negation (``!``) applied inside a comparison operand."""
+
+    def test_value_negation_literal(self):
+        """``:: A.word = !"cat"`` - right-hand side is a negated string literal."""
+        node = parse('A:[] :: A.word = !"cat"')
+        assert isinstance(node, GlobalConstraintNode)
+        cmp = node.constraint
+        assert isinstance(cmp, ConstraintComparison)
+        assert isinstance(cmp.right, ConstraintNot)
+        assert isinstance(cmp.right.operand, ConstraintLiteral)
+        assert cmp.right.operand.value == "cat"
+
+    def test_value_negation_integer(self):
+        """``:: A.depth = !5`` - right-hand side is a negated integer."""
+        node = parse("A:[] :: A.depth = !5")
+        assert isinstance(node, GlobalConstraintNode)
+        cmp = node.constraint
+        assert isinstance(cmp, ConstraintComparison)
+        assert isinstance(cmp.right, ConstraintNot)
+        assert isinstance(cmp.right.operand, ConstraintInteger)
+        assert cmp.right.operand.value == 5
+
+    def test_value_negation_bool(self):
+        """``:: A.negated = !true`` - right-hand side is a negated boolean literal."""
+        node = parse("A:[] :: A.negated = !true")
+        assert isinstance(node, GlobalConstraintNode)
+        cmp = node.constraint
+        assert isinstance(cmp, ConstraintComparison)
+        assert isinstance(cmp.right, ConstraintNot)
+        assert isinstance(cmp.right.operand, ConstraintBoolLiteral)
+        assert cmp.right.operand.value is True
+
+    def test_value_negation_integer_range(self):
+        """``:: A.depth = !in[2,5]`` - right-hand side is a negated integer range."""
+        node = parse("A:[] :: A.depth = !in[2,5]")
+        assert isinstance(node, GlobalConstraintNode)
+        cmp = node.constraint
+        assert isinstance(cmp, ConstraintComparison)
+        assert isinstance(cmp.right, ConstraintNot)
+        assert isinstance(cmp.right.operand, ConstraintIntegerRange)
+        assert cmp.right.operand.min_val == 2
+
+    def test_double_value_negation(self):
+        """``:: A.word = !!"cat"`` - double negation at value level."""
+        node = parse('A:[] :: A.word = !!"cat"')
+        assert isinstance(node, GlobalConstraintNode)
+        cmp = node.constraint
+        assert isinstance(cmp, ConstraintComparison)
+        outer = cmp.right
+        assert isinstance(outer, ConstraintNot)
+        assert isinstance(outer.operand, ConstraintNot)
+        assert isinstance(outer.operand.operand, ConstraintLiteral)
+
+    def test_round_trip_value_negation(self):
+        """Round-trip: value-level negation round-trips correctly."""
+        round_trip_test('A:[] :: A.word = !"cat"')
+        round_trip_test("A:[] :: A.negated = !true")
+
+    def test_json_round_trip_value_negation(self):
+        """JSON round-trip: value-level negation is faithfully serialized and deserialized."""
+        json_round_trip_test('A:[] :: A.word = !"cat"')

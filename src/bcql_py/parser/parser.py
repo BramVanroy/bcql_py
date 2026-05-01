@@ -24,9 +24,11 @@ from bcql_py.models.capture import (
     CaptureConstraintExpr,
     CaptureNode,
     ConstraintBoolean,
+    ConstraintBoolLiteral,
     ConstraintComparison,
     ConstraintFunctionCall,
     ConstraintInteger,
+    ConstraintIntegerRange,
     ConstraintLiteral,
     ConstraintNot,
     GlobalConstraintNode,
@@ -1220,12 +1222,15 @@ class BCQLParser:
         return left
 
     def _parse_cc_atom(self) -> CaptureConstraintExpr:
-        """``cc_atom := STRING | INTEGER | IDENT '.' IDENT | IDENT '(' cc_arg_list ')' | '(' cc_bool ')'``
+        """``cc_atom := STRING | INTEGER | TRUE | FALSE | IN '[' INTEGER ',' INTEGER ']' | '!' cc_atom | IDENT '.' IDENT | IDENT '(' cc_arg_list ')' | '(' cc_bool ')'``
 
         Highest precedence in the capture constraint grammar. Dispatches based on the current token:
 
         - **String literal** (``"over"``): produces a ``ConstraintLiteral``.
         - **Integer literal** (``5``): produces a ``ConstraintInteger``.
+        - **Boolean literal** (``true`` / ``false``): produces a ``ConstraintBoolLiteral``.
+        - **Integer range** (``in[2,5]``): produces a ``ConstraintIntegerRange``.
+        - **Negation** (``!``): produces a ``ConstraintNot`` wrapping a recursive ``cc_atom``.
         - **Identifier followed by ``.``** (``A.word``): produces an ``AnnotationRef``.
         - **Identifier followed by ``(``** (``start(A)``): produces a ``ConstraintFunctionCall``.
         - **Bare identifier** (``A``): produces an ``AnnotationRef`` with no annotation (used as a
@@ -1257,6 +1262,20 @@ class BCQLParser:
             self._advance()
             return ConstraintInteger(value=int(tok.value))
 
+        # Boolean literal
+        if tok.type in (TokenType.TRUE, TokenType.FALSE):
+            self._advance()
+            return ConstraintBoolLiteral(value=tok.type == TokenType.TRUE)
+
+        # Integer range: in[min,max]
+        if tok.type == TokenType.IN:
+            return self._parse_cc_integer_range()
+
+        # Value-level negation: !cc_atom
+        if tok.type == TokenType.BANG:
+            self._advance()
+            return ConstraintNot(operand=self._parse_cc_atom())
+
         # Identifier-led alternatives: A.word, start(...), or bare label
         if tok.type == TokenType.IDENTIFIER:
             ident_tok = self._advance()
@@ -1279,7 +1298,34 @@ class BCQLParser:
             return AnnotationRef(label=ident_tok.value, annotation="")
 
         raise self._raise_error(
-            f"Expected a string, identifier, integer, or '(' in capture constraint, got {display_token(tok)}"
+            f"Expected a string, identifier, integer, boolean, 'in[...]', or '(' in capture constraint, got {display_token(tok)}"
+        )
+
+    def _parse_cc_integer_range(self) -> ConstraintIntegerRange:
+        """Parse ``in[min,max]`` as a standalone integer range value in a capture constraint.
+
+        Called when ``in`` is the current token. Mirrors the token-level
+        ``_parse_integer_range_constraint`` but returns a standalone
+        ``ConstraintIntegerRange`` with no annotation prefix.
+
+        Returns:
+            A ``ConstraintIntegerRange`` node.
+
+        Raises:
+            BCQLSyntaxError: If the expected tokens are missing.
+        """
+        self._expect(TokenType.IN, "in integer range")
+        self._expect(TokenType.LBRACKET, "in integer range")
+        min_tok = self._expect(
+            TokenType.INTEGER, "as lower bound of integer range"
+        )
+        self._expect(TokenType.COMMA, "in integer range")
+        max_tok = self._expect(
+            TokenType.INTEGER, "as upper bound of integer range"
+        )
+        self._expect(TokenType.RBRACKET, "in integer range")
+        return ConstraintIntegerRange(
+            min_val=int(min_tok.value), max_val=int(max_tok.value)
         )
 
     def _parse_cc_function_call(self, name: str) -> ConstraintFunctionCall:

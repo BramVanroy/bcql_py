@@ -1,18 +1,11 @@
 """Download BlackLab's ``Bcql.g4`` grammar file into this repository."""
 
-# Download the latest parser definition from Github https://github.com/instituutnederlandsetaal/BlackLab
-# BlackLab/query-parser/src/main/antlr4/nl/inl/blacklab/queryParser/corpusql/Bcql.g4
-# Allow for specifying a branch and optionally tag (otherwise latest commit)
-
-_DEFINITION_PATH = (
-    "query-parser/src/main/antlr4/nl/inl/blacklab/queryParser/corpusql/Bcql.g4"
-)
 from pathlib import Path
 
 
 _CURRENT_DIR = Path(__file__).parent
 
-import requests
+from bcql_py.utils import get_blacklab_g4_grammar
 
 
 def main(
@@ -25,15 +18,8 @@ def main(
         branch: Git branch to use when ``tag`` is not provided.
         tag: Optional git tag to download from instead of ``branch``.
     """
-    if tag is not None:
-        url = f"https://raw.githubusercontent.com/instituutnederlandsetaal/BlackLab/{tag}/{_DEFINITION_PATH}"
-    else:
-        url = f"https://raw.githubusercontent.com/instituutnederlandsetaal/BlackLab/{branch}/{_DEFINITION_PATH}"
-    response = requests.get(url)
-    response.raise_for_status()
-    pfout = _CURRENT_DIR.parent / "parser" / Path(_DEFINITION_PATH).name
-    pfout.write_text(response.text, encoding="utf-8")
-    print(f"Downloaded BCQL parser definition from {url} and saved to {pfout}")
+    pfout = _CURRENT_DIR.parent / "parser" / "Bcql.g4"
+    get_blacklab_g4_grammar(output_path=pfout, branch=branch, tag=tag)
 
 
 def entry_point():

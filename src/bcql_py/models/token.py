@@ -93,7 +93,7 @@ class AnnotationConstraint(BCQLNode):
 
 
 class IntegerRangeConstraint(BCQLNode):
-    """An integer range constraint, such as a parser's confidence: ``annotation=in[min,max]``.
+    """An integer range constraint, such as a parser's confidence: ``confidence=in[min,max]``.
 
     Example: ``pos_confidence=in[50,100]``.
 

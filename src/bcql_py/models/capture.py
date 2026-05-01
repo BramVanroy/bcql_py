@@ -23,6 +23,8 @@ __all__ = [
     "ConstraintBoolean",
     "ConstraintNot",
     "ConstraintInteger",
+    "ConstraintBoolLiteral",
+    "ConstraintIntegerRange",
     "ConstraintFunctionCall",
     "CaptureConstraintExpr",
     "GlobalConstraintNode",
@@ -174,6 +176,45 @@ class ConstraintInteger(BCQLNode):
         return str(self.value)
 
 
+class ConstraintBoolLiteral(BCQLNode):
+    """A boolean literal value in a capture constraint.
+
+    Example: the ``true`` in ``A.property = true``.
+
+    Attributes:
+        value: The boolean value.
+    """
+
+    node_type: Literal["constraint_bool_literal"] = "constraint_bool_literal"
+    value: bool = Field(description="Boolean value.")
+
+    def to_bcql(self) -> str:
+        """Return this boolean literal in BCQL syntax."""
+        return "true" if self.value else "false"
+
+
+class ConstraintIntegerRange(BCQLNode):
+    """A standalone integer range value in a capture constraint.
+
+    Example: the ``in[2,5]`` in ``A.depth = in[2,5]``.
+    This is distinct from ``IntegerRangeConstraint`` in :mod:`bcql_py.models.token`,
+    which bundles an annotation name with the range inside a token query, e.g.
+    ``pos_confidence=in[min,max]``.
+
+    Attributes:
+        min_val: Lower bound of the range (inclusive).
+        max_val: Upper bound of the range (inclusive).
+    """
+
+    node_type: Literal["constraint_integer_range"] = "constraint_integer_range"
+    min_val: int = Field(description="Lower bound (inclusive).")
+    max_val: int = Field(description="Upper bound (inclusive).")
+
+    def to_bcql(self) -> str:
+        """Return this integer range in BCQL syntax."""
+        return f"in[{self.min_val},{self.max_val}]"
+
+
 class ConstraintFunctionCall(BCQLNode):
     """A function call in a capture constraint.
 
@@ -203,6 +244,8 @@ CaptureConstraintExpr = Annotated[
         AnnotationRef,
         ConstraintLiteral,
         ConstraintInteger,
+        ConstraintBoolLiteral,
+        ConstraintIntegerRange,
         ConstraintComparison,
         ConstraintBoolean,
         ConstraintNot,
