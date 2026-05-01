@@ -48,7 +48,6 @@ EXAMPLES: list[list[str]] = [
 
 TAB_LABELS: tuple[str, ...] = (
     "AST (JSON)",
-    "Canonical BCQL",
     "Active spec",
 )
 
@@ -479,7 +478,7 @@ with gr.Blocks(
             with gr.Tabs():
                 with gr.Tab(TAB_LABELS[0], render_children=True):
                     ast_output = gr.JSON(value=EMPTY_AST, label="")
-                with gr.Tab(TAB_LABELS[2], render_children=True):
+                with gr.Tab(TAB_LABELS[1], render_children=True):
                     spec_md = gr.Markdown(
                         value=render_spec_description("None (permissive)"),
                     )

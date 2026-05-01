@@ -21,24 +21,42 @@ import pytest
 
 
 pytest.importorskip("gradio")
+import gradio as gr
+
 
 # Make the repo-root ``app/`` importable without installing it as a package.
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from app.app import (  # noqa: E402
-    EMPTY_AST,
-    EXAMPLES,
-    PRESETS,
-    TAB_LABELS,
-    _build_custom_spec,
-    _parse_closed_attributes,
-    _parse_csv,
-    demo,
-    render_spec_description,
-    validate_query,
-)
+
+# Hacky way to import from ``app.app`` without triggering the demo launch side effect at import time.
+# Without this, the test file will hang on initi because ``demo.launch()`` starts a local web server and blocks the thread.
+def _no_launch(*_: Any, **__: Any) -> None:
+    """No-op used to prevent ``demo.launch()`` from blocking test imports."""
+
+
+# ``app.app`` launches the demo at import time; neutralize that side effect.
+_ORIGINAL_BLOCKS_LAUNCH = gr.Blocks.launch
+# Use setattr to satisfy mypy's [method-assign]
+setattr(gr.Blocks, "launch", _no_launch)
+
+try:
+    from app.app import (  # noqa: E402
+        EMPTY_AST,
+        EXAMPLES,
+        PRESETS,
+        TAB_LABELS,
+        _build_custom_spec,
+        _parse_closed_attributes,
+        _parse_csv,
+        demo,
+        render_spec_description,
+        validate_query,
+    )
+finally:
+    # Restore the original ``gr.Blocks.launch`` method so that if any test does call it, it behaves as expected.
+    setattr(gr.Blocks, "launch", _ORIGINAL_BLOCKS_LAUNCH)
 
 
 DEFAULT_CUSTOM = {
@@ -243,7 +261,6 @@ def test_demo_structure_has_expected_tabs() -> None:
     expected_descendant_type = {
         "AST (JSON)": "JSON",
         "Active spec": "Markdown",
-        "About": "Markdown",
     }
     for tab in tab_blocks:
         descendant_types = {type(b).__name__ for b in _walk(tab)}
