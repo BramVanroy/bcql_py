@@ -14,6 +14,7 @@ from bcql_py.parser import (
     parse,
     parse_from_tokens,
 )
+from bcql_py.parser.tokens import display_token
 
 
 class TestParserErrors:
@@ -240,6 +241,33 @@ class TestFriendlyErrorMessages:
         msg = str(exc_info.value)
         assert " LT " not in msg
         assert "'<'" in msg
+
+
+class TestTokenDisplayHelpers:
+    """Direct tests for user-facing token formatting helpers."""
+
+    def test_display_token_formats_string_and_literal_string_variants(self):
+        """`display_token` labels string and literal-string tokens distinctly."""
+        string_token = Token(TokenType.STRING, "hello", 0)
+        literal_token = Token(TokenType.LITERAL_STRING, "hello", 0)
+
+        assert display_token(string_token) == "string 'hello'"
+        assert display_token(literal_token) == "literal string 'hello'"
+
+
+class TestPrivateParserHelpers:
+    """Targeted tests for parser helper paths that are hard to hit from public grammar routes."""
+
+    def test_parse_string_value_reports_context_on_wrong_token_type(self):
+        """`_parse_string_value` includes the provided context in syntax errors."""
+        tokens = (
+            Token(TokenType.INTEGER, "42", 0),
+            Token(TokenType.EOF, "", 2),
+        )
+        parser = BCQLParser(tokens, source="42")
+
+        with pytest.raises(BCQLSyntaxError, match="inside test context"):
+            parser._parse_string_value("inside test context")
 
 
 class TestParseFromTokens:

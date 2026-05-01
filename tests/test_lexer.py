@@ -427,6 +427,15 @@ class TestLexerErrors:
         ):
             BCQLLexer("^==>").tokenize()
 
+    def test_lexer_root_parallel_arrow_internal_call(self):
+        """Internal root+parallel arrow path raises the dedicated syntax error."""
+        lexer = BCQLLexer("^==>nl")
+
+        with pytest.raises(
+            BCQLSyntaxError, match="Root relations cannot be parallel"
+        ):
+            lexer._read_arrow(0, is_root=True, is_parallel_relation=True)
+
     def test_unterminated_arrow(self):
         """relation and align arrows are detected by peeking ahead
         '-foo' is not recognized as an arrow (no '->'), so '-' is unexpected.

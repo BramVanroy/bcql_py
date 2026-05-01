@@ -11,6 +11,8 @@ from __future__ import annotations
 import pytest
 
 from bcql_py import BCQLValidationError, CorpusSpec, parse, validate
+from bcql_py.validation import spec as spec_module
+from bcql_py.validation import validator as validator_module
 from bcql_py.validation.presets import LASSY, UD
 
 
@@ -288,3 +290,93 @@ def test_nested_query_traversal():
     with pytest.raises(BCQLValidationError) as excinfo:
         parse('A:([pos="BOGUS"]){2}', spec=_pos_spec({"NOUN"}))
     assert excinfo.value.issues[0].kind == "invalid_annotation_value"
+
+
+class TestCorpusSpecEdgeCases:
+    """Additional CorpusSpec branch tests for coercion/merge/description behavior."""
+
+    def test_spec_before_validators_non_mapping_passthrough(self):
+        """Pre-validators pass through non-mapping values for normal Pydantic handling."""
+        assert spec_module.CorpusSpec._coerce_closed_attributes(123) == 123
+        assert spec_module.CorpusSpec._coerce_span_attributes(123) == 123
+
+    def test_spec_coerces_closed_attributes_none_to_empty_dict(self):
+        """`closed_attributes=None` is normalized to an empty mapping."""
+        spec = CorpusSpec(closed_attributes=None)
+        assert spec.closed_attributes == {}
+
+    def test_spec_extend_merges_optional_sets_and_bool_overrides(self):
+        """`extend()` unions optional set fields and applies explicit boolean overrides."""
+        base = CorpusSpec()
+        extended = base.extend(
+            allowed_span_tags={"s"},
+            allowed_span_attributes={"s": {"id"}},
+            allowed_alignment_fields={"nl"},
+            strict_attributes=True,
+            allow_alignment=False,
+            allow_relations=False,
+        )
+
+        assert extended.allowed_span_tags == frozenset({"s"})
+        assert extended.allowed_span_attributes == {"s": frozenset({"id"})}
+        assert extended.allowed_alignment_fields == frozenset({"nl"})
+        assert extended.strict_attributes is True
+        assert extended.allow_alignment is False
+        assert extended.allow_relations is False
+
+    def test_spec_merge_handles_optional_span_attributes_from_one_side_only(
+        self,
+    ):
+        """`merge()` keeps span-attribute constraints when only one side defines them."""
+        left = CorpusSpec(allowed_span_attributes=None)
+        right = CorpusSpec(allowed_span_attributes={"s": {"id"}})
+
+        merged = left.merge(right)
+
+        assert merged.allowed_span_attributes == {"s": frozenset({"id"})}
+
+    def test_spec_description_formats_empty_and_custom_field_types(self):
+        """`description` formats empty collections and custom scalar fields."""
+        text_default = CorpusSpec().description
+        assert "(empty)" in text_default
+
+        class CustomSpec(CorpusSpec):
+            label: str = "demo"
+
+        text_custom = CustomSpec().description
+        assert "demo" in text_custom
+
+
+class TestValidationEdgeBranches:
+    """Cover specific validator return paths that require narrow setup."""
+
+    def test_span_unknown_tag_branch_returns_when_collecting_issues(self):
+        """Unknown span tags are reported as validation issues when not fail-fast."""
+        spec = CorpusSpec(allowed_span_tags={"s"})
+
+        with pytest.raises(BCQLValidationError) as exc_info:
+            parse("<doc/>", spec=spec, fail_fast=False)
+
+        assert exc_info.value.issues[0].kind == "unknown_span_tag"
+
+    def test_span_attrs_missing_for_tag_are_unconstrained(self):
+        """Tags missing from `allowed_span_attributes` are treated as unconstrained."""
+        spec = CorpusSpec(
+            allowed_span_tags={"ne"},
+            allowed_span_attributes={"s": {"id"}},
+        )
+
+        parse('<ne lang="en"/>', spec=spec)
+
+    def test_relations_not_allowed_return_branch_when_collecting_issues(self):
+        """Disallowed dependency relations are recorded as issues in collect mode."""
+        spec = CorpusSpec(allow_relations=False)
+
+        with pytest.raises(BCQLValidationError) as exc_info:
+            parse("_ -nsubj-> _", spec=spec, fail_fast=False)
+
+        assert exc_info.value.issues[0].kind == "relations_not_allowed"
+
+    def test_format_hint_returns_empty_for_empty_allowed_set(self):
+        """`_format_hint` returns an empty suffix when there are no allowed values."""
+        assert validator_module._format_hint(None, []) == ""

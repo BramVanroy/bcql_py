@@ -1,5 +1,7 @@
 """Tests for function call parsing (Step 13): sequence-level query functions."""
 
+from typing import Any
+
 import pytest
 from conftest import round_trip_test
 
@@ -201,3 +203,13 @@ class TestFunctionCallErrors:
         """``queryfunc("however",)`` - trailing comma with no following argument."""
         with pytest.raises(BCQLSyntaxError):
             parse('queryfunc("however",)')
+
+    def test_function_call_to_bcql_rejects_invalid_constructed_argument(self):
+        """Use model_construct to exercise runtime guard against non-node, non-int args."""
+        invalid_args: list[Any] = ["invalid"]
+        node = FunctionCallNode.model_construct(
+            node_type="function_call", name="f", args=invalid_args
+        )
+
+        with pytest.raises(ValueError, match="Invalid argument type"):
+            node.to_bcql()
