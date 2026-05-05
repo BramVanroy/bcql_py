@@ -5,10 +5,10 @@
     {% set filepath = function.relative_package_filepath if function.relative_filepath.is_absolute() else function.relative_filepath %}
     {% set start = function.lineno or 1 %}
     {% set end = function.endlineno or start %}
-    <p class="doc-source-link" markdown="span">
-      <a href="https://github.com/BramVanroy/bcql_py/blob/main/{{ filepath }}#L{{ start }}-L{{ end }}" target="_blank" rel="noopener">
-        :fontawesome-brands-github: View source on GitHub: <code>{{ filepath }}</code> lines {{ start }}–{{ end }}
-      </a>
-    </p>
+<p class="doc-source-link" markdown="span">
+  <a href="https://github.com/BramVanroy/bcql_py/blob/main/{{ filepath }}#L{{ start }}-L{{ end }}" target="_blank" rel="noopener">
+    :fontawesome-brands-github: View source on GitHub: <code>{{ filepath }}</code> lines {{ start }}–{{ end }}
+  </a>
+</p>
   {% endif %}
 {% endblock source %}
