@@ -11,9 +11,9 @@
   ``word``, ``lemma``, ``xpos``, ``feats``, ``misc``, plus ``id``, ``head``.
 
 References:
-    - POS: https://universaldependencies.org/u/pos/all.html
-    - Features: https://universaldependencies.org/u/feat/all.html
-    - Relations: https://universaldependencies.org/u/dep/all.html
+    - [Part-of-speech](https://universaldependencies.org/u/pos/all.html)
+    - [Features](https://universaldependencies.org/u/feat/all.html)
+    - [Relations](https://universaldependencies.org/u/dep/all.html)
 
 Language-specific POS sub-types and relation subtypes (e.g. ``nsubj:pass``)
 are intentionally not included. Extend the preset to add them::
@@ -50,7 +50,6 @@ UD_POS_TAGS: frozenset[str] = frozenset(
 """Universal Dependencies v2 universal POS tags.
 
 Wired as closed attribute values for the ``upos`` annotation in the UD preset.
-See https://universaldependencies.org/u/pos/all.html for details.
 """
 
 # NOTE: that we do not include subtypes such as ``advcl:relcl`` or ``nsubj:pass``
@@ -100,7 +99,6 @@ UD_RELATION_LABELS: frozenset[str] = frozenset(
 
 Wired as allowed relation values in the UD preset.
 Language-specific subtypes (e.g., ``nsubj:pass``, ``acl:relcl``) are not included; extend the preset to add them.
-See https://universaldependencies.org/u/dep/all.html for full documentation.
 """
 
 UD_FEATURE_VALUES: dict[str, frozenset[str]] = {
@@ -253,7 +251,6 @@ UD_FEATURE_VALUES: dict[str, frozenset[str]] = {
 """Universal morphological features and their allowed values.
 
 Wired as closed attributes in the UD preset (e.g., ``Number``, ``Case``, ``Tense``, etc.).
-See https://universaldependencies.org/u/feat/all.html for complete documentation.
 """
 
 UD_OPEN_ATTRIBUTES: frozenset[str] = frozenset(
@@ -277,7 +274,7 @@ UD = CorpusSpec(
     closed_attributes=_UD_CLOSED_ATTRIBUTES,
     allowed_relations=UD_RELATION_LABELS,
 )
-"""Universal Dependencies v2 corpus specification.
+"""[Universal Dependencies](https://universaldependencies.org/guidelines.html) v2 corpus specification.
 
 A ready-made [CorpusSpec][bcql_py.validation.spec.CorpusSpec] for validating BCQL queries against
 Universal Dependencies v2 corpora. Includes universal POS tags, morphological features, core dependency
