@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 
 {% block outdated %}
-  You are viewing an older documentation version.
-  <a href="{{ '../' ~ base_url }}"><strong>Go to the latest release docs.</strong></a>
+  {% if version.version == "main" %}
+    You are viewing documentation for the running <strong>development version</strong>.
+    <a href="{{ '../' ~ base_url }}"><strong>Go to the latest stable release.</strong></a>
+  {% else %}
+    You are viewing documentation for version <strong>{{ version.version }}</strong>, which is not the latest release.
+    <a href="{{ '../' ~ base_url }}"><strong>Go to the latest release docs.</strong></a>
+  {% endif %}
 {% endblock %}
