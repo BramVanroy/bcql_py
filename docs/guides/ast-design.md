@@ -140,20 +140,3 @@ match ast.node_type:
 
 This is especially handy for serialised ASTs: the discriminator survives any JSON or dictionary
 representation.
-
-## Why we do not use ANTLR
-
-BlackLab's reference parser is generated from a
-[Bcql.g4 ANTLR grammar](https://github.com/instituutnederlandsetaal/BlackLab/blob/dev/query-parser/src/main/antlr4/nl/inl/blacklab/queryParser/corpusql/Bcql.g4).
-`bcql_py` re-implements the same grammar as a hand-written recursive-descent parser for three
-reasons:
-
-- **Clarity**: the generated code is hard to read and tweak; a hand-written parser is directly
-  mapped to the BNF in [`bnf.md`](https://github.com/BramVanroy/bcql_py/blob/main/bnf.md).
-- **Zero runtime dependency**: no ANTLR runtime needs to ship with the library.
-- **Position-aware errors**: we can attach precise offsets and context to every error without
-  fighting the generated machinery.
-
-When `Bcql.g4` and this library diverge, `Bcql.g4` wins. Open questions and deliberate
-differences are collected in
-[`questions.md`](https://github.com/BramVanroy/bcql_py/blob/main/questions.md).
