@@ -217,7 +217,7 @@ dev = [
     { name = "mkdocs-autorefs", specifier = ">=1.4.4,<2" },
     { name = "mkdocs-gen-files", specifier = ">=0.6.1,<1" },
     { name = "mkdocs-material", specifier = ">=9.7.6,<10" },
-    { name = "mkdocs-minify-plugin", specifier = ">=0.8.0" },
+    { name = "mkdocs-minify-plugin", specifier = ">=0.8.0,<1" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.4,<2" },
     { name = "mypy", specifier = ">=1.20.1,<2" },
     { name = "pre-commit", specifier = ">=4.6.0,<5" },
@@ -231,7 +231,7 @@ docs = [
     { name = "mkdocs-autorefs", specifier = ">=1.4.4,<2" },
     { name = "mkdocs-gen-files", specifier = ">=0.6.1,<1" },
     { name = "mkdocs-material", specifier = ">=9.7.6,<10" },
-    { name = "mkdocs-minify-plugin", specifier = ">=0.8.0" },
+    { name = "mkdocs-minify-plugin", specifier = ">=0.8.0,<1" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.4,<2" },
 ]
 
