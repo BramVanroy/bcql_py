@@ -62,11 +62,6 @@ hooks:
 
 # Plugins extend MkDocs with search and API-doc generation
 plugins:
-  # Minify HTML (contains much whitespace by default)
-  - minify:
-        minify_html: true
-        minify_js: true
-        minify_css: true
   # Full-text search index used by the site search UI
   - search
   # Versioned documentation deployment and metadata for Material selector + canonical URLs

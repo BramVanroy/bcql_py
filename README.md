@@ -91,8 +91,21 @@ uv run pre-commit run --all-files
 To work on documentation locally:
 
 ```bash
-make documentation
+make serve-docs
 ```
+
+This rebuilds a fresh local mike preview before serving it, so you do not end
+up testing stale versioned docs. By default it serves a local `0.3.0` version
+and `latest` alias from a temporary docs branch. You can override those values
+when needed, for example:
+
+```bash
+DOCS_VERSION=0.4.0 DOCS_SOURCE_REF=v0.4.0 make serve-docs
+```
+
+Open both `/latest/` and `/<version>/` while testing. If you are checking the
+GitHub source links as well, set `DOCS_SOURCE_REF` to the release tag you want
+to emulate.
 
 You can/should run tests before pushing to the remote, although
 a Github workflow will run those anyway on push. To run them locally:
