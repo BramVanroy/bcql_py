@@ -13,6 +13,7 @@ edit_uri: edit/main/docs/
 # Material for MkDocs theme configuration. See https://squidfunk.github.io/mkdocs-material/
 theme:
   name: material
+  custom_dir: docs/overrides
   features:
     # Adds a copy button to code blocks
     - content.code.copy
@@ -63,6 +64,10 @@ hooks:
 plugins:
   # Full-text search index used by the site search UI
   - search
+  # Versioned documentation deployment and metadata for Material selector + canonical URLs
+  - mike:
+      # Keep canonical URLs pointing at the current stable alias
+      canonical_version: latest
   # Cross-reference resolver used by mkdocstrings and markdown links
   - autorefs:
       # If an exact target is missing, resolve to the closest matching identifier
@@ -100,6 +105,14 @@ plugins:
             unwrap_annotated: true
             # Fold __init__ docs into the class documentation block
             merge_init_into_class: true
+
+# Extra metadata consumed by Material features like version selector and warnings
+extra:
+  version:
+    # Render version selector entries from mike's versions.json
+    provider: mike
+    # Treat this alias as the latest/stable channel for warning logic
+    default: latest
 
 # Markdown extensions used by docs pages
 markdown_extensions:
