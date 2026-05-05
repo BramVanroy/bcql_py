@@ -59,9 +59,13 @@ jobs:
       - name: Check out docs tag
         run: git checkout "${{ steps.docs_ref.outputs.docs_git_tag }}"
 
-      - name: Restore current docs link overrides for manual reruns
+      - name: Restore current docs build tooling for manual reruns
         if: github.event_name == 'workflow_dispatch'
         run: |
+          git checkout "${GITHUB_SHA}" -- pyproject.toml
+          git checkout "${GITHUB_SHA}" -- uv.lock
+          git checkout "${GITHUB_SHA}" -- mkdocs.yml
+          git checkout "${GITHUB_SHA}" -- generate_llms_file.py
           git checkout "${GITHUB_SHA}" -- docs/hooks.py
           git checkout "${GITHUB_SHA}" -- docs/overrides/python/material/class.html.jinja
           git checkout "${GITHUB_SHA}" -- docs/overrides/python/material/function.html.jinja
