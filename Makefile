@@ -14,4 +14,4 @@ test:
 	uv run pytest --cov=src/bcql_py --cov-report=term-missing
 
 documentation:
-	uv run mkdocs serve
+	uv run mike serve
