@@ -182,6 +182,7 @@ dev = [
     { name = "gradio" },
     { name = "grammarinator" },
     { name = "interrogate" },
+    { name = "mkdocs-autorefs" },
     { name = "mkdocs-gen-files" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
@@ -193,6 +194,7 @@ dev = [
     { name = "types-requests" },
 ]
 docs = [
+    { name = "mkdocs-autorefs" },
     { name = "mkdocs-gen-files" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
@@ -202,25 +204,27 @@ docs = [
 requires-dist = [{ name = "pydantic", specifier = ">=2.12.0,<3" }]
 
 [package.metadata.requires-dev]
-app = [{ name = "gradio", specifier = "==6.13.0" }]
+app = [{ name = "gradio", specifier = "==6.13.0,<7" }]
 dev = [
-    { name = "gradio", specifier = "==6.13.0" },
+    { name = "gradio", specifier = "==6.13.0,<7" },
     { name = "grammarinator", specifier = "==23.7" },
-    { name = "interrogate", specifier = ">=1.7.0" },
-    { name = "mkdocs-gen-files", specifier = ">=0.6.1" },
-    { name = "mkdocs-material", specifier = ">=9.5" },
-    { name = "mkdocstrings", extras = ["python"], specifier = ">=0.29" },
+    { name = "interrogate", specifier = ">=1.7.0,<2" },
+    { name = "mkdocs-autorefs", specifier = ">=1.4.4,<2" },
+    { name = "mkdocs-gen-files", specifier = ">=0.6.1,<1" },
+    { name = "mkdocs-material", specifier = ">=9.7.6,<10" },
+    { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.4,<2" },
     { name = "mypy", specifier = ">=1.20.1,<2" },
     { name = "pre-commit", specifier = ">=4.6.0,<5" },
     { name = "pytest", specifier = ">=9.0.3,<10" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
     { name = "ruff", specifier = ">=0.15.10,<1" },
-    { name = "types-requests", specifier = ">=2.32" },
+    { name = "types-requests", specifier = ">=2.32,<3" },
 ]
 docs = [
-    { name = "mkdocs-gen-files", specifier = ">=0.6.1" },
-    { name = "mkdocs-material", specifier = ">=9.5" },
-    { name = "mkdocstrings", extras = ["python"], specifier = ">=0.29" },
+    { name = "mkdocs-autorefs", specifier = ">=1.4.4,<2" },
+    { name = "mkdocs-gen-files", specifier = ">=0.6.1,<1" },
+    { name = "mkdocs-material", specifier = ">=9.7.6,<10" },
+    { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.4,<2" },
 ]
 
 [[package]]
