@@ -27,12 +27,12 @@ To get started, you can check out:
   global constraints, relations, alignments, and built-in functions.
 - **Immutable Pydantic v2 AST**: every node is a frozen `BaseModel` subclass with a `node_type`
   discriminator, making inspection and pattern matching straightforward.
-- **Lossless BCQL round-trip**: [`to_bcql()`](https://bramvanroy.github.io/bcql_py/api/models/base/#bcql_py.models.base.BCQLNode.to_bcql)
+- **Lossless BCQL round-trip**: [`to_bcql()`][readme-to-bcql]
   reproduces the original query (preserving shorthand forms, quote characters, sensitivity flags, etc.).
-- **Position-aware syntax errors**: [`BCQLSyntaxError`](https://bramvanroy.github.io/bcql_py/api/exceptions/#bcql_py.BCQLSyntaxError)
+- **Position-aware syntax errors**: [`BCQLSyntaxError`][readme-syntax-error]
   carries the original query, the 0-based offset, and a caret-annotated message: ready to forward to
   a user or LLM.
-- **Optional semantic validation**: a [`CorpusSpec`](https://bramvanroy.github.io/bcql_py/api/validation/#bcql_py.validation.spec.CorpusSpec)
+- **Optional semantic validation**: a [`CorpusSpec`][readme-corpus-spec]
   describes which annotations, span tags, alignment fields, and dependency relations your corpus
   supports. Pass it as ``parse(query, spec=spec)`` to catch typos and unsupported features before
   they reach the corpus. See the [tagset validation guide](https://bramvanroy.github.io/bcql_py/guides/tagset-validation/).
@@ -102,6 +102,10 @@ make test
 ```
 
 <!-- --8<-- [end:overview] -->
+
+[readme-to-bcql]: https://bramvanroy.github.io/bcql_py/api/models/base/#bcql_py.models.base.BCQLNode.to_bcql
+[readme-syntax-error]: https://bramvanroy.github.io/bcql_py/api/exceptions/#bcql_py.exceptions.BCQLSyntaxError
+[readme-corpus-spec]: https://bramvanroy.github.io/bcql_py/api/validation/#bcql_py.validation.spec.CorpusSpec
 
 ## ANTLR to generate the needed tools
 
