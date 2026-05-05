@@ -1,7 +1,7 @@
 """Gradio demo for ``bcql_py`` query validation.
 
 A small, illustrative web UI that lets users paste a BlackLab Corpus Query Language
-(BCQL) query, optionally pick or customize a :class:`~bcql_py.validation.CorpusSpec`,
+(BCQL) query, optionally pick or customize a [CorpusSpec][bcql_py.validation.CorpusSpec],
 and inspect parsing / validation results in real time.
 
 Run locally with::
@@ -191,7 +191,7 @@ def _build_custom_spec(
     span_tags: str,
     relations: str,
 ) -> CorpusSpec:
-    """Construct a :class:`CorpusSpec` from the custom-spec form fields."""
+    """Construct a [CorpusSpec][bcql_py.validation.CorpusSpec] from the custom-spec form fields."""
     closed = _parse_closed_attributes(closed_attrs)
     span_tag_list = _parse_csv(span_tags)
     relation_list = _parse_csv(relations)
@@ -207,7 +207,7 @@ def _build_custom_spec(
 
 
 def _format_syntax_error(error: BCQLSyntaxError) -> str:
-    """Format a :class:`BCQLSyntaxError` as a fenced markdown snippet with caret."""
+    """Format a [BCQLSyntaxError][bcql_py.exceptions.BCQLSyntaxError] as a fenced markdown snippet with caret."""
     lines = ["**Syntax error**", "", f"> {error.message}"]
     if error.query and error.position is not None:
         lines.extend(
@@ -223,7 +223,7 @@ def _format_syntax_error(error: BCQLSyntaxError) -> str:
 
 
 def _format_validation_error(error: BCQLValidationError) -> str:
-    """Format a :class:`BCQLValidationError` as a markdown bullet list."""
+    """Format a [BCQLValidationError][bcql_py.exceptions.BCQLValidationError] as a markdown bullet list."""
     if len(error.issues) == 1:
         issue = error.issues[0]
         parts = [
@@ -272,8 +272,7 @@ def validate_query(
 
     Returns:
         Tuple of ``(status_html, error_markdown, ast_dict, canonical_bcql)``.
-        ``ast_dict`` is a plain dict (rendered by :class:`gradio.JSON`); empty
-        when no AST was produced.
+        ``ast_dict`` is a plain dict; empty when no AST was produced.
     """
     query = (query or "").strip()
     if not query:
@@ -337,14 +336,14 @@ def validate_query(
 def validate_example(
     query: str, preset_name: str
 ) -> tuple[str, str, dict[str, Any]]:
-    """Wrapper around :func:`validate_query` for ``gr.Examples`` (2-arg signature)."""
+    """Wrapper around validate_query for ``gr.Examples`` (2-arg signature)."""
     return validate_query(
         query, preset_name, False, "", "", False, True, True, "", "", False
     )
 
 
 def render_spec_description(preset_name: str) -> str:
-    """Markdown description of the selected preset's :class:`CorpusSpec`."""
+    """Markdown description of the selected preset's [CorpusSpec][bcql_py.validation.CorpusSpec]."""
     spec = PRESETS.get(preset_name)
     if spec is None:
         return (

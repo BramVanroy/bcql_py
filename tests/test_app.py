@@ -1,4 +1,4 @@
-"""Tests for the Gradio demo under :mod:`app.app`.
+"""Tests for the Gradio demo under ``app.app``.
 
 These tests skip cleanly when gradio is not installed (the ``app`` dependency
 group is optional). They cover three concerns:

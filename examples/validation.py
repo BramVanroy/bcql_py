@@ -2,16 +2,16 @@
 
 The library validates a query at three different layers:
 
-1. **Lexical / syntactic** -- :func:`bcql_py.parse` rejects malformed input with a
-   :class:`BCQLSyntaxError` that points at the offending character.
+1. **Lexical / syntactic** -- [parse()][bcql_py.parser.parse] rejects malformed input with a
+   [BCQLSyntaxError][bcql_py.exceptions.BCQLSyntaxError] that points at the offending character.
 2. **Structural** -- the immutable Pydantic AST nodes themselves enforce
    invariants (sequences need at least two children, repetition counts cannot be
    negative, and so on). Constructing a bad node raises ``pydantic.ValidationError``.
-3. **Semantic** -- a :class:`CorpusSpec` describes which annotations, span tags,
+3. **Semantic** -- a [CorpusSpec][bcql_py.validation.CorpusSpec] describes which annotations, span tags,
    alignment fields, and dependency relations a particular corpus actually
    supports. ``parse(query, spec=spec)`` runs the spec checks after a successful
-   parse, collecting :class:`ValidationIssue` objects via
-   :class:`BCQLValidationError`.
+   parse, collecting [ValidationIssue][bcql_py.exceptions.ValidationIssue] objects via
+   [BCQLValidationError][bcql_py.exceptions.BCQLValidationError].
 
 Each section below prints intermediary output so it is easy to see what each
 layer rejects and what the resulting error messages look like.
@@ -57,7 +57,7 @@ def try_parse(
     Args:
         query: The BCQL query to parse.
         spec: Optional corpus spec for semantic validation.
-        fail_fast: Forwarded to :func:`bcql_py.parse`.
+        fail_fast: Forwarded to [parse()][bcql_py.parser.parse].
     """
     print(f"\nQuery: {query!r}")
     try:

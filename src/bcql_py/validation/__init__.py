@@ -3,8 +3,8 @@
 The parser produces a purely syntactic AST but real corpora impose extra rules: which
 annotations exist, which values a closed-class attribute may take, which XML spans
 are available, and whether alignment / relation queries are meaningful. The
-:class:`CorpusSpec` describes those rules, and :func:`validate` walks a parsed
-:class:`~bcql_py.models.base.BCQLNode` tree to verify them.
+[CorpusSpec][bcql_py.validation.CorpusSpec] describes those rules, and [validate()][bcql_py.validate] walks a parsed
+[BCQLNode][bcql_py.models.base.BCQLNode] tree to verify them.
 
 Typical usage::
 

@@ -173,7 +173,7 @@ class BCQLParser:
 
         Args:
             force_reparse: If ``True``, forces reparsing even if an AST is already cached. This allows retrying
-              after a syntax error without creating a new parser instance. Should rarely be needed.
+                after a syntax error without creating a new parser instance. Should rarely be needed.
 
         Raises:
             BCQLSyntaxError: On any syntax error.

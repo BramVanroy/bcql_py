@@ -1,14 +1,15 @@
-"""Corpus-specific semantic specification used by :func:`bcql_py.validation.validate`.
+"""Corpus-specific semantic specification used by [validate()][bcql_py.validate].
 
-A :class:`CorpusSpec` describes the surface vocabulary of a particular corpus:
+A [CorpusSpec][bcql_py.validation.CorpusSpec] describes the surface vocabulary of a particular corpus:
 which annotations exist, which annotations are closed-class (with a fixed set of
 allowed values), which XML span tags and attributes are available, and whether
 alignment or dependency-relation queries are allowed at all. This is a semantic
 layer that can be used on top of the "syntactic" AST structure to validate
 a query against corpus-specific constraints.
 
-The spec is a frozen Pydantic model; use :meth:`CorpusSpec.extend` or :meth:`CorpusSpec.merge` to
-compose specs (e.g. to add your own corpus on top of a preset).
+The spec is a frozen Pydantic model; use [CorpusSpec.extend()][bcql_py.validation.spec.CorpusSpec.extend]
+or [CorpusSpec.merge()][bcql_py.validation.spec.CorpusSpec.merge] to compose specs (e.g. to add your own
+corpus on top of a preset).
 """
 
 from __future__ import annotations
@@ -155,7 +156,7 @@ class CorpusSpec(BaseModel):
         allow_relations: bool | None = None,
     ) -> CorpusSpec:
         """Return a new spec with the given additions/overrides merged in.
-        Similar to :meth:`merge`, but with a more granular API that allows adding
+        Similar to [merge()][bcql_py.validation.spec.CorpusSpec.merge], but with a more granular API that allows adding
         specific entries without having to construct a full spec.
 
         Args:
@@ -170,7 +171,7 @@ class CorpusSpec(BaseModel):
             allow_relations: Override the relations allowed flag.
 
         Returns:
-            A new :class:`CorpusSpec`; the receiver is not modified.
+            A new [CorpusSpec][bcql_py.validation.CorpusSpec]; the receiver is not modified.
 
         Example::
 
@@ -240,7 +241,7 @@ class CorpusSpec(BaseModel):
             other: Another spec to merge into this one.
 
         Returns:
-            A new :class:`CorpusSpec` representing the union.
+            A new [CorpusSpec][bcql_py.validation.CorpusSpec] representing the union.
 
         Example::
 
@@ -306,9 +307,11 @@ class CorpusSpec(BaseModel):
         """Return whether *name* is a known annotation on this spec.
 
         An annotation is considered known when it is listed in either
-        :attr:`open_attributes` or :attr:`closed_attributes`. This method is
-        independent of :attr:`strict_attributes`: it only reports membership,
-        not whether an unknown annotation would raise during validation.
+        [CorpusSpec.open_attributes][bcql_py.validation.spec.CorpusSpec.open_attributes]
+        or [CorpusSpec.closed_attributes][bcql_py.validation.spec.CorpusSpec.closed_attributes].
+        This method is independent of
+        [CorpusSpec.strict_attributes][bcql_py.validation.spec.CorpusSpec.strict_attributes]:
+        it only reports membership, not whether an unknown annotation would raise during validation.
 
         Args:
             name: The annotation name to check.

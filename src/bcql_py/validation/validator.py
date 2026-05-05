@@ -1,8 +1,8 @@
-"""So-called Visitor that walks a BCQL AST and checks it against a :class:`CorpusSpec`.
+"""So-called Visitor that walks a BCQL AST and checks it against a [CorpusSpec][bcql_py.validation.CorpusSpec].
 
 The traversal uses Pydantic's ``model_fields`` introspection to recurse into any
-field whose value is a :class:`~bcql_py.models.base.BCQLNode`, including nested
-lists and dict values (used by :class:`~bcql_py.models.span.SpanQuery` for
+field whose value is a [BCQLNode][bcql_py.models.base.BCQLNode], including nested
+lists and dict values (used by [SpanQuery][bcql_py.models.span.SpanQuery] for
 attributes).
 
 TODO: only literal string values are checked against closed attribute sets; regex
@@ -39,22 +39,22 @@ class _StopValidation(Exception):
 
 
 class _Validator:
-    """Depth-first AST walker that accumulates :class:`ValidationIssue` objects.
+    """Depth-first AST walker that accumulates [ValidationIssue][bcql_py.exceptions.ValidationIssue] objects.
 
-    Not part of the public API: callers should go through :func:`validate`. The
+    Not part of the public API: callers should go through [validate()][bcql_py.validate]. The
     class only holds per-run state (the spec, the fail-fast flag, and the list
     of issues found so far) so the traversal can stay method-based.
 
-    Encountered issues are saved to :attr:`issues` as they are found. In
-    fail-fast mode, the first issue also triggers a :class:`_StopValidation` exception
-    to immediately stop the run, so that :func:`validate` can report the first issue found.
+    Encountered issues are saved to ``self.issues`` as they are found. In
+    fail-fast mode, the first issue also triggers a [_StopValidation][bcql_py.validation.validator._StopValidation] exception
+    to immediately stop the run, so that [validate()][bcql_py.validate] can report the first issue found.
     """
 
     def __init__(self, spec: CorpusSpec, *, fail_fast: bool):
         """Initialize a fresh validator run.
 
         Args:
-            spec: The :class:`CorpusSpec` to validate against.
+            spec: The [CorpusSpec][bcql_py.validation.CorpusSpec] to validate against.
             fail_fast: If ``True``, stop at the first issue; otherwise collect
                 every issue encountered during the walk.
         """
@@ -63,11 +63,11 @@ class _Validator:
         self.issues: list[ValidationIssue] = []
 
     def run(self, root: BCQLNode):
-        """Walk *root* and populate :attr:`issues`.
+        """Walk *root* and populate ``self.issues``.
 
-        In fail-fast mode, :meth:`_record` raises :class:`_StopValidation` on the
+        In fail-fast mode, [_record()][bcql_py.validation.validator._Validator._record] raises [_StopValidation][bcql_py.validation.validator._StopValidation] on the
         first issue; this method catches it so the traversal unwinds cleanly and
-        :func:`validate` can inspect :attr:`issues` afterward. In collect-all
+        [validate()][bcql_py.validate] can inspect ``self.issues`` afterward. In collect-all
         mode, the walk runs to completion.
 
         Args:
@@ -79,11 +79,11 @@ class _Validator:
             return
 
     def _record(self, issue: ValidationIssue):
-        """Append *issue* to :attr:`issues` and abort the walk if fail-fast is on.
+        """Append *issue* to ``self.issues`` and abort the walk if fail-fast is on.
 
         Raises:
             _StopValidation: When ``fail_fast`` is ``True``, to unwind the
-                recursive traversal back up to :meth:`run`.
+                recursive traversal back up to [run()][bcql_py.validation.validator._Validator.run].
         """
         self.issues.append(issue)
         if self.fail_fast:
@@ -123,7 +123,7 @@ class _Validator:
         Records ``unknown_annotation`` when ``strict_attributes`` is set and the
         annotation is not listed on the spec, and ``invalid_annotation_value``
         when the annotation is closed-class and the (literal) value is not in
-        its allowed set. Regex values are skipped: see :func:`_is_literal_value`.
+        its allowed set. Regex values are skipped: see [_is_literal_value()][bcql_py.validation.validator._is_literal_value].
         """
         name = node.annotation
         # Attribute given but not present in the spec: always an error in strict mode
@@ -229,7 +229,7 @@ class _Validator:
         or a root relation (``^-->`` from the root).
 
         Records ``relations_not_allowed`` when the spec forbids relations, and
-        otherwise delegates name checking to :meth:`_check_relation_type`.
+        otherwise delegates name checking to [_Validator._check_relation_type()][bcql_py.validation.validator._Validator._check_relation_type()].
         """
         if not self.spec.allow_relations:
             self._record(
@@ -315,8 +315,8 @@ class _Validator:
         """Validate a full alignment node; records ``alignment_not_allowed`` if forbidden.
 
         The per-operator field check is handled by
-        :meth:`_check_alignment_operator` as the walk descends into the node's
-        operator child, so this method only enforces the top-level toggle.
+        [_Validator._check_alignment_operator][bcql_py.validation.validator._Validator._check_alignment_operator]
+        as the walk descends into the node's operator child, so this method only enforces the top-level toggle.
         """
         if not self.spec.allow_alignment:
             self._record(
@@ -329,7 +329,7 @@ class _Validator:
 
 
 def _iter_child_nodes(node: BCQLNode) -> Iterator[BCQLNode]:
-    """Yield every :class:`BCQLNode` reachable as a direct child of ``node``.
+    """Yield every [BCQLNode][bcql_py.models.base.BCQLNode] reachable as a direct child of ``node``.
 
     Walks only into typed fields of the Pydantic model, so we don't traverse
     into unrelated containers. Lists and dict values are expanded element-wise.
@@ -340,7 +340,7 @@ def _iter_child_nodes(node: BCQLNode) -> Iterator[BCQLNode]:
 
 
 def _walk(value: Any) -> Iterator[BCQLNode]:
-    """Recursively yield every :class:`BCQLNode` reachable inside *value*.
+    """Recursively yield every [BCQLNode][bcql_py.models.base.BCQLNode] reachable inside *value*.
 
     Descends into lists, tuples, and dict values (dict keys are ignored since
     AST container keys are plain strings). Non-node leaves produce nothing.
@@ -375,9 +375,8 @@ _REGEX_METACHARS = frozenset(".^$*+?()[]{}|\\")
 def _suggest(value: str, allowed: Iterable[str]) -> str | None:
     """Return the single closest match for *value* in *allowed*, or ``None``.
 
-    Uses :func:`difflib.get_close_matches` (Ratcliff-Obershelp similarity) with a
-    fixed cutoff so only a plausibly-meant-this-one entry is returned. Closed
-    sets in typical corpus specs are small (tens of tags), so stdlib is fast
+    Uses ``difflib.get_close_matches`` with a fixed cutoff so only a plausibly-meant-this-one
+    entry is returned. Closed sets in typical corpus specs are small (tens of tags), so stdlib is fast
     enough; no external edit-distance dependency is required.
     """
     matches = get_close_matches(value, list(allowed), n=1, cutoff=0.6)
@@ -391,7 +390,7 @@ def _format_hint(suggestion: str | None, allowed: Iterable[str]) -> str:
     base message.
 
     Args:
-        suggestion: Closest match already computed by :func:`_suggest`, or ``None``.
+        suggestion: Closest match already computed by [_suggest()][bcql_py.validation.validator._suggest], or ``None``.
         allowed: The full set of allowed values for the constraint.
 
     Returns:
@@ -421,9 +420,9 @@ def validate(ast: BCQLNode, spec: CorpusSpec, *, fail_fast: bool = True):
     """Validate a parsed BCQL AST against *spec*, raising on any issue.
 
     Args:
-        ast: The root :class:`~bcql_py.models.base.BCQLNode` returned by
-            :func:`bcql_py.parse`.
-        spec: The :class:`CorpusSpec` describing what the corpus allows.
+        ast: The root [BCQLNode][bcql_py.models.base.BCQLNode] returned by
+            [parse()][bcql_py.parser.parse].
+        spec: The [CorpusSpec][bcql_py.validation.CorpusSpec] describing what the corpus allows.
         fail_fast: When ``True`` (default), raise as soon as the first issue is
             found. When ``False``, collect every issue and raise once at the end
             so callers can report them all together.

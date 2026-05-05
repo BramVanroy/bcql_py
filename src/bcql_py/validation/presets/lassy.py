@@ -6,12 +6,11 @@ Figures 1.1 and 1.2 on pages 13-14.
 Based on this this preset describes:
 
 - The full Alpino relation inventory (``rel``), also exposed as
-  :data:`LASSY_RELATION_LABELS` and integreated as
-  :class:`CorpusSpec.allowed_relations`.
+  ``LASSY_RELATION_LABELS`` and integrated as [CorpusSpec.allowed_relations][bcql_py.validation.spec.CorpusSpec.allowed_relations].
 - Phrasal categories (``cat``), part-of-speech tags (``pt``), and morphosyntactic
   features (``ntype``, ``getal``, ``graad``, ...).
 - Open-string annotations (``word``, ``lemma``, ``postag``, plus identifier / position fields).
-- The DTD element names as :class:`CorpusSpec.allowed_span_tags`, for corpora
+- The DTD element names as [CorpusSpec.allowed_span_tags][bcql_py.validation.spec.CorpusSpec.allowed_span_tags], for corpora
   that expose ``alpino_ds`` / ``node`` as XML spans.
 
 Note that "pos" and "root" are excluded, as per the documentation:

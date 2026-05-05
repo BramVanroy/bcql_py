@@ -38,20 +38,20 @@ def parse(
     """Tokenize then parse a BCQL query string and return the root AST node.
 
     When *spec* is given, the parsed AST is additionally run through
-    :func:`bcql_py.validation.validate` so that any corpus-specific semantic
+    [validate()][bcql_py.validate] so that any corpus-specific semantic
     problems are surfaced immediately rather than at query-execution time.
 
     Args:
         source: The BCQL query to parse.
-        spec: Optional :class:`~bcql_py.validation.CorpusSpec` describing the
+        spec: Optional [CorpusSpec][bcql_py.validation.CorpusSpec] describing the
             target corpus. When provided, semantic validation runs after a
             successful parse.
-        fail_fast: Forwarded to :func:`bcql_py.validation.validate`; only has
+        fail_fast: Forwarded to [validate()][bcql_py.validate]; only has
             an effect when *spec* is provided. ``True`` raises on the first
             validation issue, ``False`` collects every issue before raising.
 
     Returns:
-        The root :class:`~bcql_py.models.base.BCQLNode` of the parsed AST.
+        The root [BCQLNode][bcql_py.models.base.BCQLNode] of the parsed AST.
 
     Raises:
         BCQLSyntaxError: If the query cannot be parsed.
@@ -73,14 +73,13 @@ def parse_from_tokens(
     """Parse a BCQL token list into an abstract syntax tree.
 
     Args:
-        tokens: The list of tokens to parse (from ``tokenize``).
+        tokens: The list of tokens to parse (from [tokenize()][bcql_py.parser.tokenize]).
         source: The original source string.
-        spec: Optional :class:`~bcql_py.validation.CorpusSpec`; see :func:`parse`.
-        fail_fast: Forwarded to :func:`bcql_py.validation.validate` when *spec*
-            is provided.
+        spec: Optional [CorpusSpec][bcql_py.validation.CorpusSpec]; see [parse()][bcql_py.parser.parse].
+        fail_fast: Forwarded to [validate()][bcql_py.validate] when *spec* is provided.
 
     Returns:
-        The root ``BCQLNode``.
+        The root [BCQLNode][bcql_py.models.base.BCQLNode].
     """
     parser = BCQLParser(tokens, source=source)
     ast = parser.parse()

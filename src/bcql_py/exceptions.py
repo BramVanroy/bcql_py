@@ -10,7 +10,13 @@ __all__ = ["BCQLSyntaxError", "BCQLValidationError", "ValidationIssue"]
 
 
 class BCQLSyntaxError(Exception):
-    """Raised when tokenization or parsing of a BCQL query fails."""
+    """A syntax error with optional source and position, raised when tokenization or parsing of a BCQL query fails.
+
+    Attributes:
+        error_message: Human-readable parse or lexing error message.
+        bcql_query: Original BCQL source query.
+        error_position: 0-based character position in ``bcql_query``.
+    """
 
     def __init__(
         self,
@@ -19,13 +25,6 @@ class BCQLSyntaxError(Exception):
         bcql_query: str = "",
         error_position: int | None = None,
     ) -> None:
-        """Initialize a syntax error with optional source and position.
-
-        Args:
-            error_message: Human-readable parse or lexing error message.
-            bcql_query: Original BCQL source query.
-            error_position: 0-based character position in ``bcql_query``.
-        """
         self.query = bcql_query
         self.position = error_position
         self.message = error_message
@@ -55,10 +54,10 @@ IssueKind = Literal[
 ]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ValidationIssue:
-    """A single semantic validation problem found during :func:`bcql_py.validate`.
-    In practice, there may be multiple issues collected in a :class:`BCQLValidationError`
+    """A single semantic validation problem found during [validate()][bcql_py.validate].
+    In practice, there may be multiple issues collected in a [BCQLValidationError][bcql_py.exceptions.BCQLValidationError]
     to report them all at once instead of just the first one.
 
     Attributes:
@@ -82,13 +81,13 @@ class ValidationIssue:
 
 
 class BCQLValidationError(Exception):
-    """Raised when an AST does not satisfy a :class:`CorpusSpec`.
+    """Raised when an AST does not satisfy a [CorpusSpec][bcql_py.validation.CorpusSpec].
 
-    Collects one or more :class:`ValidationIssue` instances so that callers can surface
+    Collects one or more [ValidationIssue][bcql_py.exceptions.ValidationIssue] instances so that callers can surface
     every problem at once (when ``fail_fast=False``) or just the first (default).
 
     Attributes:
-        issues: One or more :class:`ValidationIssue` entries describing what went wrong.
+        issues: One or more [ValidationIssue][bcql_py.exceptions.ValidationIssue] entries describing what went wrong.
     """
 
     def __init__(self, issues: list[ValidationIssue]) -> None:

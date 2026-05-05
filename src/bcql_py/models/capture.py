@@ -104,7 +104,7 @@ class ConstraintComparison(BCQLNode):
 
     Attributes:
         operator: The comparison operator.
-        left: Left-hand operand (usually an [AnnotationRef][bcql_py.models.capture.AnnotationRef]).
+        left: Left-hand operand (usually an [AnnotationRef][bcql_py.models.capture.AnnotationRef]].
         right: Right-hand operand (annotation ref, literal, or function call).
     """
 
@@ -197,7 +197,7 @@ class ConstraintIntegerRange(BCQLNode):
     """A standalone integer range value in a capture constraint.
 
     Example: the ``in[2,5]`` in ``A.depth = in[2,5]``.
-    This is distinct from ``IntegerRangeConstraint`` in :mod:`bcql_py.models.token`,
+    This is distinct from [IntegerRangeConstraint][bcql_py.models.token.IntegerRangeConstraint],
     which bundles an annotation name with the range inside a token query, e.g.
     ``pos_confidence=in[min,max]``.
 

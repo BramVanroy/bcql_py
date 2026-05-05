@@ -1,13 +1,13 @@
 """Full Universal Dependencies (UD v2) preset.
 
-- Universal POS tags (:data:`UD_POS_TAGS`, wired as closed values for the
+- Universal POS tags (``UD_POS_TAGS``, wired as closed values for the
   ``upos`` annotations).
-- Universal morphological features (:data:`UD_FEATURE_VALUES`), each one a
+- Universal morphological features (``UD_FEATURE_VALUES``], each one a
   closed attribute (``Number``, ``Case``, ``PronType``, ...).
-- Core universal dependency relation labels (:data:`UD_RELATION_LABELS`), wired
-  as :class:`CorpusSpec.allowed_relations`; the relation label is also exposed
+- Core universal dependency relation labels (``UD_RELATION_LABELS``, wired
+  as [CorpusSpec.allowed_relations][bcql_py.validation.spec.CorpusSpec.allowed_relations]; the relation label is also exposed
   as the closed ``deprel`` annotation for corpora that store it on the token.
-- Common CoNLL-U-style open annotations (:data:`UD_OPEN_ATTRIBUTES`):
+- Common CoNLL-U-style open annotations (``UD_OPEN_ATTRIBUTES``):
   ``word``, ``lemma``, ``xpos``, ``feats``, ``misc``, plus ``id``, ``head``.
 
 References:

@@ -1,6 +1,6 @@
 """Semantic validation tests.
 
-Covers :class:`bcql_py.validation.CorpusSpec`, :func:`bcql_py.validation.validate`,
+Covers [CorpusSpec][bcql_py.validation.spec.CorpusSpec], [validate()][bcql_py.validate],
 and the shipped presets. Tests parse real BCQL queries via the public API and
 assert on the resulting validation issues rather than poking at private AST
 internals; this keeps the tests coupled to observable behavior.

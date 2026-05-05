@@ -30,8 +30,7 @@ class StringValue(BCQLNode):
         value: The raw string content (without surrounding quotes).
         is_literal: ``True`` when prefixed with ``l`` (e.g. ``l"e.g."``).
         sensitivity: ``"default"`` follows the default value (unspecified),
-         ``"sensitive"`` for ``(?-i)``, ``"insensitive"``
-            for ``(?i)``.
+           ``"sensitive"`` for ``(?-i)``, ``"insensitive"`` for ``(?i)``.
 
     Example::
 
@@ -184,7 +183,6 @@ class BoolConstraint(BCQLNode):
         return f"{self.left.to_bcql()} {self.operator} {self.right.to_bcql()}"
 
 
-# Discriminated union type for token-level constraint expressions
 ConstraintExpr = Annotated[
     Union[
         AnnotationConstraint,
@@ -195,6 +193,15 @@ ConstraintExpr = Annotated[
     ],
     Field(discriminator="node_type"),
 ]
+"""Discriminated union of token-level constraint expressions.
+
+Represents any constraint that can appear in a token query ``[...]``:
+- [`AnnotationConstraint`](bcql_py.models.token.AnnotationConstraint): simple annotation comparison (e.g., word="man").
+- [`IntegerRangeConstraint`](bcql_py.models.token.IntegerRangeConstraint): integer range (e.g., confidence=in[50,100]).
+- [`FunctionConstraint`](bcql_py.models.token.FunctionConstraint): function call (e.g., pos_confidence(...)).
+- [`NotConstraint`](bcql_py.models.token.NotConstraint): logical negation (e.g., !(pos="noun")).
+- [`BoolConstraint`](bcql_py.models.token.BoolConstraint): AND/OR/implication (e.g., pos="noun" | pos="verb").
+"""
 
 # Rebuild models that reference the forward-ref union to ensure the discriminated union works correctly
 # If we don't do this, we'll get a Pydantic error about the forward reference not being resolved when

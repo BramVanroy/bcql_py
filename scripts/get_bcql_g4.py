@@ -23,7 +23,7 @@ def main(
 
 
 def entry_point():
-    """Parse CLI arguments and invoke :func:`main`."""
+    """Parse CLI arguments and invoke `main`."""
     import argparse
 
     parser = argparse.ArgumentParser(

@@ -33,7 +33,7 @@ def print_section(title: str) -> None:
 
 
 def iter_children(node: BCQLNode) -> Iterator[BCQLNode]:
-    """Yield every direct child :class:`BCQLNode` of ``node``.
+    """Yield every direct child [BCQLNode][bcql_py.models.base.BCQLNode] of ``node``.
 
     Mirrors what the validator does internally: walks each typed Pydantic field
     and expands lists/dicts. Useful for hand-rolled tree traversal.
@@ -50,7 +50,7 @@ def iter_children(node: BCQLNode) -> Iterator[BCQLNode]:
 
 
 def _walk_value(value: object) -> Iterator[BCQLNode]:
-    """Recursively yield every :class:`BCQLNode` reachable inside ``value``.
+    """Recursively yield every [BCQLNode][bcql_py.models.base.BCQLNode] reachable inside ``value``.
 
     Args:
         value: Any Python object (typically the value of a Pydantic field).
