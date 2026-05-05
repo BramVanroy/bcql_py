@@ -7,8 +7,7 @@ on:
       - "src/**/*.py"
       - "pyproject.toml"
       - ".github/workflows/interrogate-badge.yml"
-    paths-ignore:
-      - ".github/interrogate_badge.svg"
+      - "!.github/interrogate_badge.svg"
   workflow_dispatch:
 
 permissions:
