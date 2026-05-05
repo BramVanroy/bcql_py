@@ -13,5 +13,5 @@ typecheck:
 test:
 	uv run pytest --cov=src/bcql_py --cov-report=term-missing
 
-docs:
+documentation:
 	uv run mkdocs serve

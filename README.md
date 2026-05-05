@@ -91,7 +91,7 @@ uv run pre-commit run --all-files
 To work on documentation locally:
 
 ```bash
-make docs
+make documentation
 ```
 
 You can/should run tests before pushing to the remote, although

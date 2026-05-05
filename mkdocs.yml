@@ -63,6 +63,10 @@ hooks:
 plugins:
   # Full-text search index used by the site search UI
   - search
+  # Cross-reference resolver used by mkdocstrings and markdown links
+  - autorefs:
+      # If an exact target is missing, resolve to the closest matching identifier
+      resolve_closest: true
   - gen-files:
       scripts:
         - generate_llms_file.py
