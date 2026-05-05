@@ -45,10 +45,17 @@ class _Validator:
     class only holds per-run state (the spec, the fail-fast flag, and the list
     of issues found so far) so the traversal can stay method-based.
 
-    Encountered issues are saved to ``self.issues`` as they are found. In
+    Encountered issues are saved to [issues][bcql_py.validation.validator._Validator.issues] as they are found. In
     fail-fast mode, the first issue also triggers a [_StopValidation][bcql_py.validation.validator._StopValidation] exception
     to immediately stop the run, so that [validate()][bcql_py.validate] can report the first issue found.
+
+    Attributes:
+        _spec: The [CorpusSpec][bcql_py.validation.spec.CorpusSpec] to validate against.
+        _fail_fast: Whether to stop at the first issue or collect them all.
+        _issues: List of [ValidationIssue][bcql_py.exceptions.ValidationIssue] entries describing what was found.
     """
+
+    __slots__ = ("_spec", "_fail_fast", "_issues")
 
     def __init__(self, spec: CorpusSpec, *, fail_fast: bool):
         """Initialize a fresh validator run.
@@ -58,9 +65,14 @@ class _Validator:
             fail_fast: If ``True``, stop at the first issue; otherwise collect
                 every issue encountered during the walk.
         """
-        self.spec = spec
-        self.fail_fast = fail_fast
-        self.issues: list[ValidationIssue] = []
+        self._spec = spec
+        self._fail_fast = fail_fast
+        self._issues: list[ValidationIssue] = []
+
+    @property
+    def issues(self) -> list[ValidationIssue]:
+        """List of [ValidationIssue][bcql_py.exceptions.ValidationIssue] entries describing what was found during the run."""
+        return self._issues
 
     def run(self, root: BCQLNode):
         """Walk *root* and populate ``self.issues``.
@@ -85,8 +97,8 @@ class _Validator:
             _StopValidation: When ``fail_fast`` is ``True``, to unwind the
                 recursive traversal back up to [run()][bcql_py.validation.validator._Validator.run].
         """
-        self.issues.append(issue)
-        if self.fail_fast:
+        self._issues.append(issue)
+        if self._fail_fast:
             raise _StopValidation
 
     def _visit(self, node: BCQLNode):
@@ -127,7 +139,9 @@ class _Validator:
         """
         name = node.annotation
         # Attribute given but not present in the spec: always an error in strict mode
-        if self.spec.strict_attributes and not self.spec.has_annotation(name):
+        if self._spec.strict_attributes and not self._spec.has_annotation(
+            name
+        ):
             self._record(
                 ValidationIssue(
                     kind="unknown_annotation",
@@ -138,7 +152,7 @@ class _Validator:
             )
             return
         # Consider valid (return) if the attribute name is not part of any closed-class set
-        allowed = self.spec.closed_attributes.get(name)
+        allowed = self._spec.closed_attributes.get(name)
         if allowed is None:
             return
 
@@ -170,7 +184,9 @@ class _Validator:
         """
         name = node.annotation
         # Attribute given but not present in the spec: always an error in strict mode
-        if self.spec.strict_attributes and not self.spec.has_annotation(name):
+        if self._spec.strict_attributes and not self._spec.has_annotation(
+            name
+        ):
             self._record(
                 ValidationIssue(
                     kind="unknown_annotation",
@@ -191,8 +207,8 @@ class _Validator:
         # Tag name can be a string or StringValue. If it is a StringValue,
         # we skip validation since it may be a regex pattern rather than a literal tag name.
         tag_name = node.tag_name if isinstance(node.tag_name, str) else None
-        if self.spec.allowed_span_tags is not None and tag_name is not None:
-            if tag_name not in self.spec.allowed_span_tags:
+        if self._spec.allowed_span_tags is not None and tag_name is not None:
+            if tag_name not in self._spec.allowed_span_tags:
                 self._record(
                     ValidationIssue(
                         kind="unknown_span_tag",
@@ -203,12 +219,12 @@ class _Validator:
                 )
                 return
         # If no strict checks for span attributes or no tag name, skip attribute checks
-        if self.spec.allowed_span_attributes is None or tag_name is None:
+        if self._spec.allowed_span_attributes is None or tag_name is None:
             return
 
         # Allowed_span_attributes specifies for a given tag which attributes are allowed
         # Consider valid (return) if the tag name is not given (since no attrs specified)
-        tag_attrs = self.spec.allowed_span_attributes.get(tag_name)
+        tag_attrs = self._spec.allowed_span_attributes.get(tag_name)
         if tag_attrs is None:
             return
         for attr_name in node.attributes:
@@ -231,7 +247,7 @@ class _Validator:
         Records ``relations_not_allowed`` when the spec forbids relations, and
         otherwise delegates name checking to [_Validator._check_relation_type()][bcql_py.validation.validator._Validator._check_relation_type()].
         """
-        if not self.spec.allow_relations:
+        if not self._spec.allow_relations:
             self._record(
                 ValidationIssue(
                     kind="relations_not_allowed",
@@ -254,11 +270,11 @@ class _Validator:
             node_type: The originating node's ``node_type`` discriminator,
                 attached to any issue produced for source-locating feedback.
         """
-        if relation_type is None or self.spec.allowed_relations is None:
+        if relation_type is None or self._spec.allowed_relations is None:
             return
         if _looks_like_regex(relation_type):
             return
-        allowed = self.spec.allowed_relations
+        allowed = self._spec.allowed_relations
         if relation_type not in allowed:
             suggestion = _suggest(relation_type, allowed)
             base = f"Unknown relation type {relation_type!r}."
@@ -282,7 +298,7 @@ class _Validator:
         ``unknown_alignment_field`` when the target field is not in
         ``allowed_alignment_fields`` (if that set is constrained).
         """
-        if not self.spec.allow_alignment:
+        if not self._spec.allow_alignment:
             self._record(
                 ValidationIssue(
                     kind="alignment_not_allowed",
@@ -292,10 +308,10 @@ class _Validator:
             )
             return
         if (
-            self.spec.allowed_alignment_fields is not None
-            and node.target_field not in self.spec.allowed_alignment_fields
+            self._spec.allowed_alignment_fields is not None
+            and node.target_field not in self._spec.allowed_alignment_fields
         ):
-            allowed = self.spec.allowed_alignment_fields
+            allowed = self._spec.allowed_alignment_fields
             suggestion = _suggest(node.target_field, allowed)
             base = f"Unknown alignment target field {node.target_field!r}."
             self._record(
@@ -318,7 +334,7 @@ class _Validator:
         [_Validator._check_alignment_operator][bcql_py.validation.validator._Validator._check_alignment_operator]
         as the walk descends into the node's operator child, so this method only enforces the top-level toggle.
         """
-        if not self.spec.allow_alignment:
+        if not self._spec.allow_alignment:
             self._record(
                 ValidationIssue(
                     kind="alignment_not_allowed",
@@ -447,5 +463,5 @@ def validate(ast: BCQLNode, spec: CorpusSpec, *, fail_fast: bool = True):
     """
     validator = _Validator(spec, fail_fast=fail_fast)
     validator.run(ast)
-    if validator.issues:
-        raise BCQLValidationError(validator.issues)
+    if validator._issues:
+        raise BCQLValidationError(validator._issues)

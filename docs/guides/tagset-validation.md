@@ -102,8 +102,8 @@ A few notes:
 Above it is mentioned that [`ValidationIssue`][bcql_py.ValidationIssue] contains a validation error.
 This is correct, however, in practice you will find that [`BCQLValidationError`][bcql_py.BCQLValidationError]
 is raised instead. This is a genuine Exception that can be raised during validation, either on the first error
-or after full validation. It collects the ValidationIssue's it its [`issues`][bcql_py.BCQLValidationError.issues]
-property. That makes error reporting more flexible.
+or after full validation. It collects the ValidationIssue's in its ``issues`` property on the exception
+instance. That makes error reporting more flexible.
 
 ---
 

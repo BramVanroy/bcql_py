@@ -1,16 +1,16 @@
 """Lassy / Alpino preset derived from the ``alpino_ds`` DTD.
 
-See the [alpino guide](https://www.let.rug.nl/~vannoord/Lassy/sa-man_lassy.pdf),
+See the [Alpino guide](https://www.let.rug.nl/~vannoord/Lassy/sa-man_lassy.pdf),
 Figures 1.1 and 1.2 on pages 13-14.
 
 Based on this this preset describes:
 
 - The full Alpino relation inventory (``rel``), also exposed as
-  ``LASSY_RELATION_LABELS`` and integrated as [CorpusSpec.allowed_relations][bcql_py.validation.spec.CorpusSpec.allowed_relations].
+  ``LASSY_RELATION_LABELS`` and integrated as allowed relation values.
 - Phrasal categories (``cat``), part-of-speech tags (``pt``), and morphosyntactic
   features (``ntype``, ``getal``, ``graad``, ...).
 - Open-string annotations (``word``, ``lemma``, ``postag``, plus identifier / position fields).
-- The DTD element names as [CorpusSpec.allowed_span_tags][bcql_py.validation.spec.CorpusSpec.allowed_span_tags], for corpora
+- The DTD element names as allowed span tags, for corpora
   that expose ``alpino_ds`` / ``node`` as XML spans.
 
 Note that "pos" and "root" are excluded, as per the documentation:
@@ -62,6 +62,11 @@ LASSY_RELATION_LABELS: frozenset[str] = frozenset(
         "whd",
     }
 )
+"""Lassy/Alpino dependency relation labels (``rel`` attribute).
+
+Wired as allowed relation values in the LASSY preset.
+See https://www.let.rug.nl/~vannoord/Lassy/sa-man_lassy.pdf (Figures 1.1-1.2) for reference.
+"""
 
 LASSY_CAT_LABELS: frozenset[str] = frozenset(
     {
@@ -90,6 +95,11 @@ LASSY_CAT_LABELS: frozenset[str] = frozenset(
         "whsub",
     }
 )
+"""Lassy phrasal category labels (``cat`` attribute).
+
+Wired as closed attribute values in the LASSY preset.
+References the Alpino/Lassy tagset for Dutch phrase structure.
+"""
 
 LASSY_PT_LABELS: frozenset[str] = frozenset(
     {
@@ -107,6 +117,11 @@ LASSY_PT_LABELS: frozenset[str] = frozenset(
         "ww",
     }
 )
+"""Lassy part-of-speech tags (``pt`` attribute).
+
+Wired as closed attribute values in the LASSY preset.
+Covers Dutch parts-of-speech from the Alpino/Lassy tagset.
+"""
 
 LASSY_FEATURE_VALUES: dict[str, frozenset[str]] = {
     "dial": frozenset({"dial"}),
@@ -166,6 +181,11 @@ LASSY_FEATURE_VALUES: dict[str, frozenset[str]] = {
     "cat": LASSY_CAT_LABELS,
     "pt": LASSY_PT_LABELS,
 }
+"""Lassy morphosyntactic features and their allowed values.
+
+Wired as closed attributes in the LASSY preset (e.g., ``ntype``, ``getal``, ``graad``, etc.).
+Covers Dutch morphological features from the Alpino/Lassy annotation scheme.
+"""
 
 # Note that POSTAG is free-form but in reality it is a short-hand that combines multiple features (p. 16):
 """
@@ -182,10 +202,20 @@ getal-n="mv-n"
 LASSY_OPEN_ATTRIBUTES: frozenset[str] = frozenset(
     {"word", "lemma", "postag", "id", "index", "begin", "end"}
 )
+"""Open annotations in Lassy/Alpino corpora.
+
+Open attributes are those whose values are not restricted to a fixed set.
+Includes token word, lemma, combined POS tag, and position metadata.
+"""
 
 LASSY_SPAN_TAGS: frozenset[str] = frozenset(
     {"alpino_ds", "node", "sentence", "comments", "comment"}
 )
+"""Allowed XML span tag names in Lassy/Alpino corpora.
+
+Wired as allowed span tags in the LASSY preset.
+Corresponds to the DTD element names used in Alpino-annotated corpora.
+"""
 
 LASSY = CorpusSpec(
     open_attributes=LASSY_OPEN_ATTRIBUTES,
@@ -193,3 +223,11 @@ LASSY = CorpusSpec(
     allowed_span_tags=LASSY_SPAN_TAGS,
     allowed_relations=LASSY_RELATION_LABELS,
 )
+"""Lassy/Alpino corpus specification for Dutch.
+
+A ready-made [CorpusSpec][bcql_py.validation.spec.CorpusSpec] for validating BCQL queries against
+Lassy/Alpino-annotated Dutch corpora. Includes Alpino POS tags, morphosyntactic features, dependency
+relations, DTD span tags, and standard CoNLL-like annotations.
+
+Based on the Alpino/Lassy annotation scheme. See https://www.let.rug.nl/~vannoord/Lassy/
+"""

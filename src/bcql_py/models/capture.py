@@ -253,6 +253,14 @@ CaptureConstraintExpr = Annotated[
     ],
     Field(discriminator="node_type"),
 ]
+"""Discriminated union of capture-level constraint expressions.
+
+Represents any constraint that can appear inside a capture group ``([...])``.
+The actual constraint type is determined by the ``node_type`` discriminator.
+
+Members include annotation references, literals, integers, comparisons, boolean
+combinations, and negations specific to capture-level validation.
+"""
 
 ConstraintComparison.model_rebuild()
 ConstraintBoolean.model_rebuild()

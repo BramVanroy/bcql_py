@@ -307,11 +307,9 @@ class CorpusSpec(BaseModel):
         """Return whether *name* is a known annotation on this spec.
 
         An annotation is considered known when it is listed in either
-        [CorpusSpec.open_attributes][bcql_py.validation.spec.CorpusSpec.open_attributes]
-        or [CorpusSpec.closed_attributes][bcql_py.validation.spec.CorpusSpec.closed_attributes].
-        This method is independent of
-        [CorpusSpec.strict_attributes][bcql_py.validation.spec.CorpusSpec.strict_attributes]:
-        it only reports membership, not whether an unknown annotation would raise during validation.
+        ``open_attributes`` or ``closed_attributes``. This method is
+        independent of ``strict_attributes``: it only reports membership,
+        not whether an unknown annotation would raise during validation.
 
         Args:
             name: The annotation name to check.

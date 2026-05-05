@@ -87,7 +87,7 @@ class BCQLValidationError(Exception):
     every problem at once (when ``fail_fast=False``) or just the first (default).
 
     Attributes:
-        issues: One or more [ValidationIssue][bcql_py.exceptions.ValidationIssue] entries describing what went wrong.
+        issues: List of [ValidationIssue][bcql_py.exceptions.ValidationIssue] entries describing what went wrong.
     """
 
     def __init__(self, issues: list[ValidationIssue]) -> None:

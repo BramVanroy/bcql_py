@@ -7,7 +7,13 @@ from bcql_py.parser.tokens import KEYWORDS, Token, TokenType
 
 
 class BCQLLexer:
-    """A hand-written lexer for BCQL query strings, converting a given string into a sequence of tokens."""
+    """A hand-written lexer for BCQL query strings, converting a given string into a sequence of tokens.
+
+    Attributes:
+        source: The original BCQL query string (read-only property).
+        pos: Current character position in source during tokenization (read-only property).
+        tokens: Immutable tuple of tokens produced by tokenization (read-only property).
+    """
 
     __slots__ = ("_source", "_pos", "_tokens")
 

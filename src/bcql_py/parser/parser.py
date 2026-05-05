@@ -74,8 +74,14 @@ class BCQLParser:
     """Parse a list of BCQL tokens into an AST.
 
     Args:
-        tokens: Token sequence produced by ``BCQLLexer``
+        tokens: Token sequence produced by ``BCQLLexer``.
         source: The original query string (used in error messages).
+
+    Attributes:
+        source: The original BCQL query string (read-only property).
+        pos: Current token index in the parser stream (read-only property).
+        tokens: Immutable token stream handled by this parser (read-only property).
+        ast: The parsed root AST node (read-only property, computed on first access).
     """
 
     __slots__ = ("_source", "_pos", "_tokens", "_ast")

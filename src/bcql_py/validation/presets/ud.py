@@ -2,10 +2,10 @@
 
 - Universal POS tags (``UD_POS_TAGS``, wired as closed values for the
   ``upos`` annotations).
-- Universal morphological features (``UD_FEATURE_VALUES``], each one a
+- Universal morphological features (``UD_FEATURE_VALUES``), each one a
   closed attribute (``Number``, ``Case``, ``PronType``, ...).
 - Core universal dependency relation labels (``UD_RELATION_LABELS``, wired
-  as [CorpusSpec.allowed_relations][bcql_py.validation.spec.CorpusSpec.allowed_relations]; the relation label is also exposed
+  as allowed relation values; the relation label is also exposed
   as the closed ``deprel`` annotation for corpora that store it on the token.
 - Common CoNLL-U-style open annotations (``UD_OPEN_ATTRIBUTES``):
   ``word``, ``lemma``, ``xpos``, ``feats``, ``misc``, plus ``id``, ``head``.
@@ -47,6 +47,11 @@ UD_POS_TAGS: frozenset[str] = frozenset(
         "X",
     }
 )
+"""Universal Dependencies v2 universal POS tags.
+
+Wired as closed attribute values for the ``upos`` annotation in the UD preset.
+See https://universaldependencies.org/u/pos/all.html for details.
+"""
 
 # NOTE: that we do not include subtypes such as ``advcl:relcl`` or ``nsubj:pass``
 # NOTE: "root" tag is not included since that should only be assigned to a sentinel node,
@@ -91,6 +96,12 @@ UD_RELATION_LABELS: frozenset[str] = frozenset(
         "xcomp",
     }
 )
+"""Core Universal Dependencies v2 dependency relation labels.
+
+Wired as allowed relation values in the UD preset.
+Language-specific subtypes (e.g., ``nsubj:pass``, ``acl:relcl``) are not included; extend the preset to add them.
+See https://universaldependencies.org/u/dep/all.html for full documentation.
+"""
 
 UD_FEATURE_VALUES: dict[str, frozenset[str]] = {
     # Lexical
@@ -239,10 +250,20 @@ UD_FEATURE_VALUES: dict[str, frozenset[str]] = {
     "Polite": frozenset({"Elev", "Form", "Humb", "Infm"}),
     "Clusivity": frozenset({"Ex", "In"}),
 }
+"""Universal morphological features and their allowed values.
+
+Wired as closed attributes in the UD preset (e.g., ``Number``, ``Case``, ``Tense``, etc.).
+See https://universaldependencies.org/u/feat/all.html for complete documentation.
+"""
 
 UD_OPEN_ATTRIBUTES: frozenset[str] = frozenset(
     {"word", "lemma", "xpos", "feats", "misc", "id", "head"}
 )
+"""Common CoNLL-U open annotations in Universal Dependencies.
+
+Open attributes are those whose values are not restricted to a fixed set.
+Includes token form, lemma, extended POS tag, features, metadata, ID, and head index.
+"""
 
 _UD_CLOSED_ATTRIBUTES: dict[str, frozenset[str]] = {
     "upos": UD_POS_TAGS,
@@ -256,3 +277,11 @@ UD = CorpusSpec(
     closed_attributes=_UD_CLOSED_ATTRIBUTES,
     allowed_relations=UD_RELATION_LABELS,
 )
+"""Universal Dependencies v2 corpus specification.
+
+A ready-made [CorpusSpec][bcql_py.validation.spec.CorpusSpec] for validating BCQL queries against
+Universal Dependencies v2 corpora. Includes universal POS tags, morphological features, core dependency
+relations, and standard CoNLL-U annotations.
+
+Language-specific subtypes and variations can be added via [extend()][bcql_py.validation.spec.CorpusSpec.extend].
+"""
