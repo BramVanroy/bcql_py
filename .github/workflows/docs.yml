@@ -3,6 +3,7 @@ name: Publish docs to GitHub Pages
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 # Cancel any in-progress docs deploy for the same branch when a new push arrives.
 concurrency:
