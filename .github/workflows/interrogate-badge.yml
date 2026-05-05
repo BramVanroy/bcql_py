@@ -3,6 +3,10 @@ name: Update Interrogate Badge
 on:
   push:
     branches: [main]
+    paths:
+      - "src/**/*.py"
+      - "pyproject.toml"
+      - ".github/workflows/interrogate-badge.yml"
     paths-ignore:
       - ".github/interrogate_badge.svg"
   workflow_dispatch:
