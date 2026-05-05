@@ -9,6 +9,7 @@
           {% set start = init.lineno or 1 %}
           {% set end = init.endlineno or start %}
           <p class="doc-source-link">
+            <span class="twemoji"> {% include ".icons/fontawesome/brands/github.svg" %} </span>
             <a href="https://github.com/BramVanroy/bcql_py/blob/main/{{ filepath }}#L{{ start }}-L{{ end }}" target="_blank" rel="noopener">
               View source on GitHub: <code>{{ filepath }}</code> lines {{ start }}–{{ end }}
             </a>
@@ -20,6 +21,7 @@
       {% set start = class.lineno or 1 %}
       {% set end = class.endlineno or start %}
       <p class="doc-source-link">
+        <span class="twemoji"> {% include ".icons/fontawesome/brands/github.svg" %} </span>
         <a href="https://github.com/BramVanroy/bcql_py/blob/main/{{ filepath }}#L{{ start }}-L{{ end }}" target="_blank" rel="noopener">
           View source on GitHub: <code>{{ filepath }}</code> lines {{ start }}–{{ end }}
         </a>
