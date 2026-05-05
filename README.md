@@ -15,9 +15,9 @@ reconstruction and structured error reporting.
 
 To get started, you can check out:
 
-- [A Quickstart guide](https://bramvanroy.github.io/bcql_py/quickstart/)
-- ``bcql_py`` and BCQL general [guides](https://bramvanroy.github.io/bcql_py/guides/)
-- The full [API reference](https://bramvanroy.github.io/bcql_py/api/top_level/)
+- [A Quickstart guide][readme-quickstart]
+- ``bcql_py`` and BCQL general [guides][readme-guides]
+- The full [API reference][readme-api-reference]
 - [Python code examples](https://github.com/BramVanroy/bcql_py/tree/main/examples)
 - A [Gradio demo](https://huggingface.co/spaces/BramVanroy/bcql_py_validation)
 
@@ -35,7 +35,7 @@ To get started, you can check out:
 - **Optional semantic validation**: a [`CorpusSpec`][readme-corpus-spec]
   describes which annotations, span tags, alignment fields, and dependency relations your corpus
   supports. Pass it as ``parse(query, spec=spec)`` to catch typos and unsupported features before
-  they reach the corpus. See the [tagset validation guide](https://bramvanroy.github.io/bcql_py/guides/tagset-validation/).
+  they reach the corpus. See the [tagset validation guide][readme-tagset-validation].
 - **Zero runtime dependencies** beyond Pydantic.
 
 ## Installation
@@ -103,9 +103,13 @@ make test
 
 <!-- --8<-- [end:overview] -->
 
-[readme-to-bcql]: https://bramvanroy.github.io/bcql_py/api/models/base/#bcql_py.models.base.BCQLNode.to_bcql
-[readme-syntax-error]: https://bramvanroy.github.io/bcql_py/api/exceptions/#bcql_py.exceptions.BCQLSyntaxError
-[readme-corpus-spec]: https://bramvanroy.github.io/bcql_py/api/validation/#bcql_py.validation.spec.CorpusSpec
+[readme-quickstart]: docs/quickstart.md
+[readme-guides]: docs/guides/index.md
+[readme-api-reference]: docs/api/top_level.md
+[readme-to-bcql]: src/bcql_py/models/base.py
+[readme-syntax-error]: src/bcql_py/exceptions.py
+[readme-corpus-spec]: src/bcql_py/validation/spec.py
+[readme-tagset-validation]: docs/guides/tagset-validation.md
 
 ## ANTLR to generate the needed tools
 
