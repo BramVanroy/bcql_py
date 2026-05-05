@@ -32,29 +32,6 @@ wheels = [
 ]
 
 [[package]]
-name = "antlerinator"
-version = "1!3.0.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "inators" },
-    { name = "setuptools" },
-    { name = "wheel" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/87/fe/530d47c433e85ec12a296bc2c680a29ffdf1bb7feb5e85225c4ed5c19b73/antlerinator-1!3.0.1.tar.gz", hash = "sha256:de4ca2a139d290b907717a11beee2cfa44182f1483c590a79d21d12f0f6209c7", size = 17971, upload-time = "2025-09-10T13:28:45.14Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/81/78/05370a46819a3c1e1d151d7133cf7c0b54a39f3a8c46a539ad39e3e5859e/antlerinator-1!3.0.1-py3-none-any.whl", hash = "sha256:0ac8e1cd2d0b89e6600d1605251413d3760d7e97b3c114e5466ae545a3a0b48a", size = 10279, upload-time = "2025-09-10T13:28:44.248Z" },
-]
-
-[[package]]
-name = "antlr4-python3-runtime"
-version = "4.13.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e3/fe/db1120682e306744a3cc3ae06fc26692d95da5b8432382d8e86140f0afc6/antlr4-python3-runtime-4.13.0.tar.gz", hash = "sha256:0d5454928ae40c8a6b653caa35046cd8492c8743b5fbc22ff4009099d074c7ae", size = 117433, upload-time = "2023-05-21T17:43:35.686Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/ff/72821c7790e33cd54bfd4b4a948da4cc240a6533aa26061d246a290c9166/antlr4_python3_runtime-4.13.0-py3-none-any.whl", hash = "sha256:53e6e208cf4a1ad53fb8b1b4467b756375a4f827331e290618aedcf481cb1d5c", size = 144462, upload-time = "2023-05-21T17:43:33.932Z" },
-]
-
-[[package]]
 name = "anyio"
 version = "4.13.0"
 source = { registry = "https://pypi.org/simple" }
@@ -133,18 +110,6 @@ wheels = [
 ]
 
 [[package]]
-name = "autopep8"
-version = "2.3.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pycodestyle" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/50/d8/30873d2b7b57dee9263e53d142da044c4600a46f2d28374b3e38b023df16/autopep8-2.3.2.tar.gz", hash = "sha256:89440a4f969197b69a995e4ce0661b031f455a9f776d2c5ba3dbd83466931758", size = 92210, upload-time = "2025-01-14T14:46:18.454Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9e/43/53afb8ba17218f19b77c7834128566c5bbb100a0ad9ba2e8e89d089d7079/autopep8-2.3.2-py2.py3-none-any.whl", hash = "sha256:ce8ad498672c845a0c3de2629c15b635ec2b05ef8177a6e7c91c74f3e9b51128", size = 45807, upload-time = "2025-01-14T14:46:15.466Z" },
-]
-
-[[package]]
 name = "babel"
 version = "2.18.0"
 source = { registry = "https://pypi.org/simple" }
@@ -180,7 +145,6 @@ app = [
 ]
 dev = [
     { name = "gradio" },
-    { name = "grammarinator" },
     { name = "interrogate" },
     { name = "mike" },
     { name = "mkdocs-autorefs" },
@@ -211,7 +175,6 @@ requires-dist = [{ name = "pydantic", specifier = ">=2.12.0,<3" }]
 app = [{ name = "gradio", specifier = "==6.13.0,<7" }]
 dev = [
     { name = "gradio", specifier = "==6.13.0,<7" },
-    { name = "grammarinator", specifier = "==23.7" },
     { name = "interrogate", specifier = ">=1.7.0,<2" },
     { name = "mike", specifier = ">=2.1.3,<3" },
     { name = "mkdocs-autorefs", specifier = ">=1.4.4,<2" },
@@ -632,22 +595,6 @@ wheels = [
 ]
 
 [[package]]
-name = "grammarinator"
-version = "23.7"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "antlerinator" },
-    { name = "antlr4-python3-runtime" },
-    { name = "autopep8" },
-    { name = "inators" },
-    { name = "jinja2" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e2/c0/f9b0d419b70185969e7b8b33b5c4ad95427c94f56d48c5ce47a0317337eb/grammarinator-23.7.tar.gz", hash = "sha256:c61df71d66e8b5794d8c81f3942fb8d420d758c6e67f4a9212267832488dbca9", size = 87492, upload-time = "2023-07-15T22:50:12.299Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f9/b0/ddc5755d427d4e8a6fa5413e29e5ec3b44be32a96f3b967d6c88e8bd69c8/grammarinator-23.7-py3-none-any.whl", hash = "sha256:cbd1f4f5a82a864930a87831c3043c280b2aeb055d6e3e9d34e37fcd015cfddc", size = 81636, upload-time = "2023-07-15T22:50:10.63Z" },
-]
-
-[[package]]
 name = "griffelib"
 version = "2.0.2"
 source = { registry = "https://pypi.org/simple" }
@@ -791,15 +738,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/22/12/2948fbe5513d062169bd91f7d7b1cd97bc8894f32946b71fa39f6e63ca0c/idna-3.12.tar.gz", hash = "sha256:724e9952cc9e2bd7550ea784adb098d837ab5267ef67a1ab9cf7846bdbdd8254", size = 194350, upload-time = "2026-04-21T13:32:48.916Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/53/b2/acc33950394b3becb2b664741a0c0889c7ef9f9ffbfa8d47eddb53a50abd/idna-3.12-py3-none-any.whl", hash = "sha256:60ffaa1858fac94c9c124728c24fcde8160f3fb4a7f79aa8cdd33a9d1af60a67", size = 68634, upload-time = "2026-04-21T13:32:47.403Z" },
-]
-
-[[package]]
-name = "inators"
-version = "2.1.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/3c/23/2d738a9c18e5edfb08dc8cb830d8282549d16e27ed7db77d9df3e27640dc/inators-2.1.1.tar.gz", hash = "sha256:0a4a524e3fc5d976679401c4442cfd1a9673a5e5c248098ae346d3fd7659b456", size = 16432, upload-time = "2025-09-10T13:09:10.065Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1a/dd/b952bb9a6c86f1094801517616be344e2324c756accc492784aec8e05d27/inators-2.1.1-py3-none-any.whl", hash = "sha256:3fcfa098b0df5e29c860c9142a28fe3487530760133b2a1bae1525ce2038d4ea", size = 13289, upload-time = "2025-09-10T13:09:08.883Z" },
 ]
 
 [[package]]
@@ -1651,15 +1589,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pycodestyle"
-version = "2.14.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/11/e0/abfd2a0d2efe47670df87f3e3a0e2edda42f055053c85361f19c0e2c1ca8/pycodestyle-2.14.0.tar.gz", hash = "sha256:c4b5b517d278089ff9d0abdec919cd97262a3367449ea1c8b49b91529167b783", size = 39472, upload-time = "2025-06-20T18:49:48.75Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d7/27/a58ddaf8c588a3ef080db9d0b7e0b97215cee3a45df74f3a94dbbf5c893a/pycodestyle-2.14.0-py2.py3-none-any.whl", hash = "sha256:dd6bf7cb4ee77f8e016f9c8e74a35ddd9f67e1d5fd4184d86c3b98e07099f42d", size = 31594, upload-time = "2025-06-20T18:49:47.491Z" },
-]
-
-[[package]]
 name = "pydantic"
 version = "2.13.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2031,15 +1960,6 @@ wheels = [
 ]
 
 [[package]]
-name = "setuptools"
-version = "82.0.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/4f/db/cfac1baf10650ab4d1c111714410d2fbb77ac5a616db26775db562c8fab2/setuptools-82.0.1.tar.gz", hash = "sha256:7d872682c5d01cfde07da7bccc7b65469d3dca203318515ada1de5eda35efbf9", size = 1152316, upload-time = "2026-03-09T12:47:17.221Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9d/76/f789f7a86709c6b087c5a2f52f911838cad707cc613162401badc665acfe/setuptools-82.0.1-py3-none-any.whl", hash = "sha256:a59e362652f08dcd477c78bb6e7bd9d80a7995bc73ce773050228a348ce2e5bb", size = 1006223, upload-time = "2026-03-09T12:47:15.026Z" },
-]
-
-[[package]]
 name = "shellingham"
 version = "1.5.4"
 source = { registry = "https://pypi.org/simple" }
@@ -2282,16 +2202,4 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/07/f6/d0e5b343768e8bcb4cda79f0f2f55051bf26177ecd5651f84c07567461cf/watchdog-6.0.0-py3-none-win32.whl", hash = "sha256:07df1fdd701c5d4c8e55ef6cf55b8f0120fe1aef7ef39a1c6fc6bc2e606d517a", size = 79065, upload-time = "2024-11-01T14:07:09.525Z" },
     { url = "https://files.pythonhosted.org/packages/db/d9/c495884c6e548fce18a8f40568ff120bc3a4b7b99813081c8ac0c936fa64/watchdog-6.0.0-py3-none-win_amd64.whl", hash = "sha256:cbafb470cf848d93b5d013e2ecb245d4aa1c8fd0504e863ccefa32445359d680", size = 79070, upload-time = "2024-11-01T14:07:10.686Z" },
     { url = "https://files.pythonhosted.org/packages/33/e8/e40370e6d74ddba47f002a32919d91310d6074130fe4e17dabcafc15cbf1/watchdog-6.0.0-py3-none-win_ia64.whl", hash = "sha256:a1914259fa9e1454315171103c6a30961236f508b9b623eae470268bbcc6a22f", size = 79067, upload-time = "2024-11-01T14:07:11.845Z" },
-]
-
-[[package]]
-name = "wheel"
-version = "0.47.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "packaging" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/39/62/75f18a0f03b4219c456652c7780e4d749b929eb605c098ce3a5b6b6bc081/wheel-0.47.0.tar.gz", hash = "sha256:cc72bd1009ba0cf63922e28f94d9d83b920aa2bb28f798a31d0691b02fa3c9b3", size = 63854, upload-time = "2026-04-22T15:51:27.727Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/87/1b/9e33c09813d65e248f7f773119148a612516a4bea93e9c6f545f78455b7c/wheel-0.47.0-py3-none-any.whl", hash = "sha256:212281cab4dff978f6cedd499cd893e1f620791ca6ff7107cf270781e587eced", size = 32218, upload-time = "2026-04-22T15:51:26.296Z" },
 ]

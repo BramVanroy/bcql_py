@@ -45,7 +45,6 @@ app = [
 dev = [
     {include-group = "docs"},
     {include-group = "app"},
-    "grammarinator==23.7",
     "interrogate>=1.7.0,<2",
     "mypy>=1.20.1,<2",
     "pre-commit>=4.6.0,<5",
