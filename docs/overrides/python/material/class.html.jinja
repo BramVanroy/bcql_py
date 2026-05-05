@@ -8,10 +8,9 @@
           {% set filepath = init.relative_package_filepath if init.relative_filepath.is_absolute() else init.relative_filepath %}
           {% set start = init.lineno or 1 %}
           {% set end = init.endlineno or start %}
-          <p class="doc-source-link">
-            <span class="twemoji"> {% include ".icons/fontawesome/brands/github.svg" %} </span>
+          <p class="doc-source-link" markdown="span">
             <a href="https://github.com/BramVanroy/bcql_py/blob/main/{{ filepath }}#L{{ start }}-L{{ end }}" target="_blank" rel="noopener">
-              View source on GitHub: <code>{{ filepath }}</code> lines {{ start }}–{{ end }}
+              :fontawesome-brands-github: View source on GitHub: <code>{{ filepath }}</code> lines {{ start }}–{{ end }}
             </a>
           </p>
         {% endwith %}
@@ -20,10 +19,9 @@
       {% set filepath = class.relative_package_filepath if class.relative_filepath.is_absolute() else class.relative_filepath %}
       {% set start = class.lineno or 1 %}
       {% set end = class.endlineno or start %}
-      <p class="doc-source-link">
-        <span class="twemoji"> {% include ".icons/fontawesome/brands/github.svg" %} </span>
+      <p class="doc-source-link" markdown="span">
         <a href="https://github.com/BramVanroy/bcql_py/blob/main/{{ filepath }}#L{{ start }}-L{{ end }}" target="_blank" rel="noopener">
-          View source on GitHub: <code>{{ filepath }}</code> lines {{ start }}–{{ end }}
+          :fontawesome-brands-github: View source on GitHub: <code>{{ filepath }}</code> lines {{ start }}–{{ end }}
         </a>
       </p>
     {% endif %}
