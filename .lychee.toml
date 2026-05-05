@@ -1,5 +1,5 @@
 # Shared lychee defaults for local checks and CI.
-verbose = true
+verbose = "info"
 no_progress = true
 max_retries = 2
 retry_wait_time = 2
