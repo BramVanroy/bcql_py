@@ -95,6 +95,17 @@ def test_fail_fast_true_raises_on_first_issue():
     assert len(excinfo.value.issues) == 1
 
 
+def test_internal_validator_issues_property_exposes_recorded_issues():
+    spec = _pos_spec({"NOUN"})
+    ast = parse('[pos="BOGUS"]')
+    validator = validator_module._Validator(spec, fail_fast=False)
+
+    validator.run(ast)
+
+    assert len(validator.issues) == 1
+    assert validator.issues[0].kind == "invalid_annotation_value"
+
+
 def test_alignment_disallowed():
     spec = CorpusSpec(allow_alignment=False)
     with pytest.raises(BCQLValidationError) as excinfo:
