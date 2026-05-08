@@ -15,7 +15,7 @@ class _DummyResponse:
 
 
 def test_get_blacklab_g4_grammar_uses_tag_url(monkeypatch: pytest.MonkeyPatch):
-    captured = {"url": None}
+    captured: dict[str, str | None] = {"url": None}
     response = _DummyResponse("grammar-tag")
 
     def fake_get(url: str):
@@ -35,7 +35,7 @@ def test_get_blacklab_g4_grammar_uses_tag_url(monkeypatch: pytest.MonkeyPatch):
 def test_get_blacklab_g4_grammar_uses_branch_and_writes_file(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ):
-    captured = {"url": None}
+    captured: dict[str, str | None] = {"url": None}
     response = _DummyResponse("grammar-branch")
 
     def fake_get(url: str):
