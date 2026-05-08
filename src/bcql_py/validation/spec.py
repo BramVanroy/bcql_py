@@ -362,7 +362,7 @@ class CorpusSpec(BaseModel):
                 return str(val)
             return str(val)
 
-        for field_name, field in self.model_fields.items():
+        for field_name, field in type(self).model_fields.items():
             value = getattr(self, field_name)
             formatted = format_value(value)
             parts.append(f"\n## {field.description}\n{formatted}")
