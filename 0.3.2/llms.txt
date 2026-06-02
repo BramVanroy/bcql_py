@@ -1,0 +1,30 @@
+# ``bcql_py``: A Python parser for BlackLab Corpus Query Language
+
+> ``bcql_py`` is a Python parser for BlackLab Corpus Query Language (BCQL) that converts BCQL strings into an immutable Pydantic v2 AST with lossless round-trip reconstruction and position-aware syntax errors. It is mainly intended for BCQL validation.
+
+Important notes:
+
+- This library focuses on parsing and validation of BCQL syntax and corpus-specific constraints in Python; it does not execute corpus searches.
+
+## Docs
+
+- [Quickstart](https://bramvanroy.github.io/bcql_py/quickstart/): Install, parse your first query, inspect AST, and serialize back to BCQL.
+- [AST and parser design](https://bramvanroy.github.io/bcql_py/guides/ast-design/): How to reason about the internals of bcql_py without reading every model and parser method. Useful to get a high-level idea of the inner workings of the parse.
+- [Tagset validation](https://bramvanroy.github.io/bcql_py/guides/tagset-validation/): Semantic validation, creating your own corpus specification to validate against, understanding error reporting of corpus specification errors.
+- [LLM workflows](https://bramvanroy.github.io/bcql_py/guides/llm-workflows/): Agent retry loops using BCQLSyntaxError with caret-annotated feedback.
+- [BCQL cheatsheet](https://bramvanroy.github.io/bcql_py/guides/cheatsheet/): A minimal cheat sheet for supported BCQL constructions.
+- [API reference](https://bramvanroy.github.io/bcql_py/api/top_level/): Public Python API for parse, exceptions, models, parser internals, and validation.
+
+## Examples
+
+- [examples/basics.py](https://raw.githubusercontent.com/BramVanroy/bcql_py/refs/heads/main/examples/basics.py): Core parse -> inspect -> to_bcql workflow.
+- [examples/llm_agentic_workflow.py](https://raw.githubusercontent.com/BramVanroy/bcql_py/refs/heads/main/examples/llm_agentic_workflow.py): Minimal LLM generation loop within a feedback loop.
+- [examples/validation.py](https://github.com/BramVanroy/bcql_py/blob/main/examples/validation.py): CorpusSpec-driven semantic validation.
+- [examples/serialization.py](https://github.com/BramVanroy/bcql_py/blob/main/examples/serialization.py): Serializing BCQL queries to and from string/AST/JSON.
+
+## Blacklab guides on writing BCQL queries
+
+- [Token-based querying](https://raw.githubusercontent.com/instituutnederlandsetaal/BlackLab/refs/heads/dev/site/docs/guide/040_query-language/010_token-based.md)
+- [Relations querying](https://raw.githubusercontent.com/instituutnederlandsetaal/BlackLab/refs/heads/dev/site/docs/guide/040_query-language/020_relations.md)
+- [Parallel corpus querying](https://raw.githubusercontent.com/instituutnederlandsetaal/BlackLab/refs/heads/dev/site/docs/guide/040_query-language/030_parallel.md)
+- [Operator precedence and CQL support](https://raw.githubusercontent.com/instituutnederlandsetaal/BlackLab/refs/heads/dev/site/docs/guide/040_query-language/050_miscellaneous.md)
