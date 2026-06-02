@@ -255,7 +255,7 @@ class BCQLParser:
         child is a full ``_parse_rel_align``.
 
         Child relations and alignment arrows are kept in separate alternatives per our BNF, so
-        mixing them in the same ``;``-chain is not allowed (see ``questions.md`` Q3).
+        mixing them in the same ``;``-chain is not allowed.
 
         Returns:
             A ``RelationNode``, ``AlignmentNode``, or the source unchanged.

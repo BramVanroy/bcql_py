@@ -51,7 +51,6 @@ class TestBasicAlignment:
         """``_ =word=>nl _`` - word-level alignment to Dutch field.
         I *assume* that this means that both source and target constraints "fluffy" and "pluizig" will
         be "looked up" in the "word" attributes but I am not sure.
-        NOTE: see questions.md for the related question
         """
         node = parse('"fluffy" =word=>nl "pluizig"')
         assert isinstance(node, AlignmentNode)

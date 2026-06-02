@@ -185,7 +185,7 @@ class TestLexerArrows:
 
     def test_root_rel_arrow(self):
         # grammar allows ^-TYPE-> but this seems semantically questionable? root relations
-        # have no source and are conventionally untyped, at least in UD (see questions.md Q9)
+        # have no source and are conventionally untyped, at least in UD
         tokens = lex("^-obj->")
         assert tokens[0].type == TokenType.ROOT_REL_CARET
         assert tokens[0].value == "^"
@@ -543,7 +543,7 @@ class TestLexerArrowEdgeCases:
 
         NOTE: the semantic meaning of `_` as the target corpus field is unclear. The parallel guide
         does not document an unspecified/wildcard field after `==>`. It is uncertain whether the
-        query engine would fall back to the first indexed field or raise an error. See questions.md.
+        query engine would fall back to the first indexed field or raise an error.
         """
         tokens = lex("==>_?")
         assert tokens[0].type == TokenType.ALIGN_LINE
