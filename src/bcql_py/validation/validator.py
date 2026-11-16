@@ -17,6 +17,7 @@ from typing import Any, Iterable, Iterator
 from bcql_py.exceptions import BCQLValidationError, ValidationIssue
 from bcql_py.models.alignment import AlignmentNode, AlignmentOperator
 from bcql_py.models.base import BCQLNode
+from bcql_py.models.function import FunctionCallNode
 from bcql_py.models.relation import (
     ChildConstraint,
     RelationOperator,
@@ -128,6 +129,8 @@ class _Validator:
             self._check_alignment_operator(node)
         elif isinstance(node, AlignmentNode):
             self._check_alignment(node)
+        elif isinstance(node, FunctionCallNode):
+            self._check_function_call(node)
 
     def _check_annotation(self, node: AnnotationConstraint):
         """Validate an ``[annotation="value"]`` constraint.
@@ -290,6 +293,31 @@ class _Validator:
                     },
                 )
             )
+
+    def _check_function_call(self, node: FunctionCallNode):
+        """Check a query function name against ``spec.allowed_functions``.
+
+        Records ``unknown_function`` when the spec restricts function names and
+        the name is not listed. For example, ``meet("a", "b")`` fails with the
+        default spec because BlackLab has no ``meet`` function.
+        """
+        allowed = self._spec.allowed_functions
+        if allowed is None or node.name in allowed:
+            return
+        suggestion = _suggest(node.name, allowed)
+        self._record(
+            ValidationIssue(
+                kind="unknown_function",
+                message=f"Unknown query function {node.name!r}."
+                + _format_hint(suggestion, allowed),
+                node_type=node.node_type,
+                context={
+                    "function": node.name,
+                    "suggestion": suggestion,
+                    "allowed": sorted(allowed),
+                },
+            )
+        )
 
     def _check_alignment_operator(self, node: AlignmentOperator):
         """Validate the ``==>`` operator and its target field.

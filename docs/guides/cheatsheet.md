@@ -66,7 +66,7 @@ BlackLab defaults to **case- and diacritics-insensitive** search.
 | `"cat" (?! "call")` | Negative lookahead |
 | `(?<! "bad") "dog"` | Negative lookbehind |
 | `[word="dog" & punctAfter=","]` | _dog_ immediately followed by a comma (pseudo-annotation) |
-| `meet("cat", "fluffy", 5)` | _cat_ within 5 tokens of _fluffy_ |
+| `"cat" []{0,5} "fluffy"` | _cat_ followed by _fluffy_ with at most 5 tokens in between |
 
 ---
 

@@ -119,7 +119,8 @@ assert parse(parse(source).to_bcql()) == parse(source)
 ```
 
 The output is not guaranteed to be *byte-identical* to the input: insignificant whitespace may be
-normalised, and some brace quantifiers are canonicalised (e.g. `{0,5}` round-trips as `{,5}`).
+normalised, and some quantifiers are canonicalised (e.g. `{0,}` is written as `*`, and the
+bcql_py input extension `{,5}` is written as `{0,5}` because BlackLab rejects `{,5}`).
 
 ## Custom traversal with `node_type`
 

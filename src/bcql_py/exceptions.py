@@ -51,6 +51,7 @@ IssueKind = Literal[
     "unknown_alignment_field",
     "relations_not_allowed",
     "unknown_relation_type",
+    "unknown_function",
 ]
 
 

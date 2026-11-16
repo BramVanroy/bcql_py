@@ -20,15 +20,27 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-__all__ = ["CorpusSpec"]
+__all__ = ["BLACKLAB_FUNCTIONS", "CorpusSpec"]
+
+
+BLACKLAB_FUNCTIONS: frozenset[str] = frozenset(
+    {"rel", "rspan", "rcapture", "rmatch", "rfield", "_ident", "_FI1", "_FI2"}
+)
+"""Query functions built into BlackLab 4.1.1, such as ``rspan(...)``.
+
+BlackLab Server answers a query that calls any other function (e.g. ``meet(...)``)
+with an internal server error, unless a plugin registers that function.
+"""
 
 
 class CorpusSpec(BaseModel):
     """Immutable description of a corpus' semantic vocabulary.
 
-    All fields default to the most permissive setting ("anything goes") so that a
-    bare ``CorpusSpec()`` is a no-op validator. Narrow the spec by listing the
-    annotations, tags, and relations your corpus actually supports.
+    All fields except ``allowed_functions`` default to the most permissive setting
+    ("anything goes"). ``allowed_functions`` defaults to the functions that BlackLab
+    itself provides, so a bare ``CorpusSpec()`` only rejects calls to unknown query
+    functions. Narrow the spec by listing the annotations, tags, and relations your
+    corpus actually supports.
 
     Attributes:
         open_attributes: Annotation names whose value space is unconstrained
@@ -51,6 +63,11 @@ class CorpusSpec(BaseModel):
         allowed_relations: Allowed relation type names, or ``None`` to allow
             any. An empty set means "no named relations allowed" (use
             ``allow_relations=False`` for that instead).
+        allowed_functions: Allowed names for query function calls such as
+            ``rspan(...)``. Defaults to
+            [BLACKLAB_FUNCTIONS][bcql_py.validation.spec.BLACKLAB_FUNCTIONS].
+            Add names that a BlackLab plugin registers, or use ``None`` to allow
+            any name.
 
     Example::
 
@@ -98,6 +115,10 @@ class CorpusSpec(BaseModel):
     allowed_relations: frozenset[str] | None = Field(
         default=None,
         description="Allowed relation type names, or None to allow any",
+    )
+    allowed_functions: frozenset[str] | None = Field(
+        default=BLACKLAB_FUNCTIONS,
+        description="Allowed query function names, or None to allow any",
     )
 
     @field_validator("closed_attributes", mode="before")
@@ -151,6 +172,7 @@ class CorpusSpec(BaseModel):
         allowed_span_attributes: Mapping[str, Iterable[str]] | None = None,
         allowed_alignment_fields: Iterable[str] | None = None,
         allowed_relations: Iterable[str] | None = None,
+        allowed_functions: Iterable[str] | None = None,
         strict_attributes: bool | None = None,
         allow_alignment: bool | None = None,
         allow_relations: bool | None = None,
@@ -166,6 +188,8 @@ class CorpusSpec(BaseModel):
             allowed_span_attributes: Extra per-tag attribute names.
             allowed_alignment_fields: Extra alignment target fields.
             allowed_relations: Extra relation type names.
+            allowed_functions: Extra query function names (e.g. from a
+                BlackLab plugin).
             strict_attributes: Override the strict-attributes flag.
             allow_alignment: Override the alignment allowed flag.
             allow_relations: Override the relations allowed flag.
@@ -212,6 +236,11 @@ class CorpusSpec(BaseModel):
             updates["allowed_relations"] = base_rels | frozenset(
                 allowed_relations
             )
+        if allowed_functions is not None:
+            base_funcs = self.allowed_functions or frozenset()
+            updates["allowed_functions"] = base_funcs | frozenset(
+                allowed_functions
+            )
         if strict_attributes is not None:
             updates["strict_attributes"] = strict_attributes
         if allow_alignment is not None:
@@ -226,7 +255,7 @@ class CorpusSpec(BaseModel):
 
         Set-valued fields are unioned. For the nullable set-valued fields
         (``allowed_span_tags``, ``allowed_alignment_fields``, ``allowed_relations``,
-        and the dict-shaped ``allowed_span_attributes``), ``None`` means "no
+        ``allowed_functions``, and the dict-shaped ``allowed_span_attributes``), ``None`` means "no
         constraint". A concrete set/dict is treated as *more restrictive* than
         ``None``, so when one side is ``None`` and the other lists entries, the
         result is the listed entries: ``None`` survives only when both sides are
@@ -262,7 +291,8 @@ class CorpusSpec(BaseModel):
             """Union two ``frozenset[str] | None`` fields under "restriction beats None".
 
             Used for the nullable frozenset fields only (``allowed_span_tags``,
-            ``allowed_alignment_fields``, ``allowed_relations``).
+            ``allowed_alignment_fields``, ``allowed_relations``,
+            ``allowed_functions``).
             """
             if a is None and b is None:
                 return None
@@ -300,6 +330,9 @@ class CorpusSpec(BaseModel):
             allow_relations=self.allow_relations and other.allow_relations,
             allowed_relations=_union_optional(
                 self.allowed_relations, other.allowed_relations
+            ),
+            allowed_functions=_union_optional(
+                self.allowed_functions, other.allowed_functions
             ),
         )
 

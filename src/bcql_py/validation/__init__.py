@@ -17,11 +17,12 @@ Typical usage::
 """
 
 from bcql_py.exceptions import BCQLValidationError, ValidationIssue
-from bcql_py.validation.spec import CorpusSpec
+from bcql_py.validation.spec import BLACKLAB_FUNCTIONS, CorpusSpec
 from bcql_py.validation.validator import validate
 
 
 __all__ = [
+    "BLACKLAB_FUNCTIONS",
     "CorpusSpec",
     "ValidationIssue",
     "BCQLValidationError",

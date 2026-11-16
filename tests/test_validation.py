@@ -152,6 +152,54 @@ def test_root_relation_checked():
         parse("^-bogus-> _", spec=spec)
 
 
+def test_unknown_function_rejected_by_default():
+    """BlackLab 4.1.1 has no ``meet`` function, so the default spec rejects it."""
+    with pytest.raises(BCQLValidationError) as excinfo:
+        validate(parse('meet("a", "b")'), CorpusSpec())
+    issue = excinfo.value.issues[0]
+    assert issue.kind == "unknown_function"
+    assert issue.node_type == "function_call"
+    assert issue.context["function"] == "meet"
+
+
+def test_unknown_function_nested_and_suggested():
+    """Function calls inside other nodes are checked and close names get a suggestion."""
+    with pytest.raises(BCQLValidationError) as excinfo:
+        parse('"a" rspn(_ -nsubj-> _)', spec=CorpusSpec())
+    assert excinfo.value.issues[0].context["suggestion"] == "rspan"
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "rspan(_ -nsubj-> _)",
+        'rcapture(_ -nsubj-> _, "x")',
+        'rel("nsubj")',
+        'rmatch("a")',
+        '_ident("a")',
+    ],
+)
+def test_blacklab_functions_accepted_by_default(query):
+    parse(query, spec=CorpusSpec())
+
+
+def test_allowed_functions_none_accepts_any_name():
+    parse('meet("a", "b")', spec=CorpusSpec(allowed_functions=None))
+
+
+def test_allowed_functions_extend_for_plugins():
+    spec = CorpusSpec().extend(allowed_functions={"meet"})
+    assert spec.allowed_functions == spec_module.BLACKLAB_FUNCTIONS | {"meet"}
+    parse('meet("a", "b")', spec=spec)
+
+
+def test_presets_keep_default_functions():
+    for preset in (UD, LASSY):
+        assert preset.allowed_functions == spec_module.BLACKLAB_FUNCTIONS
+        with pytest.raises(BCQLValidationError):
+            parse('meet("a", "b")', spec=preset)
+
+
 def test_span_tag_restriction():
     spec = CorpusSpec(allowed_span_tags={"s", "p"})
     parse("<s/>", spec=spec)

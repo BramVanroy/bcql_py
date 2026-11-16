@@ -724,8 +724,9 @@ class BCQLParser:
         Called after the child node has been parsed and we see ``{``.
 
         NOTE: ``{,m}`` (no minimum) is a bcql_py extension not present in ``Bcql.g4``'s ``repetitionAmount`` rule,
-        which requires at least one INTEGER before the comma. We accept it as a convenience since it is a common
-        regex convention meaning "up to m repetitions".
+        which requires at least one INTEGER before the comma, and BlackLab rejects it. We accept it as a convenience
+        because it is a common regex convention for "up to m repetitions". It is parsed as ``{0,m}`` and
+        [to_bcql()][bcql_py.models.base.BCQLNode.to_bcql] writes it as ``{0,m}``, so the output is valid for BlackLab.
 
         Args:
             child: The node to which the quantifier applies.

@@ -53,8 +53,8 @@ class RepetitionNode(BCQLNode):
     """A repetition quantifier applied to a sub-query.
 
     Supports ``+`` (1+), ``*`` (0+), ``?`` (0 or 1), ``{n}``, ``{n,m}``,
-    ``{n,}``. Note that "up to" quantifiers like ``{0,m}`` are exported as
-    ``{,m}`` and may therefore be different in surface form from the original.
+    ``{n,}``. The bcql_py input extension ``{,m}`` is exported as ``{0,m}``
+    because BlackLab does not accept ``{,m}``.
 
     Attributes:
         child: The sub-query being repeated.
@@ -84,8 +84,6 @@ class RepetitionNode(BCQLNode):
             return f"{{{self.min_count},}}"
         if self.min_count == self.max_count:
             return f"{{{self.min_count}}}"
-        if not self.min_count:
-            return f"{{,{self.max_count}}}"
         return f"{{{self.min_count},{self.max_count}}}"
 
     def to_bcql(self) -> str:

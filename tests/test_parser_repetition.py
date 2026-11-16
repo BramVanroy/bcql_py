@@ -1,7 +1,7 @@
 """Tests for repetition and quantifier parsing: ``+``, ``*``, ``?``, ``{n}``, ``{n,m}``, ``{n,}``, ``{,m}``.
 
 The final form ``{,m}`` is a bcql_py extension: it is accepted by this parser even though it is not
-present in ``Bcql.g4``.
+present in ``Bcql.g4``. BlackLab rejects ``{,m}``, so ``to_bcql()`` writes it as ``{0,m}``.
 """
 
 from conftest import round_trip_test
@@ -119,8 +119,24 @@ class TestRepetitionBrace:
         round_trip_test('[pos="ADJ"]{2,}')
 
     def test_round_trip_max_only(self):
-        """Round-trip: max-only brace quantifier preserves the bcql_py extension syntax."""
-        round_trip_test("[]{,3}")
+        """Round-trip: the max-only extension ``{,3}`` is written as ``{0,3}``."""
+        round_trip_test("[]{,3}", expected="[]{0,3}")
+
+    def test_round_trip_zero_min(self):
+        """Round-trip: ``{0,3}`` stays ``{0,3}`` because BlackLab rejects ``{,3}``."""
+        round_trip_test("[]{0,3}")
+
+    def test_round_trip_zero_min_in_sequence(self):
+        """Round-trip: a ``{0,n}`` gap inside a sequence keeps its explicit minimum."""
+        round_trip_test('"a" []{0,3} "b"')
+
+    def test_zero_min_never_serialised_without_minimum(self):
+        """No brace quantifier with a lower bound of 0 is written as ``{,m}``."""
+        for max_count in range(2, 6):
+            bcql = RepetitionNode(
+                child=parse("[]"), min_count=0, max_count=max_count
+            ).to_bcql()
+            assert bcql == f"[]{{0,{max_count}}}"
 
     def test_underscore_with_quantifier(self):
         """``_+`` - one or more relation wildcards.

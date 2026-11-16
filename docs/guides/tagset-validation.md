@@ -27,7 +27,8 @@ For a runnable, copy-pasteable end-to-end example, see
 ## What a CorpusSpec captures
 
 [`CorpusSpec`][bcql_py.CorpusSpec] is a frozen Pydantic model with a deliberately permissive
-default: an empty ``CorpusSpec()`` accepts every valid query. You tighten it by listing only
+default: an empty ``CorpusSpec()`` accepts every valid query. The one restriction it applies by
+default is on query function names (see ``allowed_functions`` below). You tighten it by listing only
 what your corpus actually supports.
 
 | Field | Type | What it controls |
@@ -41,8 +42,22 @@ what your corpus actually supports.
 | ``allowed_alignment_fields`` | ``frozenset[str] \| None`` | Allowed target field names for ``==>field`` (e.g. ``en``). ``None`` = unconstrained |
 | ``allow_relations`` | ``bool`` | When ``False``, any dependency relation (``-type->`` or ``^-->``) is rejected |
 | ``allowed_relations`` | ``frozenset[str] \| None`` | Allowed relation type names (usually your depedency tagset). ``None`` = unconstrained |
+| ``allowed_functions`` | ``frozenset[str] \| None`` | Allowed query function names such as ``rspan``. Defaults to ``BLACKLAB_FUNCTIONS`` (the functions built into BlackLab 4.1.1). ``None`` = unconstrained |
 
-Every field is optional. Only the constraints you set are enforced.
+Every field is optional. Only the constraints you set are enforced, plus the default check on
+function names.
+
+!!! note "Query functions"
+    The parser accepts any function name, e.g. ``meet("a", "b")``. BlackLab Server 4.1.1 answers a
+    call to a function that it does not know with an internal server error (HTTP 500). The validator
+    therefore reports ``unknown_function`` for every name outside ``allowed_functions``. If a BlackLab
+    plugin adds a function, extend the spec:
+
+    ```python
+    from bcql_py import CorpusSpec
+
+    spec = CorpusSpec().extend(allowed_functions={"myfunc"})
+    ```
 
 !!! note "Regex values are skipped"
     The validator only checks values that are unambiguously literal (an ``l"..."`` prefix or a
