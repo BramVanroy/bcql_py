@@ -72,11 +72,30 @@ jobs:
           # Forks and Dependabot PRs have no access to the token; don't fail their PRs over it.
           fail_ci_if_error: ${{ github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
 
+  # Catches dependency updates that break the docs before a release tries to deploy them.
+  docs:
+    name: Docs build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+
+      - name: Install docs dependencies
+        run: uv sync --locked --group docs
+
+      - name: Build docs
+        run: uv run mkdocs build --strict
+
   # Single required status check for branch protection.
   ci-ok:
     name: CI OK
     if: always()
-    needs: [quality, test]
+    needs: [quality, test, docs]
     runs-on: ubuntu-latest
     steps:
       - name: Check job results
