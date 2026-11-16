@@ -40,7 +40,7 @@ docs = [
     "mkdocs-minify-plugin>=0.8.0,<1",
 ]
 app = [
-    "gradio==6.13.0,<7",
+    "gradio==6.32.0",
 ]
 dev = [
     {include-group = "docs"},
