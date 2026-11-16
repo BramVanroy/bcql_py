@@ -5,10 +5,16 @@ max_retries = 2
 retry_wait_time = 2
 timeout = 20
 max_concurrency = 8
-accept = [200, 206]
+accept = ["200..=206", 429]
 
-# Local app/demo URLs are expected to be unavailable in CI.
 exclude = [
-  "^http://localhost",
-  "^http://127\\.0\\.0\\.1",
+  # Local app/demo URLs are expected to be unavailable in CI.
+  '^https?://localhost',
+  '^https?://127\.0\.0\.1',
+  # Badges and pages that only exist after the first release/deploy.
+  '^https://img\.shields\.io/',
+  '^https://badge\.fury\.io/',
+  '^https://codecov\.io/gh/BramVanroy/bcql_py',
+  '^https://pypi\.org/project/bcql_py',
+  '^https://BramVanroy\.github\.io/bcql_py',
 ]

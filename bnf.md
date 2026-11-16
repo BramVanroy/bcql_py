@@ -2,7 +2,7 @@
 
 As I dug into which parser "paradigm" to use, I found that a recurisve descent parser made much sense for BCQL. Starting from lowest precedence construction down to the highest. I've always been a sucker for recursion (though admittedly I never held much love for Prolog).
 
-Reading into recursive descent parsers more, I got much inspiration from Jamis Buck's [blog post on recursive descent parsers](https://weblog.jamisbuck.org/2015/7/30/writing-a-simple-recursive-descent-parser.html). The first thing to do, he illustrates, is to convert your grammar into [Backus-Naur Form](https://cs61a.org/study-guide/bnf/) (BNF). In practice I am using EBNF (Extended BNF) which has some nice shorthands like quantifiers `*`.
+Reading into recursive descent parsers more, I got much inspiration from Jamis Buck's [blog post on recursive descent parsers](https://weblog.jamisbuck.org/2015/7/30/writing-a-simple-recursive-descent-parser.html). The first thing to do, he illustrates, is to convert your grammar into [Backus-Naur Form](https://web.archive.org/web/20230924212229/https://cs61a.org/study-guide/bnf/) (BNF). In practice I am using EBNF (Extended BNF) which has some nice shorthands like quantifiers `*`.
 
 Let's see if writing this BNF helps me out.
 

@@ -169,4 +169,4 @@ If you'd like to try the ANTLR route yourself, you can try it as follows:
   specifically the part on "Scanning". Token types and error handling in `bcql_py` is heavily
   inspired by his work.
 - Jamis Buck's [blog post on recursive descent parsers](https://weblog.jamisbuck.org/2015/7/30/writing-a-simple-recursive-descent-parser.html)
-- Berkeley [course notes on BNF](https://cs61a.org/study-guide/bnf/)
+- Berkeley [course notes on BNF](https://web.archive.org/web/20230924212229/https://cs61a.org/study-guide/bnf/)

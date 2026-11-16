@@ -14,7 +14,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: interrogate-badge-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -23,16 +23,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.3.1
         with:
           enable-cache: true
-          python-version: "3.11"
 
       - name: Install dependencies
-        run: uv sync --locked --group dev
+        run: uv sync --locked
 
       - name: Generate interrogate badge
         continue-on-error: true
@@ -40,10 +39,12 @@ jobs:
           uv run interrogate -c pyproject.toml
           --generate-badge .github/interrogate_badge.svg
           --badge-style flat-square-modified
+          src
       # Workflow inspired by https://github.com/actions/checkout?tab=readme-ov-file#push-a-commit-to-a-pr-using-the-built-in-token
       - name: Commit updated badge
         run: |
-          if git diff --quiet -- .github/interrogate_badge.svg; then
+          # `git status` (unlike `git diff`) also sees the badge on its first, untracked run.
+          if [ -z "$(git status --porcelain -- .github/interrogate_badge.svg)" ]; then
             echo "Badge unchanged"
             exit 0
           fi
